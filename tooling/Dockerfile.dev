@@ -16,7 +16,8 @@ RUN pip install uvicorn && \
     pip install fastapi
     
 # install git additions
-RUN pip install pre-commit && \
+RUN apt-get install git-flow -y && \
+    pip install pre-commit && \
     pip install conventional-commit
    
 # change shell to zsh and install useful commandline tools
