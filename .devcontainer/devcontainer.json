@@ -1,0 +1,4 @@
+{
+	"name": "SEGP Container",
+	"image": "warmtea137/privacy-ml-segp:latest"
+}
