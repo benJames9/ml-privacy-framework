@@ -4,6 +4,9 @@ FROM node:alpine
 # Workdir for output
 WORKDIR /app
 
+# Copy package.json and package-lock.json
+COPY package*.json .
+
 # Install dependencies
 RUN npm install
 
@@ -14,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Run the app
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

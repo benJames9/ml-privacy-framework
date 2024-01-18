@@ -1,1 +1,9 @@
 __pycache__
+
+# Node.js related
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Next.js build
+/.next/
