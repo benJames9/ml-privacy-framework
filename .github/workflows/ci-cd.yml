@@ -36,7 +36,7 @@ jobs:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        timeout: 5m
         script: |
-          echo "hello world" 
+          echo "hello world"
         
