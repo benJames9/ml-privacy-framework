@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    # branches:
+    #   - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build and push frontend image
+      run: docker build -t benjames9/ml-privacy-frontend:latest ./frontend && docker push benjames9/ml-privacy-frontend:latest
+
+    - name: Build and push backend image
+      run: docker build -t benjames9/ml-privacy-backend:latest ./backend && docker push benjames9/ml-privacy-backend:latest
+
+    - name: Build and push nginx image
+      run: docker build -t benjames9/ml-privacy-nginx:latest ./nginx && docker push benjames9/ml-privacy-nginx:latest
