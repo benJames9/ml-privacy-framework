@@ -31,12 +31,11 @@ jobs:
 
     steps:
     - name: Configure SSH and pull updated containers
-      uses: appleboy/ssh-action@v0.1.10
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        command_timeout: 30m
         script: |
           # Navigate to dir containing docker-compose
           cd ~
