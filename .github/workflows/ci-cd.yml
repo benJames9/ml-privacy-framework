@@ -37,11 +37,5 @@ jobs:
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # Navigate to dir containing docker-compose
-          cd ~
-
-          # Pull the latest Docker images from registry
-          docker-compose pull
-
-          # Restart containers
-          docker-compose up -d
+          echo "hello world"
+        
