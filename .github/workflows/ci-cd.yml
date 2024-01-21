@@ -31,5 +31,15 @@ jobs:
 
     steps:
     - name: Configure SSH and pull updated containers
-      run: tmpfile=$(mktemp) && echo "${{ secrets.SSH_PRIVATE_KEY }}" > $tmpfile | ssh -o "IdentitiesOnly=yes" -i $tmpfile -t deploy@cloud-vm-42-246.doc.ic.ac.uk "docker ps"
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.SHELL_SSH_HOST }}
+        proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
+        proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
+        timeout: 5m
+        script: |
+          echo "hello world"
         
