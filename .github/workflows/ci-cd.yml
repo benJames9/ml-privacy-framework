@@ -41,5 +41,7 @@ jobs:
         proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
         timeout: 5m
         script: |
-          echo "hello world"
+          cd ~
+          docker-compose pull
+          docker-compose up -d
         
