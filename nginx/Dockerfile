@@ -1,8 +1,12 @@
 # Nginx base image
 FROM nginx:latest
 
+# ARG variables are available during build
+ARG FRONTEND_VM_IP
+ARG BACKEND_VM_IP
+
 # Copy the .env file
-COPY ./nginx/env /etc/nginx/.env
+COPY .env /etc/nginx/.env
 
 # Copy the Nginx configuration file
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
