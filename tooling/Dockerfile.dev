@@ -14,7 +14,7 @@ RUN pip install pytest && \
 # for the backend api stuff
 RUN pip install uvicorn && \
     pip install fastapi
-    
+
 # install git additions
 RUN apt-get install git-flow -y && \
     pip install pre-commit && \FROM continuumio/anaconda3
@@ -33,12 +33,12 @@ RUN pip install pytest && \
 # for the backend api stuff
 RUN pip install uvicorn && \
     pip install fastapi
-    
+
 # install git additions
 RUN apt-get install git-flow -y && \
     pip install pre-commit && \
     pip install commitizen
-   
+
 # change shell to zsh and install useful commandline tools
 RUN apt-get install zsh vim htop tree fzf -y && \
     chsh -s /bin/zsh && \
@@ -54,7 +54,7 @@ RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | 
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
     nvm install 18 && nvm use 18 &&\npm install -g next@latest react@latest react-dom@latest
 
-   
+
 # change shell to zsh and install useful commandline tools
 RUN apt-get install zsh vim htop tree fzf -y && \
     chsh -s /bin/zsh && \
