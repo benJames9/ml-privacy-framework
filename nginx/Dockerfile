@@ -2,7 +2,7 @@
 FROM nginx:latest
 
 # Copy the .env file
-COPY .env /etc/nginx/.env
+COPY ./nginx/env /etc/nginx/.env
 
 # Copy the Nginx configuration file
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
