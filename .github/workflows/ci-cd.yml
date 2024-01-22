@@ -2,8 +2,8 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main 
+    # branches:
+    #   - main 
 
 jobs:
   build:
@@ -30,10 +30,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Configure SSH and pull updated containers
+    - name: Configure SSH and pull reverse-proxy container
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SSH_HOST }}
+        host: ${{ secrets.SSH_RP_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.SHELL_SSH_HOST }}
+        proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
+        proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
+        timeout: 5m
+        script: |
+          cd ~
+          docker-compose pull
+          docker-compose up -d
+
+    - name: Configure SSH and pull backend container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_BACKEND_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.SHELL_SSH_HOST }}
+        proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
+        proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
+        timeout: 5m
+        script: |
+          cd ~
+          docker-compose pull
+          docker-compose up -d
+
+    - name: Configure SSH and pull frontend container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_FRONTEND_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ secrets.SHELL_SSH_HOST }}
