@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    # branches:
+    # branches: 
     #   - main
 
 jobs:
@@ -40,6 +40,7 @@ jobs:
         proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
         proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
         timeout: 5m
+        proxy_timeout: 5m
         script: |
           cd ~
           docker-compose pull
@@ -55,6 +56,7 @@ jobs:
         proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
         proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
         timeout: 5m
+        proxy_timeout: 5m
         script: |
           cd ~
           docker-compose pull
@@ -70,6 +72,7 @@ jobs:
         proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
         proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
         timeout: 5m
+        proxy_timeout: 5m
         script: |
           cd ~
           docker-compose pull
