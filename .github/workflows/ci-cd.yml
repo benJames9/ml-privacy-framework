@@ -9,10 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      FRONTEND: ${{ secrets.SSH_FRONTEND_HOST}}
-      BACKEND: ${{ secrets.SHH_BACKEND_HOST }}
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -29,8 +25,8 @@ jobs:
     - name: Build and push nginx image
       run: |
         docker build -t benjames9/ml-privacy-nginx:latest \
-          --build-arg FRONTEND_VM_IP=$FRONTEND \
-          --build-arg BACKEND_VM_IP=$BACKEND \
+          --build-arg FRONTEND_VM_IP="${{ secrets.SSH_FRONTEND_HOST }}" \
+          --build-arg BACKEND_VM_IP="${{ secrets.SSH_BACKEND_HOST }}" \
           ./nginx && docker push benjames9/ml-privacy-nginx:latest
   
   deploy:
