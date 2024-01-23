@@ -5,6 +5,9 @@ FROM nginx:latest
 ARG FRONTEND_VM_IP
 ARG BACKEND_VM_IP
 
+RUN echo "FRONTEND IP: $FRONTEND_VM_IP" && \
+    echo "BACKEND_IP: $BACKEND_VM_IP"
+
 # Copy the Nginx configuration file
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
