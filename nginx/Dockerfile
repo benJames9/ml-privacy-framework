@@ -1,10 +1,6 @@
 # Nginx base image
 FROM nginx:latest
 
-# ARG variables are available during build
-ARG FRONTEND_VM_IP
-ARG BACKEND_VM_IP
-
 # Copy the .env file
 COPY .env /etc/nginx/.env
 

@@ -7,7 +7,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
+
+    env:
+      FRONTEND_VM_IP: ${{ secrets.SSH_FRONTEND_HOST}}
+      BACKEND_VM_IP: ${{ secrets.SHH_BACKEND_HOST }}
 
     steps:
     - name: Checkout code
