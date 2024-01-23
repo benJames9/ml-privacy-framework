@@ -9,7 +9,7 @@ ARG BACKEND_VM_IP
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
 # Copy env variables to the conf file
-RUN bash -c envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+RUN bash -c envsubst "$${FRONTEND_VM_IP} $${BACKEND_VM_IP}" < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Expose HTTP port
 EXPOSE 80
