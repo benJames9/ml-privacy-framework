@@ -15,4 +15,4 @@ RUN bash -c envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 EXPOSE 80
 
 # Start Nginx with environment variables
-CMD ["nginx -g 'daemon off;'"]
+CMD ["nginx", "-g", "daemon off;"]
