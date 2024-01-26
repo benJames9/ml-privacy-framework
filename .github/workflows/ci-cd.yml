@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: 
+    branches:
       - main
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
           --build-arg FRONTEND_VM_IP="${{ secrets.SSH_FRONTEND_HOST }}" \
           --build-arg BACKEND_VM_IP="${{ secrets.SSH_BACKEND_HOST }}" \
           ./nginx && docker push benjames9/ml-privacy-nginx:latest
-  
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -81,4 +81,3 @@ jobs:
           cd ~
           docker-compose pull
           docker-compose up -d
-        
