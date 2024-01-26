@@ -2,12 +2,12 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main 
+    branches: 
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -23,23 +23,60 @@ jobs:
       run: docker build -t benjames9/ml-privacy-backend:latest ./backend && docker push benjames9/ml-privacy-backend:latest
 
     - name: Build and push nginx image
-      run: docker build -t benjames9/ml-privacy-nginx:latest ./nginx && docker push benjames9/ml-privacy-nginx:latest
+      run: |
+        docker build -t benjames9/ml-privacy-nginx:latest \
+          --build-arg FRONTEND_VM_IP="${{ secrets.SSH_FRONTEND_HOST }}" \
+          --build-arg BACKEND_VM_IP="${{ secrets.SSH_BACKEND_HOST }}" \
+          ./nginx && docker push benjames9/ml-privacy-nginx:latest
   
   deploy:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Configure SSH and pull updated containers
+    - name: Configure SSH and pull reverse-proxy container
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SSH_HOST }}
+        host: ${{ secrets.SSH_RP_HOST }}
         username: ${{ secrets.SSH_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ secrets.SHELL_SSH_HOST }}
         proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
         proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
         timeout: 5m
+        proxy_timeout: 5m
+        script: |
+          cd ~
+          docker-compose pull
+          docker-compose up -d
+
+    - name: Configure SSH and pull backend container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_BACKEND_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.SHELL_SSH_HOST }}
+        proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
+        proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
+        timeout: 5m
+        proxy_timeout: 5m
+        script: |
+          cd ~
+          docker-compose pull
+          docker-compose up -d
+
+    - name: Configure SSH and pull frontend container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SSH_FRONTEND_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        proxy_host: ${{ secrets.SHELL_SSH_HOST }}
+        proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}
+        proxy_key: ${{ secrets.SHELL_SSH_PRIVATE_KEY }}
+        timeout: 5m
+        proxy_timeout: 5m
         script: |
           cd ~
           docker-compose pull

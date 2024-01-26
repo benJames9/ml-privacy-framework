@@ -1,11 +1,18 @@
 # Nginx base image
 FROM nginx:latest
 
-# Copy the Nginx configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
+# Context required for nginx.conf
+ARG FRONTEND_VM_IP
+ARG BACKEND_VM_IP
 
-# Expose HTTP port (currently 8080 for testing)
+# Copy the Nginx configuration file
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
+
+# Copy env variables to the conf file
+RUN envsubst '${FRONTEND_VM_IP} ${BACKEND_VM_IP}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
+# Expose HTTP port
 EXPOSE 80
 
-# Start Nginx
+# Start Nginx with environment variables
 CMD ["nginx", "-g", "daemon off;"]
