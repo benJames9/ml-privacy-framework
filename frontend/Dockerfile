@@ -10,7 +10,7 @@ COPY package*.json .
 # Install dependencies
 RUN npm install
 
-# Copy code to working directory 
+# Copy code to working directory
 COPY . .
 
 # Expose frontend container port
