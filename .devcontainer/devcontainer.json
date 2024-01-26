@@ -1,4 +1,5 @@
 {
-	"name": "SEGP Container",
-	"image": "warmtea137/privacy-ml-segp:latest"
+  "name": "SEGP Container",
+  "image": "warmtea137/privacy-ml-segp:latest",
+  "initializeCommand": "docker pull warmtea137/privacy-ml-segp:latest"
 }
