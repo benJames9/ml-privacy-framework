@@ -1,0 +1,20 @@
+version: '3'
+services:
+  frontend:
+    build: ../frontend
+    ports:
+      - "3000:3000"
+
+  backend:
+    build: ../backend
+    ports:
+      - "8000:8000"
+
+  nginx:
+    build:
+      context: ../nginx
+      args:
+        BACKEND_VM_IP: backend
+        FRONTEND_VM_IP: frontend
+    ports:
+      - "80:80"
