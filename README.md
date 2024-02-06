@@ -24,3 +24,5 @@ Here are the main `git flow` rules/commands we'll be adhering to:
   - Also don't forget to do `git push origin --tags` to push the tagged release
 - `git flow hotfix start [name of hotfix]` only use these when you come across a bug in `main` and immediately need to fix it
   - Finish it with `git flow hotfix finish` while on the hotfix branch
+####
+Use `./pull.sh` to pull files rather than `git pull`
