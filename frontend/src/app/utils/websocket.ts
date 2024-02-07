@@ -1,3 +1,5 @@
+import WebSocket from "ws";
+
 // Websocket connection to backend
 class WebSocketClient {
   socket: WebSocket;

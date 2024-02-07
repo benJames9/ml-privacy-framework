@@ -29,9 +29,9 @@ async def websocket_endpoint(websocket: WebSocket):
             return
         
         # Handle supported data types
-        if data_type == "pt"
+        if data_type == "pt":
             await handle_pt_file(websocket)
-        else if data_type == "test"
+        elif data_type == "test":
             await handle_test_message(websocket)
         else:
             handle_unsupported_type(websocket, connection_id, data_type)
@@ -54,14 +54,14 @@ async def handle_pt_file(websocket: WebSocket):
     return
 
 # Handle unexpected header error in initial message
-async def handle_unexpected_header(websocket: WebSocket, connection_id: string, header: string):
+async def handle_unexpected_header(websocket: WebSocket, connection_id, header):
     err = f"Unexpected message from conn {connection_id}: {header}"
     print(err)
     await websocket.send_text(err)
     await websocket.close()
 
 # Handle unsupported data type in intial message
-async def handle_unsupported_type(websocket: WebSocket, connection_id: string, data_type: string):
+async def handle_unsupported_type(websocket: WebSocket, connection_id, data_type):
     err = f"Unexpected data type from conn {connection_id}: {data_type}"
     print(err)
     await websocket.send_text(err)
