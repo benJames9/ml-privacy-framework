@@ -1,4 +1,6 @@
+import HBar from "@/components/HBar";
 import Navbar from "@/components/Navbar";
+import ReconstructedImage from "@/components/ReconstructedImage";
 import Stats from "@/components/Stats";
 
 const ResultsPage: React.FC = () => {
@@ -11,6 +13,9 @@ const ResultsPage: React.FC = () => {
         <div className="flex flex-col items-center">
           <h1 className="text-4xl font-bold text-gray-400">Attack Statistics</h1>
           <Stats stats={stats} />
+          <HBar />
+          <h1 className="text-4xl font-bold text-gray-400">Reconstructed Image</h1>
+          <ReconstructedImage image="https://via.placeholder.com/300" /> {/* Replace with backend response*/}
         </div>
       </div>
     </main>
