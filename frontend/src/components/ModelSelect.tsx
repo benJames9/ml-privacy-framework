@@ -10,7 +10,9 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   models,
   onChange,
 }) => {
+  const [internalSelectedModel, setInternalSelectedModel] = useState(models[0]);
   const handleModelSelect = (model: string) => {
+    setInternalSelectedModel(model);
     onChange(model);
     const fileInput = document.getElementById('file-upload');
     fileInput!.scrollIntoView({ behavior: 'smooth' });
@@ -23,7 +25,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
           key={model}
           type="button"
           className={
-            "bg-gray-900 text-white hover:bg-gray-600 border border-gray-300 text-gray-700 focus:ring-4 focus:ring-blue-500 font-medium rounded-lg text-center inline-flex items-center px-5 py-4 text-base w-full justify-center min-w-48 h-32 min-w-32 text-xl"
+            `bg-gray-900 text-white hover:bg-gray-600 border border-gray-300 text-gray-700 ${internalSelectedModel === model ? "ring-4 ring-blue-500" : ""} font-medium rounded-lg text-center inline-flex items-center px-5 py-4 text-base w-full justify-center min-w-48 h-32 min-w-32 text-xl`
           }
           onClick={() => handleModelSelect(model)}
         >
