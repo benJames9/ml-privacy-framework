@@ -10,7 +10,7 @@ const TextInput: React.FC<TextInputProps> = ({ label, onChange }) => {
       <input
         type="text"
         onChange={onChange}
-        className="text-black bg-gray-100 border border-gray-300 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+        className="text-black bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
       />
     </div>
   )
