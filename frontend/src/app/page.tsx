@@ -12,7 +12,8 @@ import EvaluateButton from "@/components/EvaluateButton";
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
   const [selectedModel, setSelectedModel] = useState<string>("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPtFile, setSelectedPtFile] = useState<File | null>(null);
+  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
 
   // Dataset parameters
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
@@ -31,10 +32,15 @@ export default function Home() {
 
   const onClick = () => {
     window.location.href = "/results";
+    console.log(selectedZipFile);
   }
 
-  const handleFileChange = (file: File | null) => {
-    setSelectedFile(file);
+  const handlePtFileChange = (file: File | null) => {
+    setSelectedPtFile(file);
+  }
+  
+  const handleZipFileChange = (file: File | null) => {
+    setSelectedZipFile(file);
   }
 
   const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,15 +94,29 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Model</h2>
         <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-header">Upload Model Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
             label="Select File (.pt)"
-            onFileChange={handleFileChange}
+            onFileChange={handlePtFileChange}
+            nextElement="upload-zip-header"
           />
-          {selectedFile && (
-            <p className="mt-2 text-sm text-gray-400">{selectedFile.name}</p>
+          {selectedPtFile && (
+            <p className="mt-2 text-sm text-gray-400">{selectedPtFile.name}</p>
+          )}
+        </div>
+        <HBar />
+        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+        <div className="mb-4">
+          <FileUpload
+            expectedFileType="zip"
+            label="Select File (.zip)"
+            onFileChange={handleZipFileChange}
+            nextElement="data-params-header"
+          />
+          {selectedZipFile && (
+            <p className="mt-2 text-sm text-gray-400">{selectedZipFile.name}</p>
           )}
         </div>
         <HBar />
