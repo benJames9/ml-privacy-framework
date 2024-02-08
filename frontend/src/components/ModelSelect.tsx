@@ -14,8 +14,8 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   const handleModelSelect = (model: string) => {
     setInternalSelectedModel(model);
     onChange(model);
-    const fileInput = document.getElementById('file-upload');
-    fileInput!.scrollIntoView({ behavior: 'smooth' });
+    const fileUpload = document.getElementById('upload-header');
+    fileUpload!.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (

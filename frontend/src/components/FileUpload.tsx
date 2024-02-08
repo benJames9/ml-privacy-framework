@@ -21,6 +21,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     if (fileType === expectedFileType) {
       onFileChange(file);
+      const dataParams = document.getElementById("data-params-header");
+      dataParams!.scrollIntoView({ behavior: "smooth" });
     } else {
       onFileChange(null);
       console.error('Invalid file type selected');

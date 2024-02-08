@@ -88,7 +88,7 @@ export default function Home() {
         <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Model</h2>
         <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8">Upload Model Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-header">Upload Model Parameters</h3>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
@@ -100,7 +100,7 @@ export default function Home() {
           )}
         </div>
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8">Dataset Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">Dataset Parameters</h3>
         <DatasetParams
           datasetStructure={datasetStructure}
           handleStructureChange={handleStructureChange}
