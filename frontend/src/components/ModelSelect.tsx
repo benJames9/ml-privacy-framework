@@ -3,20 +3,15 @@ import React, { useState } from 'react';
 
 interface ModelSelectProps {
   models: string[];
-  selectedModel?: string;
+  onChange: (model: string) => void;
 }
 
 const ModelSelect: React.FC<ModelSelectProps> = ({
   models,
-  selectedModel,
+  onChange,
 }) => {
-  const [internalSelectedModel, setInternalSelectedModel] = useState<string>(
-    selectedModel || ''
-  );
-
   const handleModelSelect = (model: string) => {
-    setInternalSelectedModel(model);
-    console.log(`Selected model: ${model}`);
+    onChange(model);
     const fileInput = document.getElementById('file-upload');
     fileInput!.scrollIntoView({ behavior: 'smooth' });
   };
