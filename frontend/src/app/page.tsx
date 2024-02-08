@@ -12,6 +12,7 @@ import EvaluateButton from "@/components/EvaluateButton";
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
   const [csvPath, setCsvPath] = useState<string>("");
   const [datasetSize, setDatasetSize] = useState<number>(0);
@@ -21,11 +22,16 @@ export default function Home() {
   const onClick = () => {
     console.log("Clicked");
     console.log("model", selectedModel);
+    console.log("file:", selectedFile);
     console.log("structure:", datasetStructure);
     console.log("csvPath:", csvPath);
     console.log("datasetSize:", datasetSize);
     console.log("numClasses:", numClasses);
     console.log("batchSize:", batchSize);
+  }
+
+  const handleFileChange = (file: File | null) => {
+    setSelectedFile(file);
   }
 
   const handleDataParamsChange = (field: string, value: string) => {
@@ -61,7 +67,16 @@ export default function Home() {
         <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Upload Model Parameters</h3>
-        <FileUpload expectedFileType="pt" label="Select File (.pt)" />
+        <div className="mb-4">
+          <FileUpload
+            expectedFileType="pt"
+            label="Select File (.pt)"
+            onFileChange={handleFileChange}
+          />
+          {selectedFile && (
+            <p className="mt-2 text-sm text-gray-400">{selectedFile.name}</p>
+          )}
+        </div>
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Dataset Parameters</h3>
         <DatasetParams

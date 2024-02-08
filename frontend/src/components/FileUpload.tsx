@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 interface FileUploadProps {
   expectedFileType: string;
   label?: string;
+  onFileChange: (file: File | null) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   expectedFileType,
   label = '',
+  onFileChange,
 }) => {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -20,15 +20,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
     const fileType: string = file.name.split('.').pop() || '';
 
     if (fileType === expectedFileType) {
-      setSelectedFile(file);
+      onFileChange(file);
     } else {
-      setSelectedFile(null);
+      onFileChange(null);
       console.error('Invalid file type selected');
     }
   };
 
   return (
-    <div className="mb-4">
+    <div>
       <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300">
         {label}
       </label>
@@ -39,9 +39,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         className="block w-full p-3 text-sm border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
         onChange={handleFileChange}
       />
-      {selectedFile && (
-        <p className="mt-2 text-sm text-gray-400">{selectedFile.name}</p>
-      )}
     </div>
   );
 };
