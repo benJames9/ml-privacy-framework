@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketDisconnect
 import aiofiles
-import uuid 
+import uuid
 
 app = FastAPI()
 
@@ -13,8 +13,8 @@ def read_root():
 async def websocket_endpoint(websocket: WebSocket):
     # Accept connection
     await websocket.accept()
-    connection_id = str(uuid.uuid4()) 
-    filename = f"received_model_{connection_id}.pt" 
+    connection_id = str(uuid.uuid4())
+    filename = f"received_model_{connection_id}.pt"
     print(f"connection id is {connection_id}")
     print(f"filename is {filename}")
 
@@ -27,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket):
         if header != "dataType":
             await handle_unexpected_header(websocket, connection_id, header)
             return
-        
+
         # Handle supported data types
         if data_type == "pt":
             await handle_pt_file(websocket)
@@ -36,7 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
         else:
             handle_unsupported_type(websocket, connection_id, data_type)
             return
-        
+
         # Success message
         await websocket.send_text("File received successfully")
     except WebSocketDisconnect:
