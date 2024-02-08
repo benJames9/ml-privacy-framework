@@ -5,12 +5,14 @@ interface FileUploadProps {
   expectedFileType: string;
   label?: string;
   onFileChange: (file: File | null) => void;
+  nextElement: string;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   expectedFileType,
   label = '',
   onFileChange,
+  nextElement,
 }) => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -21,7 +23,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     if (fileType === expectedFileType) {
       onFileChange(file);
-      const dataParams = document.getElementById("data-params-header");
+      const dataParams = document.getElementById(nextElement);
       dataParams!.scrollIntoView({ behavior: "smooth" });
     } else {
       onFileChange(null);
