@@ -1,3 +1,4 @@
+import DatasetParams from "@/components/DatasetParams";
 import FileUpload from "@/components/FileUpload";
 import HBar from "@/components/HBar";
 import ModelSelect from "@/components/ModelSelect";
@@ -15,6 +16,8 @@ export default function Home() {
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Upload Model Parameters</h3>
         <FileUpload expectedFileType="pt" label="Select File (.pt)" />
         <HBar />
+        <h3 className="text-2xl font-bold text-gray-400 mb-8">Data Parameters</h3>
+        <DatasetParams />
       </div>
     </main>
   )
