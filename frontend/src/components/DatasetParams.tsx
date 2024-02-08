@@ -4,38 +4,13 @@ import Radio from "./Radio";
 import TextInput from "./TextInput";
 import NumberInput from "./NumberInput";
 
-const DatasetParams: React.FC = () => {
-  const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
-  const [csvPath, setCsvPath] = useState<string>("");
-  const [datasetSize, setDatasetSize] = useState<number>(0);
-  const [numClasses, setNumClasses] = useState<number>(0);
-  const [batchSize, setBatchSize] = useState<number>(0);
+interface DatasetParamsProps {
+  datasetStructure: "Foldered" | "CSV";
+  handleDataParamsChange: (field: string, value: string) => void;
+  handleStructureChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
 
-  const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value);
-    setDatasetStructure(e.target.value as "Foldered" | "CSV");
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    // TODO: add validation
-    switch (field) {
-      case "csvPath":
-        setCsvPath(value);
-        break;
-      case "datasetSize":
-        setDatasetSize(parseInt(value));
-        break;
-      case "numClasses":
-        setNumClasses(parseInt(value));
-        break;
-      case "batchSize":
-        setBatchSize(parseInt(value));
-        break;
-      default:
-        break;
-    }
-  }
-
+const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleDataParamsChange, handleStructureChange }) => {
   return (
     <div>
       <div className="flex items-center">
@@ -48,20 +23,20 @@ const DatasetParams: React.FC = () => {
       {datasetStructure === "CSV" && (
         <TextInput
           label="Path to CSV file:"
-          onChange={(e) => handleInputChange("csvPath", e.target.value)}
+          onChange={(e) => handleDataParamsChange("csvPath", e.target.value)}
         />
       )}
       <NumberInput
         label="Size of dataset:"
-        onChange={(e) => handleInputChange("datasetSize", e.target.value)}
+        onChange={(e) => handleDataParamsChange("datasetSize", e.target.value)}
       />
       <NumberInput
         label="Number of classes:"
-        onChange={(e) => handleInputChange("numClasses", e.target.value)}
+        onChange={(e) => handleDataParamsChange("numClasses", e.target.value)}
       />
       <NumberInput
         label="Batch size:"
-        onChange={(e) => handleInputChange("batchSize", e.target.value)}
+        onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
       />
     </div>
   );

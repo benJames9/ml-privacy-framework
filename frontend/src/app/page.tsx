@@ -12,10 +12,45 @@ import EvaluateButton from "@/components/EvaluateButton";
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
+  const [csvPath, setCsvPath] = useState<string>("");
+  const [datasetSize, setDatasetSize] = useState<number>(0);
+  const [numClasses, setNumClasses] = useState<number>(0);
+  const [batchSize, setBatchSize] = useState<number>(0);
 
   const onClick = () => {
     console.log("Clicked");
-    console.log(selectedModel);
+    console.log("model", selectedModel);
+    console.log("structure:", datasetStructure);
+    console.log("csvPath:", csvPath);
+    console.log("datasetSize:", datasetSize);
+    console.log("numClasses:", numClasses);
+    console.log("batchSize:", batchSize);
+  }
+
+  const handleDataParamsChange = (field: string, value: string) => {
+    // TODO: add validation
+    switch (field) {
+      case "csvPath":
+        setCsvPath(value);
+        break;
+      case "datasetSize":
+        setDatasetSize(parseInt(value));
+        break;
+      case "numClasses":
+        setNumClasses(parseInt(value));
+        break;
+      case "batchSize":
+        setBatchSize(parseInt(value));
+        break;
+      default:
+        break;
+    }
+  }
+
+  const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(e.target.value);
+    setDatasetStructure(e.target.value as "Foldered" | "CSV");
   }
 
   return (
@@ -29,7 +64,11 @@ export default function Home() {
         <FileUpload expectedFileType="pt" label="Select File (.pt)" />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Dataset Parameters</h3>
-        <DatasetParams />
+        <DatasetParams
+          datasetStructure={datasetStructure}
+          handleStructureChange={handleStructureChange}
+          handleDataParamsChange={handleDataParamsChange}
+        />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
         <AttackParams />
