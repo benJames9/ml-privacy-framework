@@ -4,6 +4,7 @@ import HBar from "@/components/HBar";
 import ModelSelect from "@/components/ModelSelect";
 import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
+import LoggingParams from "@/components/LoggingParams";
 
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
@@ -23,6 +24,8 @@ export default function Home() {
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
         <AttackParams />
         <HBar />
+        <h3 className="text-2xl font-bold text-gray-400 mb-4">Logging Parameters</h3>
+        <LoggingParams />
       </div>
     </main>
   )
