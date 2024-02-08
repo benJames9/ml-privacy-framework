@@ -10,12 +10,8 @@ COPY package*.json .
 # Install dependencies
 RUN npm install
 
-# Copy code to working directory
-COPY . .
-
 # Expose frontend container port
 EXPOSE 3000
 
 # Run the app
-RUN npm run build
-CMD npm run start
+CMD npm run dev
