@@ -26,18 +26,11 @@ export default function Home() {
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
 
+  // Logging parameters
+  const [callbackInterval, setCallbackInterval] = useState<number>(0);
+
   const onClick = () => {
     console.log("Clicked");
-    console.log("model", selectedModel);
-    console.log("file:", selectedFile);
-    console.log("structure:", datasetStructure);
-    console.log("csvPath:", csvPath);
-    console.log("datasetSize:", datasetSize);
-    console.log("numClasses:", numClasses);
-    console.log("batchSize:", batchSize);
-    console.log("numRestarts:", numRestarts);
-    console.log("stepSize:", stepSize);
-    console.log("maxIterations:", maxIterations);
   }
 
   const handleFileChange = (file: File | null) => {
@@ -45,7 +38,6 @@ export default function Home() {
   }
 
   const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value);
     setDatasetStructure(e.target.value as "Foldered" | "CSV");
   }
 
@@ -85,6 +77,10 @@ export default function Home() {
     }
   }
 
+  const handleLoggingParamsChange = (value: string) => {
+    setCallbackInterval(parseInt(value));
+  }
+
   return (
     <main>
       <Navbar />
@@ -115,7 +111,7 @@ export default function Home() {
         <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-4">Logging Parameters</h3>
-        <LoggingParams />
+        <LoggingParams handleLoggingParamsChange={handleLoggingParamsChange} />
         <EvaluateButton onClick={onClick} />
       </div>
     </main>

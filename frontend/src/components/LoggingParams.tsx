@@ -1,20 +1,17 @@
 "use client";
-import React, { useState } from 'react';
+import React from 'react';
 import NumberInput from './NumberInput';
 
-const LoggingParams: React.FC = () => {
-  const [callbackInterval, setCallbackInterval] = useState<number>(0);
+interface LoggingParamsProps {
+  handleLoggingParamsChange: (value: string) => void;
+}
 
-  const handleInputChange = (value: string) => {
-    console.log(value);
-    setCallbackInterval(parseInt(value));
-  }
-
+const LoggingParams: React.FC<LoggingParamsProps> = ({ handleLoggingParamsChange }) => {
   return (
     <div>
       <NumberInput
         label="Callback Interval:"
-        onChange={(e) => handleInputChange(e.target.value)}
+        onChange={(e) => handleLoggingParamsChange(e.target.value)}
       />
     </div>
   );
