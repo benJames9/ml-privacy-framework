@@ -4,7 +4,7 @@ import ReconstructedImage from "@/components/ReconstructedImage";
 import Stats from "@/components/Stats";
 
 const ResultsPage: React.FC = () => {
-  const stats = { "MSE": 0.1, "PSNR": 0.2, "SSIM": 0.3 }; // Replace with backend response
+  const stats = { "MSE": 0.1164, "PSNR": 9.40, "SSIM": 5.184e-03 }; // Replace with backend response
 
   return (
     <main>
@@ -15,7 +15,7 @@ const ResultsPage: React.FC = () => {
           <Stats stats={stats} />
           <HBar />
           <h1 className="text-4xl font-bold text-gray-400">Reconstructed Image</h1>
-          <ReconstructedImage image="https://via.placeholder.com/300" /> {/* Replace with backend response*/}
+          <ReconstructedImage image="/demo.jpg" /> {/* Replace with backend response*/}
         </div>
       </div>
     </main>
