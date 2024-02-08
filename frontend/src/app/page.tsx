@@ -3,6 +3,7 @@ import FileUpload from "@/components/FileUpload";
 import HBar from "@/components/HBar";
 import ModelSelect from "@/components/ModelSelect";
 import Navbar from "@/components/Navbar";
+import AttackParams from "@/components/AttackParams";
 
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
@@ -16,8 +17,12 @@ export default function Home() {
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Upload Model Parameters</h3>
         <FileUpload expectedFileType="pt" label="Select File (.pt)" />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8">Data Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8">Dataset Parameters</h3>
         <DatasetParams />
+        <HBar />
+        <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
+        <AttackParams />
+        <HBar />
       </div>
     </main>
   )

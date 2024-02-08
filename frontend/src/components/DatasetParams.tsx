@@ -39,7 +39,7 @@ const DatasetParams: React.FC = () => {
   return (
     <div>
       <div className="flex items-center">
-        <h3 className="font-semibold text-white mr-4">Structure of Dataset:</h3>
+        <h3 className="font-semibold text-white mr-4">Structure of dataset:</h3>
         <div className="flex items-center space-x-3">
           <Radio value="Foldered" checked={datasetStructure === "Foldered"} onChange={handleStructureChange} />
           <Radio value="CSV" checked={datasetStructure === "CSV"} onChange={handleStructureChange} />
@@ -60,7 +60,7 @@ const DatasetParams: React.FC = () => {
         onChange={(e) => handleInputChange("numClasses", e.target.value)}
       />
       <NumberInput
-        label="Batch Size:"
+        label="Batch size:"
         onChange={(e) => handleInputChange("batchSize", e.target.value)}
       />
     </div>
