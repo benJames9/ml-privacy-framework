@@ -30,7 +30,7 @@ export default function Home() {
   const [callbackInterval, setCallbackInterval] = useState<number>(0);
 
   const onClick = () => {
-    console.log("Clicked");
+    window.location.href = "/results";
   }
 
   const handleFileChange = (file: File | null) => {
