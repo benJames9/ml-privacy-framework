@@ -1,5 +1,24 @@
 {
   "name": "SEGP Container",
   "image": "warmtea137/privacy-ml-segp:latest",
-  "initializeCommand": "docker pull warmtea137/privacy-ml-segp:latest"
+  "initializeCommand": "docker pull warmtea137/privacy-ml-segp:latest",
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "njqdev.vscode-python-typehint",
+        "usernamehw.errorlens",
+        "njpwerner.autodocstring",
+        "KevinRose.vsc-python-indent",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-vscode.vscode-typescript-next",
+        "huizhou.githd"
+      ]
+    }
+  },
+  "postStartCommand": "cd backend && pip install -r requirements.txt"
 }

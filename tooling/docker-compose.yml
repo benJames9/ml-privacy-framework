@@ -1,12 +1,21 @@
 version: '3'
 services:
   frontend:
-    build: ../frontend
+    build:
+      context: ../frontend
+      dockerfile: ../frontend/Dockerfile.dev
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules/
     ports:
       - "3000:3000"
 
   backend:
-    build: ../backend
+    build:
+      context: ../backend
+      dockerfile: ../backend/Dockerfile.dev
+    volumes:
+      - ../backend:/app
     ports:
       - "8000:8000"
 
