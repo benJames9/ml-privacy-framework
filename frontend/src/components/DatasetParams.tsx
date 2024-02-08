@@ -5,10 +5,22 @@ import TextInput from "./TextInput";
 
 const DatasetParams: React.FC = () => {
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
+  const [csvPath, setCsvPath] = useState<string>("");
 
   const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log(e.target.value);
     setDatasetStructure(e.target.value as "Foldered" | "CSV");
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    switch (field) {
+      case "csvPath":
+        console.log(value);
+        setCsvPath(value);
+        break;
+      default:
+        break;
+    }
   }
 
   return (
@@ -21,7 +33,7 @@ const DatasetParams: React.FC = () => {
         </div>
       </div>
       {datasetStructure === "CSV" && (
-        <TextInput label="Path to CSV file:" />
+        <TextInput label="Path to CSV file:" onChange={(e) => handleInputChange("csvPath", e.target.value)} />
       )}
     </div>
   );
