@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Radio from "./Radio";
+import TextInput from "./TextInput";
 
 const DatasetParams: React.FC = () => {
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
@@ -19,6 +20,9 @@ const DatasetParams: React.FC = () => {
           <Radio value="CSV" checked={datasetStructure === "CSV"} onChange={handleStructureChange} />
         </div>
       </div>
+      {datasetStructure === "CSV" && (
+        <TextInput label="Path to CSV file:" />
+      )}
     </div>
   );
 }
