@@ -12,7 +12,7 @@ interface SearchParam {
     id: number
   }
 };
- 
+
 /**
  * Construct a valid websocket URL given an endpoint
  * @param {string} endpoint - The endpoint (starting with a "/")
