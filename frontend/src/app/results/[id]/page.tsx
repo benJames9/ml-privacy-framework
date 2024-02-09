@@ -1,10 +1,44 @@
+'use client'
+
 import HBar from "@/components/HBar";
 import Navbar from "@/components/Navbar";
 import ReconstructedImage from "@/components/ReconstructedImage";
 import Stats from "@/components/Stats";
 
-const ResultsPage: React.FC = () => {
+import React, { useEffect } from "react";
+
+interface SearchParam {
+  params: {
+    id: number
+  }
+};
+ 
+/**
+ * Construct a valid websocket URL given an endpoint
+ * @param {string} endpoint - The endpoint (starting with a "/")
+ * @returns {string} The resultant valid URL
+ */
+function construct_ws_url(endpoint: string) {
+  const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const wsHost = window.location.hostname;
+  return `${wsScheme}://${wsHost}${endpoint}`
+}
+
+const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const stats = { "MSE": 0.1164, "PSNR": 9.40, "SSIM": 5.184e-03 }; // Replace with backend response
+
+  useEffect(() => {
+    const ws = new WebSocket(construct_ws_url("/ws"));
+
+    ws.onopen = () => {
+      // Do stuff
+    };
+
+    // Cleanup function to close WebSocket connection
+    return () => {
+      ws.close();
+    };
+  }, [params.id]); // Dependency array to only re-run effect if params.id changes
 
   return (
     <main>
