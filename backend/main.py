@@ -14,7 +14,7 @@ app = FastAPI()
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
-  
+
 @app.post("/api/submit-attack")
 def submit_attack(attack_info: AttackInfo):
     # TODO: process appropriately, append to correct data structures
