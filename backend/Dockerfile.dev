@@ -4,6 +4,8 @@ FROM python:3.9
 # Workdir for output
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+
 # Copy requirements.txt to workdir
 COPY requirements.txt .
 

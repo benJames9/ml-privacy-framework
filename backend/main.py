@@ -34,7 +34,7 @@ async def websocket_endpoint(websocket: WebSocket):
         elif data_type == "test":
             await handle_test_message(websocket)
         else:
-            handle_unsupported_type(websocket, connection_id, data_type)
+            await handle_unsupported_type(websocket, connection_id, data_type)
             return
 
         # Success message
@@ -45,7 +45,6 @@ async def websocket_endpoint(websocket: WebSocket):
 # Handle a test message sent over websocket
 async def handle_test_message(websocket: WebSocket):
     message = await websocket.receive_text()
-    message = data.decode('utf-8')
     print("Received string message:", message)
     await websocket.send_text(f"Successfully received message: {message}")
 
