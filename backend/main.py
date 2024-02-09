@@ -2,18 +2,31 @@ from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketDisconnect
 import aiofiles
 import uuid
+from pydantic import BaseModel
+
+class AttackInfo(BaseModel):
+    name: str
+    # TODO: fill in with appropriate POST data fields
+
 
 app = FastAPI()
 
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
+  
+@app.post("/api/submit-attack")
+def submit_attack(attack_info: AttackInfo):
+    # TODO: process appropriately, append to correct data structures
+    req_token = uuid.uuid4()
+    # TODO: use the token somewhere
+    return str(req_token)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws/attack-progress/{req_token}")
+async def websocket_endpoint(websocket: WebSocket, req_token: str):
     # Accept connection
     await websocket.accept()
-    connection_id = str(uuid.uuid4())
+    connection_id = req_token
     filename = f"received_model_{connection_id}.pt"
     print(f"connection id is {connection_id}")
     print(f"filename is {filename}")

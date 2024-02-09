@@ -9,7 +9,7 @@ import React, { useEffect } from "react";
 
 interface SearchParam {
   params: {
-    id: number
+    req_token: number
   }
 };
 
@@ -27,18 +27,21 @@ function construct_ws_url(endpoint: string) {
 const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const stats = { "MSE": 0.1164, "PSNR": 9.40, "SSIM": 5.184e-03 }; // Replace with backend response
 
+  const { req_token } = params;
+
   useEffect(() => {
-    const ws = new WebSocket(construct_ws_url("/ws"));
+    const ws_url = construct_ws_url(`/ws/attack-progress/${req_token}`)
+    const ws = new WebSocket(ws_url);
 
     ws.onopen = () => {
-      // Do stuff
+      // TODO: receive updates from here and update state accordingly
     };
 
     // Cleanup function to close WebSocket connection
     return () => {
       ws.close();
     };
-  }, [params.id]); // Dependency array to only re-run effect if params.id changes
+  }, [params.req_token]); // Dependency array to only re-run effect if params.req_token changes
 
   return (
     <main>

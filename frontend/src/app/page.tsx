@@ -30,15 +30,23 @@ export default function Home() {
   // Logging parameters
   const [callbackInterval, setCallbackInterval] = useState<number>(0);
 
-  const onClick = () => {
-    window.location.href = "/results";
-    console.log(selectedZipFile);
+  const onClick = async () => {
+    // TODO: we pass all the form data to this endpoint, which responds with an ID
+    const res = await fetch("/api/submit-attack", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ "name": "example" })
+    })
+    const req_token = await res.json();
+    window.location.href = `/results/${req_token}`;
   }
 
   const handlePtFileChange = (file: File | null) => {
     setSelectedPtFile(file);
   }
-  
+
   const handleZipFileChange = (file: File | null) => {
     setSelectedZipFile(file);
   }
