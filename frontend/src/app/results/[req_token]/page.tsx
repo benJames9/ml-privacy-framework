@@ -37,6 +37,10 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       // TODO: receive updates from here and update state accordingly
     };
 
+    ws.onmessage = (e) => {
+      console.log(e.data)
+    }
+
     // Cleanup function to close WebSocket connection
     return () => {
       ws.close();
