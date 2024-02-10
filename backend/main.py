@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from PubSubWs import PubSubWs
 import asyncio
 
+
 class AttackInfo(BaseModel):
     name: str
     # TODO: fill in with appropriate POST data fields
@@ -15,35 +16,40 @@ class AttackInfo(BaseModel):
 app = FastAPI()
 psw = PubSubWs(app, "/ws/attack-progress")
 
+
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
 
+
 curr_token = None
+
 
 @app.post("/api/submit-attack")
 async def submit_attack(attack_info: AttackInfo):
     global curr_token
     # TODO: process appropriately, append to correct data structures
     req_token = str(uuid.uuid4())
-    
+
     # TODO: use the token somewhere
     await psw.register_route(req_token)
     curr_token = req_token
     return req_token
-  
+
+
 async def publish_repeatedly():
-  while True:
-    await asyncio.sleep(0.5)
-    if curr_token:
-      await psw.publish(curr_token, "hello everyone")
-  
+    while True:
+        await asyncio.sleep(0.5)
+        if curr_token:
+            await psw.publish(curr_token, "hello everyone")
+
+
 loop = asyncio.get_event_loop()
 try:
-  loop.run_until_complete(publish_repeatedly())
+    loop.run_until_complete(publish_repeatedly())
 except:
-  pass
-  
+    pass
+
 
 # @app.websocket("/ws/attack-progress/{req_token}")
 # async def websocket_endpoint(websocket: WebSocket, req_token: str):
