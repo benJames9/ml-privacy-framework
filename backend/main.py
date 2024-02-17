@@ -1,114 +1,89 @@
-from fastapi import FastAPI, WebSocket
-from starlette.websockets import WebSocketDisconnect
-import aiofiles
 import uuid
-from pydantic import BaseModel
+import tempfile
+import shutil
+from fastapi import FastAPI, File, Form, UploadFile
 
-from PubSubWs import PubSubWs
-import asyncio
+from common import AttackParameters
+from attack_worker import attack_worker
 
-
-class AttackInfo(BaseModel):
-    name: str
-    # TODO: fill in with appropriate POST data fields
-
+from BackgroundTasks import BackgroundTasks
 
 app = FastAPI()
-psw = PubSubWs(app, "/ws/attack-progress")
+program_state = BackgroundTasks()
 
+@app.on_event("startup")
+def startup_event():
+    program_state.setup(app, attack_worker)
+    program_state.start()
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    program_state.shutdown()
 
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
 
 
-curr_token = None
+# Save the uploaded file to a temporary file on the server
+# and return the path to the temporary file
+# This under the assumption that PyTorch will be able to load the file from the path
+# but cannot load it from the SpooledTemporaryFile (which underlies the UploadFile)
+# TODO: check if zip files are needed, or if we can just extract them and use the extracted files
+async def save_upload_file_to_temp(upload_file: UploadFile):
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    shutil.copyfileobj(upload_file.file, temp_file)
+    return temp_file.name
 
 
+# Since this is for receiving files, the content type should be multipart/form-data
+# This means that Swagger UI cannot generate a form for this endpoint, and
+# documentation will need to be written manually
+# This takes all the parameters necessary for initiating an attack,
+# and returns a request token which should be used for subscribing to a websocket endpoint
+#   - the endpoint will publish updates on the how the attack is going
 @app.post("/api/submit-attack")
-async def submit_attack(attack_info: AttackInfo):
-    global curr_token
-    # TODO: process appropriately, append to correct data structures
-    req_token = str(uuid.uuid4())
+async def submit_attack(
+    ptFile: UploadFile = File(None),
+    zipFile: UploadFile = File(None),
+    model: str = Form(...),
+    datasetStructure: str = Form(...),
+    csvPath: str = Form(None),
+    datasetSize: int = Form(...),
+    numClasses: int = Form(...),
+    batchSize: int = Form(...),
+    numRestarts: int = Form(...),
+    stepSize: int = Form(...),
+    maxIterations: int = Form(...),
+    callbackInterval: int = Form(...),
+):
+    request_token = str(uuid.uuid4())
 
-    # TODO: use the token somewhere
-    await psw.register_route(req_token)
-    curr_token = req_token
-    return req_token
+    # Register the route for the request token, so that the frontend can subscribe to it
 
+    attack_params = AttackParameters(
+        model,
+        datasetStructure,
+        csvPath,
+        datasetSize,
+        numClasses,
+        batchSize,
+        numRestarts,
+        stepSize,
+        maxIterations,
+        callbackInterval,
+    )
 
-async def publish_repeatedly():
-    while True:
-        await asyncio.sleep(0.5)
-        if curr_token:
-            await psw.publish(curr_token, "hello everyone")
+    if ptFile is not None:
+        ptTempFilePath = await save_upload_file_to_temp(ptFile)
+        attack_params.ptFilePath = ptTempFilePath
 
+    if zipFile is not None:
+        zipTempFilePath = await save_upload_file_to_temp(zipFile)
+        attack_params.zipFilePath = zipTempFilePath
 
-loop = asyncio.get_event_loop()
-try:
-    loop.run_until_complete(publish_repeatedly())
-except:
-    pass
+    program_state.worker_queues.put_task(request_token, attack_params)
+    await program_state._psw.register_route(request_token)
 
-
-# @app.websocket("/ws/attack-progress/{req_token}")
-# async def websocket_endpoint(websocket: WebSocket, req_token: str):
-#     # Accept connection
-#     await websocket.accept()
-#     connection_id = req_token
-#     filename = f"received_model_{connection_id}.pt"
-#     print(f"connection id is {connection_id}")
-#     print(f"filename is {filename}")
-
-#     # Handle messages
-#     try:
-#         message = await websocket.receive_text()
-#         header, data_type = message.split(':', 1)
-
-#         # Handle unexpected initial header
-#         if header != "dataType":
-#             await handle_unexpected_header(websocket, connection_id, header)
-#             return
-
-#         # Handle supported data types
-#         if data_type == "pt":
-#             await handle_pt_file(websocket)
-#         elif data_type == "test":
-#             await handle_test_message(websocket)
-#         else:
-#             await handle_unsupported_type(websocket, connection_id, data_type)
-#             return
-
-#         # Success message
-#         await websocket.send_text("File received successfully")
-#     except WebSocketDisconnect:
-#         await websocket.close()
-
-# # Handle a test message sent over websocket
-# async def handle_test_message(websocket: WebSocket):
-#     message = await websocket.receive_text()
-#     print("Received string message:", message)
-#     await websocket.send_text(f"Successfully received message: {message}")
-
-# # Handle a .pt file being sent by saving to machine
-# async def handle_pt_file(websocket: WebSocket):
-#     return
-
-# # Handle unexpected header error in initial message
-# async def handle_unexpected_header(websocket: WebSocket, connection_id, header):
-#     err = f"Unexpected message from conn {connection_id}: {header}"
-#     print(err)
-#     await websocket.send_text(err)
-#     await websocket.close()
-
-# # Handle unsupported data type in intial message
-# async def handle_unsupported_type(websocket: WebSocket, connection_id, data_type):
-#     err = f"Unexpected data type from conn {connection_id}: {data_type}"
-#     print(err)
-#     await websocket.send_text(err)
-#     await websocket.close()
-
-# # Save .pt file to server
-# async def save_pt_file(file_data, filename):
-#     async with aiofiles.open(filename, "wb") as f:
-#         await f.write(file_data)
+    return request_token
