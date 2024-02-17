@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket
+from starlette.websockets import WebSocketState
 
 from asyncio import Lock
 
@@ -12,7 +13,8 @@ class PubSubWs:
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             if not request_token in self._route_dict:
-                return 500
+                print("Attempted to connect to non existent route")
+                return 401
 
             await ws.accept()
 
@@ -24,7 +26,8 @@ class PubSubWs:
                     await ws.receive()  # just so we can monitor when it closes
             except:
                 # Handle the case where the websocket is closed or errored
-                await ws.close()
+                if ws.client_state != WebSocketState.DISCONNECTED:
+                    await ws.close()
 
                 async with self._dict_lock:
                     self._route_dict[request_token].remove(ws)
