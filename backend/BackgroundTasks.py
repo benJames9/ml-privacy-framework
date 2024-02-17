@@ -1,10 +1,9 @@
 import asyncio
 
-from multiprocessing import Queue as mpQueue, Process
+from multiprocessing import Process
 from asyncio import Queue as aioQueue, run_coroutine_threadsafe
 from threading import Thread
 from typing import Callable, NoReturn, Deque, Tuple
-from queue import Queue
 from collections import deque
 
 from PubSubWs import PubSubWs
@@ -64,7 +63,9 @@ class BackgroundTasks:
         while True:
             await asyncio.sleep(1)
             for i, (req_token, _) in enumerate(self._buffered_requests):
-                await self._psw.publish(req_token, str(i + 1))
+                await self._psw.publish_serialisable_data(
+                    req_token, {"position_in_queue": str(i + 1)}
+                )
 
     async def _put_responses_to_thread(self):
         while True:

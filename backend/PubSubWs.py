@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketState
-
 from asyncio import Lock
+import json
 
 
 class PubSubWs:
@@ -32,7 +32,10 @@ class PubSubWs:
                 async with self._dict_lock:
                     self._route_dict[request_token].remove(ws)
 
-    async def publish(self, request_token: str, data_str):
+    async def publish_serialisable_data(self, request_token: str, data):
+        await self.publish(request_token, json.dumps(data))
+
+    async def publish(self, request_token: str, data_str: str):
         if not request_token in self._route_dict:
             raise Exception("Cannot publish to non existent route")
 
