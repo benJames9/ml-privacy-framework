@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
-from multiprocessing import Queue as mpQueue
+from typing import Optional, Tuple, TypeVar, Generic
+from multiprocessing import Queue as mpQueue, Event as mpEvent
 
 
 @dataclass
@@ -19,25 +19,33 @@ class AttackParameters:
     zipFilePath: Optional[str] = None
 
 
-class WorkerQueues:
+T = TypeVar("T")
+
+
+class WorkerQueue(Generic[T]):
     RequestToken = str
     SentinelTuple = (None, None)
 
-    def __init__(self, task_queue: mpQueue, response_queue: mpQueue):
-        self.task_queue = task_queue
-        self.response_queue = response_queue
+    def __init__(self):
+        self._queue = mpQueue()
+        self._get_call_event = mpEvent()
 
-    def put_response(self, request_token: RequestToken, response: str):
-        self.response_queue.put((request_token, response))
+    def put(self, request_token: RequestToken, payload: T):
+        self._queue.put((request_token, payload))
 
-    def put_task(self, request_token: RequestToken, attack_params: AttackParameters):
-        self.task_queue.put((request_token, attack_params))
+    def get(self) -> Tuple[RequestToken, T]:
+        self._get_call_event.set()
+        return self._queue.get()
+      
+    def wait_for_get_event(self):
+        self._get_call_event.wait()
+        self._get_call_event.clear()
 
-    def get_response(self) -> Tuple[RequestToken, AttackParameters]:
-        return self.response_queue.get()
+    def flush(self):
+        self._queue.put(self.SentinelTuple)
 
-    def get_task(self) -> Tuple[RequestToken, AttackParameters]:
-        return self.task_queue.get()
 
-    def flush_response_queue(self):
-        self.response_queue.put(self.SentinelTuple)
+class WorkerCommunication:
+    def __init__(self):
+        self.task_channel = WorkerQueue[AttackParameters]()
+        self.response_channel = WorkerQueue[str]()
