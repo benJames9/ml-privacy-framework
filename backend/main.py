@@ -9,17 +9,19 @@ from attack_worker import attack_worker
 from BackgroundTasks import BackgroundTasks
 
 app = FastAPI()
-program_state = BackgroundTasks()
+background_task_manager = BackgroundTasks()
+
 
 @app.on_event("startup")
 def startup_event():
-    program_state.setup(app, attack_worker)
-    program_state.start()
+    background_task_manager.setup(app, attack_worker)
+    background_task_manager.start()
 
 
 @app.on_event("shutdown")
 def shutdown_event():
-    program_state.shutdown()
+    background_task_manager.shutdown()
+
 
 @app.get("/api")
 def read_root():
@@ -83,7 +85,7 @@ async def submit_attack(
         zipTempFilePath = await save_upload_file_to_temp(zipFile)
         attack_params.zipFilePath = zipTempFilePath
 
-    program_state.worker_queues.put_task(request_token, attack_params)
-    await program_state._psw.register_route(request_token)
+    background_task_manager.submit_task(request_token, attack_params)
+    await background_task_manager._psw.register_route(request_token)
 
     return request_token
