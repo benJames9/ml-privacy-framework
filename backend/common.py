@@ -36,7 +36,7 @@ class WorkerQueue(Generic[T]):
     def get(self) -> Tuple[RequestToken, T]:
         self._get_call_event.set()
         return self._queue.get()
-      
+
     def wait_for_get_event(self):
         self._get_call_event.wait()
         self._get_call_event.clear()
