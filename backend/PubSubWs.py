@@ -24,7 +24,7 @@ class PubSubWs:
             async with self._dict_lock:
                 self._route_dict[request_token].append(ws)
                 last_data = self._last_published_data[request_token]
-                
+
             # rebroadcast the last published data for any new comers
             if last_data != None:
                 await self.publish(request_token, last_data)
@@ -63,7 +63,7 @@ class PubSubWs:
 
         async with self._dict_lock:
             self._last_published_data[request_token] = data_str
-          
+
             for ws in self._route_dict[request_token]:
                 try:
                     await ws.send_text(data_str)
