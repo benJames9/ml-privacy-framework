@@ -40,6 +40,7 @@ class AttackProgress(BaseModel):
     max_batches: int = 0
     time_taken: float = 0
     statistics: AttackStatistics = AttackStatistics()
+    reconstructed_image: Optional[str] = None # base64 encoded image
 
 
 T = TypeVar("T")

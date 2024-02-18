@@ -26,6 +26,7 @@ interface AttackProgress {
   max_batches: number;
   time_taken: number;
   statistics: AttackStatistics;
+  reconstructed_image: string;
 }
 
 enum PageState {
@@ -33,6 +34,10 @@ enum PageState {
   LOADING_QUEUED,
   ATTACKING,
   FINAL_SCREEN
+}
+
+async function wait_ms(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -64,7 +69,8 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       MSE: 0,
       PSNR: 0,
       SSIM: 0
-    }
+    },
+    reconstructed_image: ""
   });
 
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
@@ -73,7 +79,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     const ws_url = construct_ws_url(`/ws/attack-progress/${request_token}`)
     const ws = new WebSocket(ws_url);
 
-    ws.onmessage = (e) => {
+    ws.onmessage = async (e) => {
       const data = JSON.parse(e.data)
       console.log(data)
       switch (data.message_type) {
@@ -84,12 +90,18 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           setQueuedCurrent(data.position);
           break;
         case "AttackProgress":
+          setQueuedCurrent(0);
+          // let them see the full queue progress bar for a bit
+          await wait_ms(500);
+
           setPageState(PageState.ATTACKING)
 
           delete data.message_type;
           setAttackProgress(data);
 
           if (data.current_iteration === data.max_iterations) {
+            // let them see the full attack progress bar for a bit
+            await wait_ms(500);
             setPageState(PageState.FINAL_SCREEN);
           }
           break;
@@ -113,7 +125,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       break;
     case PageState.LOADING_QUEUED:
       content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
-        <HorizontalBar min={0} max={queuedMax + 1} current={queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
+        <HorizontalBar min={0} max={Math.max(queuedMax + 1, 10)} current={Math.max(queuedMax + 1, 10) - queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
       </div>
       break;
     case PageState.ATTACKING:
@@ -134,8 +146,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           <Stats stats={attackProgress.statistics} />
           <HBar />
           <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
-          <ReconstructedImage image="/demo.jpg" />
-          {/* Replace with backend response*/}
+          <ReconstructedImage image={attackProgress.reconstructed_image} />
         </div>
       </div>
   }
