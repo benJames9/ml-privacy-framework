@@ -54,7 +54,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SSH_BACKEND_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
+        username: ${{ secrets.SSH_BACKEND_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         proxy_host: ${{ secrets.SHELL_SSH_HOST }}
         proxy_username: ${{ secrets.SHELL_SSH_USERNAME }}

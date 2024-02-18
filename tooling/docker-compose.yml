@@ -1,0 +1,30 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../frontend/Dockerfile.dev
+    volumes:
+      - ../frontend/:/app
+      - /app/node_modules/
+    ports:
+      - "3000:3000"
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../backend/Dockerfile.dev
+    volumes:
+      - ../backend/:/app
+    ports:
+      - "8000:8000"
+
+  nginx:
+    build:
+      context: ../nginx
+    volumes:
+      - type: bind
+        source: ../nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+    ports:
+      - "80:80"
