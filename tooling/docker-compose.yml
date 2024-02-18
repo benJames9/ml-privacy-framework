@@ -22,8 +22,9 @@ services:
   nginx:
     build:
       context: ../nginx
-      args:
-        BACKEND_VM_IP: backend
-        FRONTEND_VM_IP: frontend
+    volumes:
+      - type: bind
+        source: ../nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
     ports:
       - "80:80"

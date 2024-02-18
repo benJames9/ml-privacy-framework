@@ -11,9 +11,9 @@ import EvaluateButton from "@/components/EvaluateButton";
 
 export default function Home() {
   const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
-  const [selectedModel, setSelectedModel] = useState<string>("");
-  const [selectedPtFile, setSelectedPtFile] = useState<File | null>(null);
-  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
+  const [model, setSelectedModel] = useState<string>(models[0]);
+  const [ptFile, setSelectedPtFile] = useState<File | null>(null);
+  const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
   // Dataset parameters
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
@@ -30,15 +30,38 @@ export default function Home() {
   // Logging parameters
   const [callbackInterval, setCallbackInterval] = useState<number>(0);
 
-  const onClick = () => {
-    window.location.href = "/results";
-    console.log(selectedZipFile);
+  const onClick = async () => {
+    const formData = new FormData();
+
+    // Append files to formData
+    if (ptFile) formData.append("ptFile", ptFile);
+    if (zipFile) formData.append("zipFile", zipFile);
+
+    // Append text fields to formData
+    formData.append("model", model);
+    formData.append("datasetStructure", datasetStructure);
+    formData.append("csvPath", csvPath);
+    formData.append("datasetSize", datasetSize.toString());
+    formData.append("numClasses", numClasses.toString());
+    formData.append("batchSize", batchSize.toString());
+    formData.append("numRestarts", numRestarts.toString());
+    formData.append("stepSize", stepSize.toString());
+    formData.append("maxIterations", maxIterations.toString());
+    formData.append("callbackInterval", callbackInterval.toString());
+
+    const res = await fetch("/api/submit-attack", {
+      method: 'POST',
+      body: formData,
+    })
+
+    const req_token = await res.json();
+    window.location.href = `/results/${req_token}`;
   }
 
   const handlePtFileChange = (file: File | null) => {
     setSelectedPtFile(file);
   }
-  
+
   const handleZipFileChange = (file: File | null) => {
     setSelectedZipFile(file);
   }
@@ -102,8 +125,8 @@ export default function Home() {
             onFileChange={handlePtFileChange}
             nextElement="upload-zip-header"
           />
-          {selectedPtFile && (
-            <p className="mt-2 text-sm text-gray-400">{selectedPtFile.name}</p>
+          {ptFile && (
+            <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
           )}
         </div>
         <HBar />
@@ -115,8 +138,8 @@ export default function Home() {
             onFileChange={handleZipFileChange}
             nextElement="data-params-header"
           />
-          {selectedZipFile && (
-            <p className="mt-2 text-sm text-gray-400">{selectedZipFile.name}</p>
+          {zipFile && (
+            <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
           )}
         </div>
         <HBar />

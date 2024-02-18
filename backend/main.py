@@ -1,73 +1,91 @@
-from fastapi import FastAPI, WebSocket
-from starlette.websockets import WebSocketDisconnect
-import aiofiles
 import uuid
+import tempfile
+import shutil
+from fastapi import FastAPI, File, Form, UploadFile
+
+from common import AttackParameters
+from attack_worker import attack_worker
+
+from BackgroundTasks import BackgroundTasks
 
 app = FastAPI()
+background_task_manager = BackgroundTasks()
+
+
+@app.on_event("startup")
+def startup_event():
+    background_task_manager.setup(app, attack_worker)
+    background_task_manager.start()
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    background_task_manager.shutdown()
+
 
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    # Accept connection
-    await websocket.accept()
-    connection_id = str(uuid.uuid4())
-    filename = f"received_model_{connection_id}.pt"
-    print(f"connection id is {connection_id}")
-    print(f"filename is {filename}")
 
-    # Handle messages
-    try:
-        message = await websocket.receive_text()
-        header, data_type = message.split(':', 1)
+# Save the uploaded file to a temporary file on the server
+# and return the path to the temporary file
+# This under the assumption that PyTorch will be able to load the file from the path
+# but cannot load it from the SpooledTemporaryFile (which underlies the UploadFile)
+# TODO: check if zip files are needed, or if we can just extract them and use the extracted files
+async def save_upload_file_to_temp(upload_file: UploadFile):
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    shutil.copyfileobj(upload_file.file, temp_file)
+    return temp_file.name
 
-        # Handle unexpected initial header
-        if header != "dataType":
-            await handle_unexpected_header(websocket, connection_id, header)
-            return
 
-        # Handle supported data types
-        if data_type == "pt":
-            await handle_pt_file(websocket)
-        elif data_type == "test":
-            await handle_test_message(websocket)
-        else:
-            handle_unsupported_type(websocket, connection_id, data_type)
-            return
+# Since this is for receiving files, the content type should be multipart/form-data
+# This means that Swagger UI cannot generate a form for this endpoint, and
+# documentation will need to be written manually
+# This takes all the parameters necessary for initiating an attack,
+# and returns a request token which should be used for subscribing to a websocket endpoint
+#   - the endpoint will publish updates on the how the attack is going
+@app.post("/api/submit-attack")
+async def submit_attack(
+    ptFile: UploadFile = File(None),
+    zipFile: UploadFile = File(None),
+    model: str = Form(...),
+    datasetStructure: str = Form(...),
+    csvPath: str = Form(None),
+    datasetSize: int = Form(...),
+    numClasses: int = Form(...),
+    batchSize: int = Form(...),
+    numRestarts: int = Form(...),
+    stepSize: int = Form(...),
+    maxIterations: int = Form(...),
+    callbackInterval: int = Form(...),
+):
+    request_token = str(uuid.uuid4())
 
-        # Success message
-        await websocket.send_text("File received successfully")
-    except WebSocketDisconnect:
-        await websocket.close()
+    # Register the route for the request token, so that the frontend can subscribe to it
 
-# Handle a test message sent over websocket
-async def handle_test_message(websocket: WebSocket):
-    message = await websocket.receive_text()
-    message = data.decode('utf-8')
-    print("Received string message:", message)
-    await websocket.send_text(f"Successfully received message: {message}")
+    ptTempFilePath, zipTempFilePath = None, None
+    if ptFile is not None:
+        ptTempFilePath = await save_upload_file_to_temp(ptFile)
+    if zipFile is not None:
+        zipTempFilePath = await save_upload_file_to_temp(zipFile)
 
-# Handle a .pt file being sent by saving to machine
-async def handle_pt_file(websocket: WebSocket):
-    return
+    attack_params = AttackParameters(
+        model=model,
+        datasetStructure=datasetStructure,
+        csvPath=csvPath,
+        datasetSize=datasetSize,
+        numClasses=numClasses,
+        batchSize=batchSize,
+        numRestarts=numRestarts,
+        stepSize=stepSize,
+        maxIterations=maxIterations,
+        callbackInterval=callbackInterval,
+        ptFilePath=ptTempFilePath,
+        zipFilePath=zipTempFilePath,
+    )
 
-# Handle unexpected header error in initial message
-async def handle_unexpected_header(websocket: WebSocket, connection_id, header):
-    err = f"Unexpected message from conn {connection_id}: {header}"
-    print(err)
-    await websocket.send_text(err)
-    await websocket.close()
+    background_task_manager.submit_task(request_token, attack_params)
+    await background_task_manager._psw.register_route(request_token)
 
-# Handle unsupported data type in intial message
-async def handle_unsupported_type(websocket: WebSocket, connection_id, data_type):
-    err = f"Unexpected data type from conn {connection_id}: {data_type}"
-    print(err)
-    await websocket.send_text(err)
-    await websocket.close()
-
-# Save .pt file to server
-async def save_pt_file(file_data, filename):
-    async with aiofiles.open(filename, "wb") as f:
-        await f.write(file_data)
+    return request_token
