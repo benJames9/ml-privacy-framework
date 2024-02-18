@@ -19,6 +19,7 @@ class AttackParameters(BaseModel):
 
 
 class PositionInQueue(BaseModel):
+    message_type = "PositionInQueue"
     position: int
     total: int
 
@@ -30,6 +31,7 @@ class AttackStatistics(BaseModel):
 
 
 class AttackProgress(BaseModel):
+    message_type = "AttackProgress"
     current_iteration: int = 0
     max_iterations: int = 0
     current_restart: int = 0

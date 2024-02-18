@@ -1,12 +1,14 @@
 from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketState
 from asyncio import Lock
+from typing import Optional
 import json
 
 
 class PubSubWs:
     def __init__(self) -> None:
         self._route_dict: dict[str, list[WebSocket]] = dict()
+        self._last_published_data: dict[str, Optional[str]] = dict()
         self._dict_lock = Lock()
 
     def setup(self, app: FastAPI, base_route: str):
@@ -18,8 +20,14 @@ class PubSubWs:
 
             await ws.accept()
 
+            last_data = None
             async with self._dict_lock:
                 self._route_dict[request_token].append(ws)
+                last_data = self._last_published_data[request_token]
+                
+            # rebroadcast the last published data for any new comers
+            if last_data != None:
+                await self.publish(request_token, last_data)
 
             try:
                 while True:
@@ -54,6 +62,8 @@ class PubSubWs:
             raise Exception("Cannot publish to non existent route")
 
         async with self._dict_lock:
+            self._last_published_data[request_token] = data_str
+          
             for ws in self._route_dict[request_token]:
                 try:
                     await ws.send_text(data_str)
@@ -67,6 +77,7 @@ class PubSubWs:
 
         async with self._dict_lock:
             self._route_dict[request_token] = []
+            self._last_published_data[request_token] = None
 
     async def deregister_route(self, request_token: str):
         if not request_token in self._route_dict:
@@ -74,3 +85,4 @@ class PubSubWs:
 
         async with self._dict_lock:
             self._route_dict.pop(request_token)
+            self._last_published_data.pop(request_token)

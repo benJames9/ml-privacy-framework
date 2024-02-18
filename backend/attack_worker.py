@@ -1,5 +1,6 @@
-from common import WorkerCommunication, AttackProgress
+from common import WorkerCommunication, AttackProgress, AttackStatistics
 import time
+import random
 
 
 def attack_worker(queues: WorkerCommunication):
@@ -23,6 +24,7 @@ def attack_worker(queues: WorkerCommunication):
             )
 
         time.sleep(1)
+        stats = AttackStatistics(MSE=random.random(), SSIM=random.random(), PSNR=random.random())
         queues.response_channel.put(
-            request_token, AttackProgress(current_iteration=999, max_iterations=999)
+            request_token, AttackProgress(current_iteration=999, max_iterations=999, statistics=stats)
         )
