@@ -11,7 +11,8 @@ from common import AttackParameters, WorkerCommunication, PositionInQueue
 
 WorkerFunction = Callable[[WorkerCommunication], NoReturn]
 
-
+# Background task manager, responsible for managing the worker process 
+# and the communication between the worker process and the web server
 class BackgroundTasks:
     def __init__(self):
         self._process_is_dead = False
@@ -25,8 +26,10 @@ class BackgroundTasks:
         self._worker_queues = WorkerCommunication()
 
         self._psw = PubSubWs()
-
+    
+    # Setup relevant modules and processes
     def setup(self, app, worker_fn):
+        # Creates the websocket server with given base path 
         self._psw.setup(app, "/ws/attack-progress")
 
         self._worker_process = Process(target=worker_fn, args=(self._worker_queues,))
@@ -35,6 +38,7 @@ class BackgroundTasks:
             target=self._response_reader, args=(asyncio.get_event_loop(),)
         )
 
+    # Start the worker proces, the response reader and event loop tasks
     def start(self):
         self._response_reading_thread.start()
         self._worker_process.start()
@@ -43,25 +47,29 @@ class BackgroundTasks:
     def shutdown(self):
         self._worker_process.terminate()
 
-        # stop waiting on data to be received from the worker process
+        # Stop waiting on data to be received from the worker process
         self._process_is_dead = True
-        # if we don't flush the queue, the response reader will block indefinitely
+        # If we don't flush the queue, the response reader will block indefinitely
         self._worker_queues.response_channel.flush()
 
         self._worker_process.join()
         self._response_reading_thread.join()
 
+    # Submit a task to the worker process and set async events
     async def submit_task(self, request_token: str, attack_params: AttackParameters):
         async with self._buffered_requests_lock:
             self._buffered_requests.append((request_token, attack_params))
         self._buffered_request_added.set()
         self._num_buffered_requests_changed.set()
 
+    # Broadcast the position in the queue to all clients
     async def _broadcast_position_in_queue(self):
         while True:
+            # Trigger is when there is any change to request buffer
             await self._num_buffered_requests_changed.wait()
             self._num_buffered_requests_changed.clear()
 
+            # Publish the position in queue to all clients
             async with self._buffered_requests_lock:
                 num_jobs_in_queue = len(self._buffered_requests)
                 for i, (req_token, _) in enumerate(self._buffered_requests):
@@ -69,16 +77,17 @@ class BackgroundTasks:
                         req_token, PositionInQueue(position=i + 1, total=num_jobs_in_queue)
                     )
 
+    # Transfer requests from the buffer to the worker process
     async def _put_requests_to_thread(self):
         while True:
             await asyncio.to_thread(self._worker_queues.task_channel.wait_for_get_event)
-            # the worker process is requesting for a new task
+            # The worker process is requesting for a new task
 
-            # if there are no buffered requests, then wait until there is one
+            # If there are no buffered requests, then wait until there is one
             if len(self._buffered_requests) == 0:
                 await self._buffered_request_added.wait()
 
-            # the Event is set regardless of whether or not the queue is empty, so we need to clear it
+            # The Event is set regardless of whether or not the queue is empty, so we need to clear it
             self._buffered_request_added.clear()
             async with self._buffered_requests_lock:
                 request_token, payload_data = self._buffered_requests.popleft()
@@ -88,13 +97,15 @@ class BackgroundTasks:
                 self._worker_queues.task_channel.put, request_token, payload_data
             )
 
+    # Transfer worker responses to the main thread response queue
     def _response_reader(self, event_loop):
         while not self._process_is_dead:
             response = self._worker_queues.response_channel.get()
 
-            # safely push to asyncio queue on the main thread
+            # Safely push to asyncio queue on the main thread
             run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
 
+    # Publish responses from main thread to clients
     async def _get_response_from_thread(self):
         while True:
             request_token, response_data = await self._resp_aio_queue.get()
@@ -105,6 +116,7 @@ class BackgroundTasks:
 
             await self._psw.publish_serialisable_data(request_token, response_data)
 
+    # Add thread tasks to the main event loop
     def receive_data_from_process(self):
         loop = asyncio.get_event_loop()
         loop.create_task(self._get_response_from_thread())

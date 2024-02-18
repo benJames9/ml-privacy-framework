@@ -46,6 +46,7 @@ class AttackProgress(BaseModel):
 T = TypeVar("T")
 
 
+# Queue type for attack workers
 class WorkerQueue(Generic[T]):
     RequestToken = str
     SentinelTuple = (None, None)
@@ -69,6 +70,7 @@ class WorkerQueue(Generic[T]):
         self._queue.put(self.SentinelTuple)
 
 
+# Contains the task and response channels specific to a single worker
 class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()

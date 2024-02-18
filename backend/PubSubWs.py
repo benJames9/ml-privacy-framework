@@ -4,34 +4,38 @@ from asyncio import Lock
 from typing import Optional
 import json
 
-
+# Websocket server for publishing attack responses to clients
 class PubSubWs:
     def __init__(self) -> None:
         self._route_dict: dict[str, list[WebSocket]] = dict()
         self._last_published_data: dict[str, Optional[str]] = dict()
         self._dict_lock = Lock()
 
+    # Setup websocket to accept connections
     def setup(self, app: FastAPI, base_route: str):
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
+            # Clients should only connect to websocket after submitting attack
+            # so we should already have a route for the request token
             if not request_token in self._route_dict:
                 print("Attempted to connect to non existent route")
                 return 401
 
             await ws.accept()
 
+            # Fetch the last cached response
             last_data = None
             async with self._dict_lock:
                 self._route_dict[request_token].append(ws)
                 last_data = self._last_published_data[request_token]
 
-            # rebroadcast the last published data for any new comers
+            # Re-broadcast the last published data for any new comers
             if last_data != None:
                 await self.publish(request_token, last_data)
 
             try:
                 while True:
-                    await ws.receive()  # just so we can monitor when it closes
+                    await ws.receive()  # Just so we can monitor when it closes
             except Exception as e:
                 # Handle the case where the websocket is closed or errored
                 if ws.client_state != WebSocketState.DISCONNECTED:
@@ -40,9 +44,11 @@ class PubSubWs:
                 async with self._dict_lock:
                     self._route_dict[request_token].remove(ws)
 
+    # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
         str_data = ""
-
+        
+        # Extract string from data
         try:
             str_data = json.dumps(data)
         except:
@@ -57,13 +63,16 @@ class PubSubWs:
             raise Exception("Data is not serialisable")
         await self.publish(request_token, str_data)
 
+    # Publish serialised attack responses to clients
     async def publish(self, request_token: str, data_str: str):
         if not request_token in self._route_dict:
             raise Exception("Cannot publish to non existent route")
-
+        
+        # Cache the last published data
         async with self._dict_lock:
             self._last_published_data[request_token] = data_str
 
+        # Broadcast the data to all clients
             for ws in self._route_dict[request_token]:
                 try:
                     await ws.send_text(data_str)
@@ -71,6 +80,7 @@ class PubSubWs:
                     print(f"WebSocket may already dead: {e}")
                     pass
 
+    # Register new routes
     async def register_route(self, request_token: str):
         if request_token in self._route_dict:
             raise Exception("Route already registered")
@@ -79,6 +89,7 @@ class PubSubWs:
             self._route_dict[request_token] = []
             self._last_published_data[request_token] = None
 
+    # Deregister routes
     async def deregister_route(self, request_token: str):
         if not request_token in self._route_dict:
             raise Exception("Route doesn't exist")
