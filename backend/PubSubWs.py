@@ -1,8 +1,10 @@
 from fastapi import FastAPI, WebSocket
 from starlette.websockets import WebSocketState
-from asyncio import Lock
+from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
+
+WEBSOCKET_TIMEOUT_SECONDS = 600 # Timeout for websocket connections
 
 # Websocket server for publishing attack responses to clients
 class PubSubWs:
@@ -22,6 +24,9 @@ class PubSubWs:
                 return 401
 
             await ws.accept()
+            
+            # Set timeout for webscket connection
+            create_task(self._close_websocket_after_timeout(ws, request_token))
 
             # Fetch the last cached response
             last_data = None
@@ -37,11 +42,22 @@ class PubSubWs:
                 while True:
                     await ws.receive()  # Just so we can monitor when it closes
             except Exception as e:
-                # Handle the case where the websocket is closed or errored
-                if ws.client_state != WebSocketState.DISCONNECTED:
-                    await ws.close()
-
-                async with self._dict_lock:
+                await self._close_websocket(ws, request_token)
+                    
+    # Function to close the WebSocket after timeout
+    async def _close_websocket_after_timeout(self, ws: WebSocket, request_token: str):
+        await sleep(WEBSOCKET_TIMEOUT_SECONDS)
+        await self._close_websocket(ws, request_token)
+        
+    # Close websocket and handle routes
+    async def _close_websocket(self, ws: WebSocket, request_token: str):
+        if ws.client_state != WebSocketState.DISCONNECTED:
+            await ws.close()
+        
+        # Remove the websocket from routes
+        async with self._dict_lock:
+            if request_token in self._route_dict:
+                if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
 
     # Publish attack responses to clients
