@@ -1,13 +1,12 @@
-from dataclasses import dataclass
 from typing import Optional, Tuple, TypeVar, Generic
 from multiprocessing import Queue as mpQueue, Event as mpEvent
+from pydantic import BaseModel
 
 
-@dataclass
-class AttackParameters:
+class AttackParameters(BaseModel):
     model: str
     datasetStructure: str
-    csvPath: str
+    csvPath: Optional[str]
     datasetSize: int
     numClasses: int
     batchSize: int
@@ -15,8 +14,30 @@ class AttackParameters:
     stepSize: int
     maxIterations: int
     callbackInterval: int
-    ptFilePath: Optional[str] = None
-    zipFilePath: Optional[str] = None
+    ptFilePath: Optional[str]
+    zipFilePath: Optional[str]
+
+
+class PositionInQueue(BaseModel):
+    position: int
+    total: int
+
+
+class AttackStatistics(BaseModel):
+    MSE: float = 0
+    PSNR: float = 0
+    SSIM: float = 0
+
+
+class AttackProgress(BaseModel):
+    current_iteration: int = 0
+    max_iterations: int = 0
+    current_restart: int = 0
+    max_restarts: int = 0
+    current_batch: int = 0
+    max_batches: int = 0
+    time_taken: float = 0
+    statistics: AttackStatistics = AttackStatistics()
 
 
 T = TypeVar("T")
@@ -48,4 +69,4 @@ class WorkerQueue(Generic[T]):
 class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
-        self.response_channel = WorkerQueue[str]()
+        self.response_channel = WorkerQueue[AttackProgress]()

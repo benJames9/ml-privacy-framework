@@ -64,26 +64,26 @@ async def submit_attack(
 
     # Register the route for the request token, so that the frontend can subscribe to it
 
-    attack_params = AttackParameters(
-        model,
-        datasetStructure,
-        csvPath,
-        datasetSize,
-        numClasses,
-        batchSize,
-        numRestarts,
-        stepSize,
-        maxIterations,
-        callbackInterval,
-    )
-
+    ptTempFilePath, zipTempFilePath = None, None
     if ptFile is not None:
         ptTempFilePath = await save_upload_file_to_temp(ptFile)
-        attack_params.ptFilePath = ptTempFilePath
-
     if zipFile is not None:
         zipTempFilePath = await save_upload_file_to_temp(zipFile)
-        attack_params.zipFilePath = zipTempFilePath
+
+    attack_params = AttackParameters(
+        model=model,
+        datasetStructure=datasetStructure,
+        csvPath=csvPath,
+        datasetSize=datasetSize,
+        numClasses=numClasses,
+        batchSize=batchSize,
+        numRestarts=numRestarts,
+        stepSize=stepSize,
+        maxIterations=maxIterations,
+        callbackInterval=callbackInterval,
+        ptFilePath=ptTempFilePath,
+        zipFilePath=zipTempFilePath,
+    )
 
     background_task_manager.submit_task(request_token, attack_params)
     await background_task_manager._psw.register_route(request_token)

@@ -7,7 +7,7 @@ from typing import Callable, NoReturn, Deque, Tuple
 from collections import deque
 
 from PubSubWs import PubSubWs
-from common import AttackParameters, WorkerCommunication
+from common import AttackParameters, WorkerCommunication, PositionInQueue
 
 WorkerFunction = Callable[[WorkerCommunication], NoReturn]
 
@@ -62,9 +62,10 @@ class BackgroundTasks:
     async def _broadcast_position_in_queue(self):
         while True:
             await asyncio.sleep(1)
+            num_jobs_in_queue = len(self._buffered_requests)
             for i, (req_token, _) in enumerate(self._buffered_requests):
                 await self._psw.publish_serialisable_data(
-                    req_token, {"position_in_queue": str(i + 1)}
+                    req_token, PositionInQueue(position=i + 1, total=num_jobs_in_queue)
                 )
 
     async def _put_responses_to_thread(self):
@@ -100,7 +101,7 @@ class BackgroundTasks:
             if request_token is None:
                 break
 
-            await self._psw.publish(request_token, response_data)
+            await self._psw.publish_serialisable_data(request_token, response_data)
 
     def receive_data_from_process(self):
         loop = asyncio.get_event_loop()

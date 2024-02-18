@@ -24,7 +24,7 @@ class PubSubWs:
             try:
                 while True:
                     await ws.receive()  # just so we can monitor when it closes
-            except:
+            except Exception as e:
                 # Handle the case where the websocket is closed or errored
                 if ws.client_state != WebSocketState.DISCONNECTED:
                     await ws.close()
@@ -33,7 +33,21 @@ class PubSubWs:
                     self._route_dict[request_token].remove(ws)
 
     async def publish_serialisable_data(self, request_token: str, data):
-        await self.publish(request_token, json.dumps(data))
+        str_data = ""
+
+        try:
+            str_data = json.dumps(data)
+        except:
+            pass
+
+        try:
+            str_data = data.json()
+        except:
+            pass
+
+        if str_data == "":
+            raise Exception("Data is not serialisable")
+        await self.publish(request_token, str_data)
 
     async def publish(self, request_token: str, data_str: str):
         if not request_token in self._route_dict:
@@ -43,8 +57,8 @@ class PubSubWs:
             for ws in self._route_dict[request_token]:
                 try:
                     await ws.send_text(data_str)
-                except:
-                    print("WebSocket already dead")
+                except Exception as e:
+                    print(f"WebSocket may already dead: {e}")
                     pass
 
     async def register_route(self, request_token: str):

@@ -1,4 +1,4 @@
-from common import WorkerCommunication
+from common import WorkerCommunication, AttackProgress
 import time
 
 
@@ -18,7 +18,11 @@ def attack_worker(queues: WorkerCommunication):
         for i in range(10):
             time.sleep(1)
             print(f"doing work {i}")
-            queues.response_channel.put(request_token, f"working on subtask {i}")
+            queues.response_channel.put(
+                request_token, AttackProgress(current_iteration=i, max_iterations=10)
+            )
 
         time.sleep(1)
-        queues.response_channel.put(request_token, "done - we have finished the task")
+        queues.response_channel.put(
+            request_token, AttackProgress(current_iteration=999, max_iterations=999)
+        )
