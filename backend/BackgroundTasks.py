@@ -1,7 +1,7 @@
 import asyncio
 
 from multiprocessing import Process
-from asyncio import Queue as aioQueue, run_coroutine_threadsafe
+from asyncio import Queue as aioQueue, run_coroutine_threadsafe, Event as aioEvent
 from threading import Thread
 from typing import Callable, NoReturn, Deque, Tuple
 from collections import deque
@@ -16,11 +16,9 @@ class BackgroundTasks:
     def __init__(self):
         self._process_is_dead = False
 
-        self._req_aio_queue: aioQueue = aioQueue()
+        self._buffered_request_added = aioEvent()
         self._buffered_requests: Deque[Tuple[str, AttackParameters]] = deque()
-        self._should_buffer_requests = (
-            True  # always buffer, until the worker process requests for a task
-        )
+        self._num_buffered_requests_changed = aioEvent()
 
         self._resp_aio_queue: aioQueue = aioQueue()
         self._worker_queues = WorkerCommunication()
@@ -53,34 +51,34 @@ class BackgroundTasks:
         self._response_reading_thread.join()
 
     def submit_task(self, request_token: str, attack_params: AttackParameters):
-        if not self._should_buffer_requests:
-            self._req_aio_queue.put_nowait((request_token, attack_params))
-            self._should_buffer_requests = True  # set the flag to buffer requests again
-        else:
-            self._buffered_requests.append((request_token, attack_params))
+        self._buffered_requests.append((request_token, attack_params))
+        self._buffered_request_added.set()
+        self._num_buffered_requests_changed.set()
 
     async def _broadcast_position_in_queue(self):
         while True:
-            await asyncio.sleep(1)
+            await self._num_buffered_requests_changed.wait()
+            self._num_buffered_requests_changed.clear()
+
             num_jobs_in_queue = len(self._buffered_requests)
             for i, (req_token, _) in enumerate(self._buffered_requests):
                 await self._psw.publish_serialisable_data(
                     req_token, PositionInQueue(position=i + 1, total=num_jobs_in_queue)
                 )
 
-    async def _put_responses_to_thread(self):
+    async def _put_requests_to_thread(self):
         while True:
             await asyncio.to_thread(self._worker_queues.task_channel.wait_for_get_event)
             # the worker process is requesting for a new task
 
-            # so check the buffer for any tasks
-            request_token, payload_data = None, None
-            if len(self._buffered_requests) != 0:
-                request_token, payload_data = self._buffered_requests.popleft()
-            else:
-                # if there are no tasks in the buffer, then we set a flag and wait for a new task to be submitted
-                self._should_buffer_requests = False
-                request_token, payload_data = await self._req_aio_queue.get()
+            # if there are no buffered requests, then wait until there is one
+            if len(self._buffered_requests) == 0:
+                await self._buffered_request_added.wait()
+
+            # the Event is set regardless of whether or not the queue is empty, so we need to clear it
+            self._buffered_request_added.clear()
+            request_token, payload_data = self._buffered_requests.popleft()
+            self._num_buffered_requests_changed.set()
 
             await asyncio.to_thread(
                 self._worker_queues.task_channel.put, request_token, payload_data
@@ -107,4 +105,4 @@ class BackgroundTasks:
         loop = asyncio.get_event_loop()
         loop.create_task(self._get_response_from_thread())
         loop.create_task(self._broadcast_position_in_queue())
-        loop.create_task(self._put_responses_to_thread())
+        loop.create_task(self._put_requests_to_thread())
