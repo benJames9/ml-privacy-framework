@@ -91,10 +91,11 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           break;
         case "AttackProgress":
           setQueuedCurrent(0);
-          // let them see the full queue progress bar for a bit
-          await wait_ms(500);
-
-          setPageState(PageState.ATTACKING)
+          if (data.current_iteration !== data.max_iterations) {
+            // let them see the full queue progress bar for a bit
+            await wait_ms(500);
+            setPageState(PageState.ATTACKING)
+          }
 
           delete data.message_type;
           setAttackProgress(data);
