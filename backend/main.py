@@ -85,7 +85,7 @@ async def submit_attack(
         zipFilePath=zipTempFilePath,
     )
 
-    background_task_manager.submit_task(request_token, attack_params)
+    await background_task_manager.submit_task(request_token, attack_params)
     await background_task_manager._psw.register_route(request_token)
 
     return request_token
