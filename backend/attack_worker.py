@@ -1,10 +1,11 @@
 import base64
 from common import WorkerCommunication, AttackProgress, AttackStatistics
+from multiprocessing import Event as mpEvent
 import time
 import random
 import GPUtil
 
-def attack_worker(queues: WorkerCommunication):
+def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
     """
     This shows how the worker process should be structured.
     The actual worker should receive the data from the input_queue,
@@ -17,15 +18,24 @@ def attack_worker(queues: WorkerCommunication):
         print(data)
         
         limit_gpu_percentage(data.budget)
-
+        restart = False
+        
         time.sleep(1)
         for i in range(10):
+            if (cancel.is_set()):
+                cancel.clear()
+                restart = True
+                break
+            
             time.sleep(1)
             print(f"doing work {i}")
             queues.response_channel.put(
                 request_token, AttackProgress(current_iteration=i, max_iterations=10)
             )
-
+        
+        if restart: 
+            continue
+        
         time.sleep(1)
         stats = AttackStatistics(MSE=random.random(), SSIM=random.random(), PSNR=random.random())
 

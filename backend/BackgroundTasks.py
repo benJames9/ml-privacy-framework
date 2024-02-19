@@ -1,6 +1,6 @@
 import asyncio
 
-from multiprocessing import Process
+from multiprocessing import Process, Event as mpEvent
 from asyncio import Queue as aioQueue, run_coroutine_threadsafe, Event as aioEvent, Lock as aioLock
 from threading import Thread
 from typing import Callable, NoReturn, Deque, Tuple
@@ -24,6 +24,7 @@ class BackgroundTasks:
 
         self._resp_aio_queue: aioQueue = aioQueue()
         self._worker_queues = WorkerCommunication()
+        self._cancel_current = mpEvent()
 
         self._psw = PubSubWs()
     
@@ -32,7 +33,7 @@ class BackgroundTasks:
         # Creates the websocket server with given base path 
         self._psw.setup(app, "/ws/attack-progress")
 
-        self._worker_process = Process(target=worker_fn, args=(self._worker_queues,))
+        self._worker_process = Process(target=worker_fn, args=(self._worker_queues, self._cancel_current))
 
         self._response_reading_thread = Thread(
             target=self._response_reader, args=(asyncio.get_event_loop(),)
@@ -122,3 +123,14 @@ class BackgroundTasks:
         loop.create_task(self._get_response_from_thread())
         loop.create_task(self._broadcast_position_in_queue())
         loop.create_task(self._put_requests_to_thread())
+    
+    async def cancel_task(self, attack_token: str): 
+        async with self._buffered_requests_lock:
+            if (attack_token, _) in _buffered_requests:
+                _buffered_requests.remove((attack_token, _))
+                self._num_buffered_requests_changed.set()
+            else:
+                self._cancel_current.set()
+        
+        self._psw.deregister_route(attack_token)
+            
