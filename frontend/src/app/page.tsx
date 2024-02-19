@@ -26,6 +26,7 @@ export default function Home() {
   const [numRestarts, setNumRestarts] = useState<number>(0);
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
+  const [budget, setBudget] = useState<number>(0);
 
   // Logging parameters
   const [callbackInterval, setCallbackInterval] = useState<number>(0);
@@ -48,6 +49,7 @@ export default function Home() {
     formData.append("stepSize", stepSize.toString());
     formData.append("maxIterations", maxIterations.toString());
     formData.append("callbackInterval", callbackInterval.toString());
+    formData.append("budget", budget.toString());
 
     const res = await fetch("/api/submit-attack", {
       method: 'POST',
@@ -100,6 +102,9 @@ export default function Home() {
         break;
       case "maxIterations":
         setMaxIterations(parseInt(value));
+        break;
+      case "budget": 
+        setBudget(parseInt(value));
         break;
       default:
         break;

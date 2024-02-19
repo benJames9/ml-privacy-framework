@@ -14,6 +14,7 @@ class AttackParameters(BaseModel):
     stepSize: int
     maxIterations: int
     callbackInterval: int
+    budget: int
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
 

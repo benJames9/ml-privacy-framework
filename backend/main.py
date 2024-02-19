@@ -59,6 +59,7 @@ async def submit_attack(
     stepSize: int = Form(...),
     maxIterations: int = Form(...),
     callbackInterval: int = Form(...),
+    budget: int = Form(...),
 ):
     request_token = str(uuid.uuid4())
 
@@ -83,6 +84,7 @@ async def submit_attack(
         callbackInterval=callbackInterval,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
+        budget=budget,
     )
 
     await background_task_manager.submit_task(request_token, attack_params)
