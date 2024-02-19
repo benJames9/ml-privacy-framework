@@ -92,6 +92,7 @@ async def submit_attack(
 
     return request_token
 
-@app.post('/cancel')
-async def cancel_attack(attack_token: str):
-    await background_task_manager.cancel_task(attack_token)
+# Cancel an attack associated with token
+@app.post(f"/api/cancel/{{request_token}}")
+async def cancel_attack(request_token: str):
+    await background_task_manager.cancel_task(request_token)

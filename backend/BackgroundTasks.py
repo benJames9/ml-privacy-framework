@@ -123,14 +123,23 @@ class BackgroundTasks:
         loop.create_task(self._get_response_from_thread())
         loop.create_task(self._broadcast_position_in_queue())
         loop.create_task(self._put_requests_to_thread())
-    
-    async def cancel_task(self, attack_token: str): 
+
+    # Cancel a task either in buffer or currently being processed
+    async def cancel_task(self, request_token: str): 
+        in_buffer = False
         async with self._buffered_requests_lock:
-            if (attack_token, _) in _buffered_requests:
-                _buffered_requests.remove((attack_token, _))
-                self._num_buffered_requests_changed.set()
-            else:
-                self._cancel_current.set()
+            for (buffered_request_token, _) in self._buffered_requests:
+                if buffered_request_token == request_token:
+                    self._buffered_requests.remove((request_token, _))
+                    in_buffer = True
+                    break
         
-        self._psw.deregister_route(attack_token)
+        # Either signal worker to cancel current task or remove from buffer
+        if in_buffer:
+            self._num_buffered_requests_changed.set()
+        else:
+            self._cancel_current.set()
+        
+        # Never got result so deregister route
+        self._psw.deregister_route(request_token)
             

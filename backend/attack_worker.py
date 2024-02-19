@@ -14,6 +14,7 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
 
     while True:
         print("waiting for data...")
+        cancel.clear()
         request_token, data = queues.task_channel.get()
         print(data)
         
@@ -22,6 +23,7 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
         
         time.sleep(1)
         for i in range(10):
+            # Cancel the current job
             if (cancel.is_set()):
                 cancel.clear()
                 restart = True
@@ -33,6 +35,7 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
                 request_token, AttackProgress(current_iteration=i, max_iterations=10)
             )
         
+        # Continue on to next job
         if restart: 
             continue
         
