@@ -1,4 +1,5 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Request
+from fastapi.responses import JSONResponse
 from starlette.websockets import WebSocketState
 from asyncio import Lock, create_task, sleep
 from typing import Optional
@@ -14,15 +15,13 @@ class PubSubWs:
         self._dict_lock = Lock()
 
     # Setup websocket to accept connections
-    def setup(self, app: FastAPI, base_route: str):
+    def setup(self, app: FastAPI, base_route: str):        
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
-            # Clients should only connect to websocket after submitting attack
-            # so we should already have a route for the request token
-            if not request_token in self._route_dict:
-                print("Attempted to connect to non existent route")
-                return 401
-
+            if request_token not in self._route_dict:
+                self._close_websocket(ws, request_token, "Non-existent route")
+                return
+            
             await ws.accept()
             
             # Set timeout for webscket connection
@@ -42,30 +41,26 @@ class PubSubWs:
                 while True:
                     await ws.receive()  # Just so we can monitor when it closes
             except Exception as e:
-                error_message = self._generate_error(f"WebSocket error: {e}")
-                await ws.send_text(json.dumps(error_message))
-                await self._close_websocket(ws, request_token)
+                await self._close_websocket(ws, request_token, str(e))
                     
     # Function to close the WebSocket after timeout
     async def _close_websocket_after_timeout(self, ws: WebSocket, request_token: str):
         await sleep(WEBSOCKET_TIMEOUT_SECONDS)
         
-        # Send timeout message to client
-        if ws.client_state != WebSocketState.DISCONNECTED:
-            timeout_message = self._generate_error("WebSocket connection timed out")
-            await ws.send_text(json.dumps(timeout_message))
-        
         # Close the websocket
-        await self._close_websocket(ws, request_token)
+        await self._close_websocket(ws, request_token, "Timeout")
         
     # Close websocket and handle routes
-    async def _close_websocket(self, ws: WebSocket, request_token: str):
-        # Close the websocket
+    async def _close_websocket(self, ws: WebSocket, request_token: str, error: str):
+
+        # Wrap lock around closure so closing and removing is atomic
         async with self._dict_lock:
             if ws.client_state != WebSocketState.DISCONNECTED:
+                error_message = self._generate_error(f"WebSocket error: {error}")
+                await ws.send_text(json.dumps(error_message))
                 await ws.close()
             
-            # Remove from routes (stay locked so closing and removing is atomic)
+            # Remove from routes dict
             if request_token in self._route_dict:
                 if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
