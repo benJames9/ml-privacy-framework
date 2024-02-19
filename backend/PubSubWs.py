@@ -51,19 +51,21 @@ class PubSubWs:
         await sleep(WEBSOCKET_TIMEOUT_SECONDS)
         
         # Send timeout message to client
-        timeout_message = self._generate_error("WebSocket connection timed out")
-        await ws.send_text(json.dumps(timeout_message))
+        if ws.client_state != WebSocketState.DISCONNECTED:
+            timeout_message = self._generate_error("WebSocket connection timed out")
+            await ws.send_text(json.dumps(timeout_message))
         
         # Close the websocket
         await self._close_websocket(ws, request_token)
         
     # Close websocket and handle routes
     async def _close_websocket(self, ws: WebSocket, request_token: str):
-        if ws.client_state != WebSocketState.DISCONNECTED:
-            await ws.close()
-        
-        # Remove the websocket from routes
+        # Close the websocket
         async with self._dict_lock:
+            if ws.client_state != WebSocketState.DISCONNECTED:
+                await ws.close()
+            
+            # Remove from routes (stay locked so closing and removing is atomic)
             if request_token in self._route_dict:
                 if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
@@ -108,7 +110,7 @@ class PubSubWs:
                 try:
                     await ws.send_text(data_str)
                 except Exception as e:
-                    print(f"WebSocket may already dead: {e}")
+                    # print(f"WebSocket may already dead: {e}")
                     pass
 
     # Register new routes
