@@ -48,6 +48,9 @@ const onCancel = async (requestToken: number) => {
 
   if (res.ok) {
     window.location.href = "/";
+
+    // Modify the browser history to prevent navigation back to this page
+    window.history.replaceState(null, '', '/');
   } else {
     console.error('Failed to cancel attack');
   }
