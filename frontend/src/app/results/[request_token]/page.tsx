@@ -85,7 +85,6 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       switch (data.message_type) {
         case "PositionInQueue":
           setPageState(PageState.LOADING_QUEUED)
-
           setQueuednMax(data.total);
           setQueuedCurrent(data.position);
           break;
@@ -104,6 +103,11 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
             // let them see the full attack progress bar for a bit
             await wait_ms(500);
             setPageState(PageState.FINAL_SCREEN);
+          }
+          break;
+        case "error":
+          if (pageState !== PageState.FINAL_SCREEN) {
+            window.location.href = `/server-disconnect?error=${encodeURIComponent(data.error)}`;
           }
           break;
         default:

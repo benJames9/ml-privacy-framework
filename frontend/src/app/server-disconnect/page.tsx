@@ -1,14 +1,19 @@
 "use client";
 
+import { useSearchParams } from 'next/navigation'
+
 const onClick = async () => {
   window.location.href = `/`;
 }
 
 const ConnectionClosedPage = () => {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
       <h1 className="text-3xl font-bold text-white-600 mb-4">
-        WebSocket Timeout
+        {error}
       </h1>
       <div className="flex justify-center">
         <button
