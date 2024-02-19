@@ -2,7 +2,7 @@ import base64
 from common import WorkerCommunication, AttackProgress, AttackStatistics
 import time
 import random
-
+import GPUtil
 
 def attack_worker(queues: WorkerCommunication):
     """
@@ -15,6 +15,8 @@ def attack_worker(queues: WorkerCommunication):
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
+        
+        limit_gpu_percentage(data.budget)
 
         time.sleep(1)
         for i in range(10):
@@ -35,3 +37,12 @@ def attack_worker(queues: WorkerCommunication):
         queues.response_channel.put(
             request_token, AttackProgress(current_iteration=999, max_iterations=999, statistics=stats, reconstructed_image=base64_encoded_data)
         )
+
+# Limit GPU access with GPUtil
+def limit_gpu_percentage(percentage):
+    gpus = GPUtil.getGPUs()
+    if gpus:
+        gpu = gpus[0]  # Assuming you have only one GPU
+        gpu.set_power_limit(percentage=percentage)
+    else:
+        print("No GPU found.")
