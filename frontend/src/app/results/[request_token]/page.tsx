@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import HorizontalBar from "@/components/ProgressBar";
 
 import { AttackStatistics } from "@/components/AttackStatistics";
+import CancelButton from "@/components/CancelButton";
 
 interface SearchParam {
   params: {
@@ -38,6 +39,18 @@ enum PageState {
 
 async function wait_ms(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const onCancel = async (requestToken: number) => {
+  const res = await fetch(`/api/cancel/${requestToken}`, {
+    method: 'POST',
+  });
+
+  if (res.ok) {
+    window.location.href = "/";
+  } else {
+    console.error('Failed to cancel attack');
+  }
 }
 
 /**
@@ -131,6 +144,9 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     case PageState.LOADING_QUEUED:
       content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
         <HorizontalBar min={0} max={Math.max(queuedMax + 1, 10)} current={Math.max(queuedMax + 1, 10) - queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
+        />
       </div>
       break;
     case PageState.ATTACKING:
@@ -141,6 +157,9 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           max={attackProgress.max_iterations}
           text="Attacking..."
           color="bg-green-600"
+        />
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
         />
       </div>
       break;
