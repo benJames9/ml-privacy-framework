@@ -42,11 +42,19 @@ class PubSubWs:
                 while True:
                     await ws.receive()  # Just so we can monitor when it closes
             except Exception as e:
+                error_message = self._generate_error(f"WebSocket error: {e}")
+                await ws.send_text(json.dumps(error_message))
                 await self._close_websocket(ws, request_token)
                     
     # Function to close the WebSocket after timeout
     async def _close_websocket_after_timeout(self, ws: WebSocket, request_token: str):
         await sleep(WEBSOCKET_TIMEOUT_SECONDS)
+        
+        # Send timeout message to client
+        timeout_message = self._generate_error("WebSocket connection timed out")
+        await ws.send_text(json.dumps(timeout_message))
+        
+        # Close the websocket
         await self._close_websocket(ws, request_token)
         
     # Close websocket and handle routes
@@ -59,6 +67,13 @@ class PubSubWs:
             if request_token in self._route_dict:
                 if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
+    
+    # Generate JSON error message to send to client       
+    def _generate_error(self, error: str):
+        return {
+            "message_type": "error",
+            "error": error
+        }
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
