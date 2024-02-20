@@ -50,6 +50,12 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
         onChange2={(e) => { handleDataParamsChange("mean2", e.target.value) }}
         onChange3={(e) => { handleDataParamsChange("mean3", e.target.value) }}
       />
+      <ThreeNumberInput
+        label="Standard deviation:"
+        onChange1={(e) => { handleDataParamsChange("std1", e.target.value) }}
+        onChange2={(e) => { handleDataParamsChange("std2", e.target.value) }}
+        onChange3={(e) => { handleDataParamsChange("std3", e.target.value) }}
+      />
     </div>
   );
 }
