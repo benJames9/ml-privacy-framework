@@ -44,15 +44,15 @@ def limit_gpu_percentage(percentage):
 # if __name__ == "__main__":
 #     pars = AttackParameters(
 #         model='resnet18',
-#         datasetStructure='csv',
+#         datasetStructure='test',
 #         csvPath='nothing',
-#         datasetSize=1212,
-#         numClasses=1212,
-#         batchSize=1212,
-#         numRestarts=1212,
-#         stepSize=1212,
-#         maxIterations=1212,
-#         callbackInterval=1212,
+#         datasetSize=50000,
+#         numClasses=10,
+#         batchSize=1,
+#         numRestarts=1,
+#         stepSize=0.1,
+#         maxIterations=10,
+#         callbackInterval=1,
 #         ptFilePath='nothing',
 #         zipFilePath='nothing',
 #     )
