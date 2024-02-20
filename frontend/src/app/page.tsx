@@ -22,6 +22,7 @@ export default function Home() {
   const [numClasses, setNumClasses] = useState<number>(0);
   const [batchSize, setBatchSize] = useState<number>(0);
   const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
+  const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
 
   // Attack parameters
   const [numRestarts, setNumRestarts] = useState<number>(0);
@@ -95,6 +96,15 @@ export default function Home() {
         break;
       case "imageShape3":
         setImageShape([imageShape[0], imageShape[1], parseInt(value)]);
+        break;
+      case "mean1":
+        setMean([parseFloat(value), mean[1], mean[2]]);
+        break;
+      case "mean2":
+        setMean([mean[0], parseFloat(value), mean[2]]);
+        break;
+      case "mean3":
+        setMean([mean[0], mean[1], parseFloat(value)]);
         break;
       default:
         break;
