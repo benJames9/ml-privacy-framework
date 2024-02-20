@@ -3,7 +3,7 @@ from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
 
 class PositionInQueue(BaseModel):
-    message_type = "PositionInQueue"
+    message_type: str = "PositionInQueue"
     position: int
     total: int
 
