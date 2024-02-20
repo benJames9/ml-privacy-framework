@@ -21,6 +21,7 @@ export default function Home() {
   const [datasetSize, setDatasetSize] = useState<number>(0);
   const [numClasses, setNumClasses] = useState<number>(0);
   const [batchSize, setBatchSize] = useState<number>(0);
+  const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
 
   // Attack parameters
   const [numRestarts, setNumRestarts] = useState<number>(0);
@@ -73,7 +74,6 @@ export default function Home() {
   }
 
   const handleDataParamsChange = (field: string, value: string) => {
-    // TODO: add validation
     switch (field) {
       case "csvPath":
         setCsvPath(value);
@@ -86,6 +86,15 @@ export default function Home() {
         break;
       case "batchSize":
         setBatchSize(parseInt(value));
+        break;
+      case "imageShape1":
+        setImageShape([parseInt(value), imageShape[1], imageShape[2]]);
+        break;
+      case "imageShape2":
+        setImageShape([imageShape[0], parseInt(value), imageShape[2]]);
+        break;
+      case "imageShape3":
+        setImageShape([imageShape[0], imageShape[1], parseInt(value)]);
         break;
       default:
         break;
@@ -103,7 +112,7 @@ export default function Home() {
       case "maxIterations":
         setMaxIterations(parseInt(value));
         break;
-      case "budget": 
+      case "budget":
         setBudget(parseInt(value));
         break;
       default:

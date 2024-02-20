@@ -38,9 +38,11 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
         label="Batch size:"
         onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
       />
-      <ThreeNumberInput 
+      <ThreeNumberInput
         label="Image shape:"
-        onChange={() => { }}
+        onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
+        onChange2={(e) => { handleDataParamsChange("imageShape2", e.target.value) }}
+        onChange3={(e) => { handleDataParamsChange("imageShape3", e.target.value) }}
       />
     </div>
   );
