@@ -2,6 +2,7 @@
 import Radio from "./Radio";
 import TextInput from "./TextInput";
 import NumberInput from "./NumberInput";
+import ThreeNumberInput from "./ThreeNumberInput";
 
 interface DatasetParamsProps {
   datasetStructure: "Foldered" | "CSV";
@@ -36,6 +37,24 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
       <NumberInput
         label="Batch size:"
         onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
+      />
+      <ThreeNumberInput
+        label="Image shape:"
+        onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
+        onChange2={(e) => { handleDataParamsChange("imageShape2", e.target.value) }}
+        onChange3={(e) => { handleDataParamsChange("imageShape3", e.target.value) }}
+      />
+      <ThreeNumberInput
+        label="Mean:"
+        onChange1={(e) => { handleDataParamsChange("mean1", e.target.value) }}
+        onChange2={(e) => { handleDataParamsChange("mean2", e.target.value) }}
+        onChange3={(e) => { handleDataParamsChange("mean3", e.target.value) }}
+      />
+      <ThreeNumberInput
+        label="Standard deviation:"
+        onChange1={(e) => { handleDataParamsChange("std1", e.target.value) }}
+        onChange2={(e) => { handleDataParamsChange("std2", e.target.value) }}
+        onChange3={(e) => { handleDataParamsChange("std3", e.target.value) }}
       />
     </div>
   );

@@ -21,6 +21,9 @@ export default function Home() {
   const [datasetSize, setDatasetSize] = useState<number>(0);
   const [numClasses, setNumClasses] = useState<number>(0);
   const [batchSize, setBatchSize] = useState<number>(0);
+  const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
+  const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
+  const [std, setStd] = useState<[number, number, number]>([0, 0, 0]);
 
   // Attack parameters
   const [numRestarts, setNumRestarts] = useState<number>(0);
@@ -73,7 +76,6 @@ export default function Home() {
   }
 
   const handleDataParamsChange = (field: string, value: string) => {
-    // TODO: add validation
     switch (field) {
       case "csvPath":
         setCsvPath(value);
@@ -86,6 +88,33 @@ export default function Home() {
         break;
       case "batchSize":
         setBatchSize(parseInt(value));
+        break;
+      case "imageShape1":
+        setImageShape([parseInt(value), imageShape[1], imageShape[2]]);
+        break;
+      case "imageShape2":
+        setImageShape([imageShape[0], parseInt(value), imageShape[2]]);
+        break;
+      case "imageShape3":
+        setImageShape([imageShape[0], imageShape[1], parseInt(value)]);
+        break;
+      case "mean1":
+        setMean([parseFloat(value), mean[1], mean[2]]);
+        break;
+      case "mean2":
+        setMean([mean[0], parseFloat(value), mean[2]]);
+        break;
+      case "mean3":
+        setMean([mean[0], mean[1], parseFloat(value)]);
+        break;
+      case "std1":
+        setStd([parseFloat(value), std[1], std[2]]);
+        break;
+      case "std2":
+        setStd([std[0], parseFloat(value), std[2]]);
+        break;
+      case "std3":
+        setStd([std[0], std[1], parseFloat(value)]);
         break;
       default:
         break;
@@ -103,7 +132,7 @@ export default function Home() {
       case "maxIterations":
         setMaxIterations(parseInt(value));
         break;
-      case "budget": 
+      case "budget":
         setBudget(parseInt(value));
         break;
       default:
