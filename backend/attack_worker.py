@@ -1,11 +1,10 @@
 import base64
 from common import WorkerCommunication
-from breaching.breaching.attacks.attack_info import AttackStatistics, AttackProgress, AttackParameters
-from breaching.attack_script import setup_attack, perform_attack, get_metrics
+from breaching.attack_script import breaching, AttackParameters, AttackProgress, AttackStatistics, setup_attack, perform_attack, get_metrics
 import time
 import random
 import GPUtil
-# import uuid
+import uuid
 # from unittest.mock import Mock
 
 def attack_worker(queues: WorkerCommunication):
@@ -20,7 +19,7 @@ def attack_worker(queues: WorkerCommunication):
         request_token, data = queues.task_channel.get()
         print(data)
         
-        limit_gpu_percentage(data.budget)
+        #limit_gpu_percentage(data.budget)
 
         cfg, setup, user, server, attacker, model, loss_fn = setup_attack(attack_params=data, 
                                                                           cfg=None, 
