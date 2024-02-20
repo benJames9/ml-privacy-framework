@@ -40,25 +40,25 @@ def limit_gpu_percentage(percentage):
         print("No GPU found.")
 
 # Use this for testing?
-# if __name__ == "__main__":
-#     pars = AttackParameters(
-#         model='resnet18',
-#         datasetStructure='test',
-#         csvPath='nothing',
-#         datasetSize=50000,
-#         numClasses=10,
-#         batchSize=1,
-#         numRestarts=1,
-#         stepSize=0.1,
-#         maxIterations=10,
-#         callbackInterval=1,
-#         ptFilePath='nothing',
-#         zipFilePath='nothing',
-#     )
+if __name__ == "__main__":
+    pars = AttackParameters(
+        model='resnet18',
+        datasetStructure='test',
+        csvPath='~/data',
+        datasetSize=50000,
+        numClasses=10,
+        batchSize=1,
+        numRestarts=1,
+        stepSize=0.1,
+        maxIterations=10,
+        callbackInterval=1,
+        ptFilePath='nothing',
+        zipFilePath='nothing',
+    )
 
-#     req_tok = str(uuid.uuid4())
+    req_tok = str(uuid.uuid4())
 
-#     queue = WorkerCommunication()
-#     queue.task_channel.put(req_tok, pars)
+    queue = WorkerCommunication()
+    queue.task_channel.put(req_tok, pars)
 
-#     attack_worker(queue)
+    attack_worker(queue)
