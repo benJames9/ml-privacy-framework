@@ -2,6 +2,7 @@
 import Radio from "./Radio";
 import TextInput from "./TextInput";
 import NumberInput from "./NumberInput";
+import ThreeNumberInput from "./ThreeNumberInput";
 
 interface DatasetParamsProps {
   datasetStructure: "Foldered" | "CSV";
@@ -36,6 +37,10 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
       <NumberInput
         label="Batch size:"
         onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
+      />
+      <ThreeNumberInput 
+        label="Image shape:"
+        onChange={() => { }}
       />
     </div>
   );
