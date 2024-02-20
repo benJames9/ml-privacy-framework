@@ -1,8 +1,12 @@
 import base64
-from common import WorkerCommunication, AttackProgress, AttackStatistics
+from common import WorkerCommunication
+from breaching.breaching.attacks.attack_info import AttackStatistics, AttackProgress, AttackParameters
+from breaching.attack_script import setup_attack, perform_attack, get_metrics
 import time
 import random
 import GPUtil
+# import uuid
+# from unittest.mock import Mock
 
 def attack_worker(queues: WorkerCommunication):
     """
@@ -18,25 +22,14 @@ def attack_worker(queues: WorkerCommunication):
         
         limit_gpu_percentage(data.budget)
 
-        time.sleep(1)
-        for i in range(10):
-            time.sleep(1)
-            print(f"doing work {i}")
-            queues.response_channel.put(
-                request_token, AttackProgress(current_iteration=i, max_iterations=10)
-            )
+        cfg, setup, user, server, attacker, model, loss_fn = setup_attack(attack_params=data, 
+                                                                          cfg=None, 
+                                                                          torch_model=None)
 
-        time.sleep(1)
-        stats = AttackStatistics(MSE=random.random(), SSIM=random.random(), PSNR=random.random())
-
-        image_data = None
-        with open("./demo.jpg", 'rb') as image_file:
-            image_data = image_file.read()
-        base64_encoded_data = base64.b64encode(image_data).decode('utf-8')
-
-        queues.response_channel.put(
-            request_token, AttackProgress(current_iteration=999, max_iterations=999, statistics=stats, reconstructed_image=base64_encoded_data)
-        )
+        response = request_token, queues.response_channel
+        r_user_data, t_user_data, server_payload = perform_attack(cfg, setup, user, server, attacker, model, loss_fn, 
+                                                                  response=response)
+        get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
 
 # Limit GPU access with GPUtil
 def limit_gpu_percentage(percentage):
@@ -46,3 +39,27 @@ def limit_gpu_percentage(percentage):
         gpu.set_power_limit(percentage=percentage)
     else:
         print("No GPU found.")
+
+# Use this for testing?
+# if __name__ == "__main__":
+#     pars = AttackParameters(
+#         model='resnet18',
+#         datasetStructure='csv',
+#         csvPath='nothing',
+#         datasetSize=1212,
+#         numClasses=1212,
+#         batchSize=1212,
+#         numRestarts=1212,
+#         stepSize=1212,
+#         maxIterations=1212,
+#         callbackInterval=1212,
+#         ptFilePath='nothing',
+#         zipFilePath='nothing',
+#     )
+
+#     req_tok = str(uuid.uuid4())
+
+#     queue = WorkerCommunication()
+#     queue.task_channel.put(req_tok, pars)
+
+#     attack_worker(queue)

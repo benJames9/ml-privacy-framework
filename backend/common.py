@@ -2,47 +2,10 @@ from typing import Optional, Tuple, TypeVar, Generic
 from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
 
-
-class AttackParameters(BaseModel):
-    model: str
-    datasetStructure: str
-    csvPath: Optional[str]
-    datasetSize: int
-    numClasses: int
-    batchSize: int
-    numRestarts: int
-    stepSize: int
-    maxIterations: int
-    callbackInterval: int
-    budget: int
-    ptFilePath: Optional[str]
-    zipFilePath: Optional[str]
-
-
 class PositionInQueue(BaseModel):
     message_type = "PositionInQueue"
     position: int
     total: int
-
-
-class AttackStatistics(BaseModel):
-    MSE: float = 0
-    PSNR: float = 0
-    SSIM: float = 0
-
-
-class AttackProgress(BaseModel):
-    message_type = "AttackProgress"
-    current_iteration: int = 0
-    max_iterations: int = 0
-    current_restart: int = 0
-    max_restarts: int = 0
-    current_batch: int = 0
-    max_batches: int = 0
-    time_taken: float = 0
-    statistics: AttackStatistics = AttackStatistics()
-    reconstructed_image: Optional[str] = None # base64 encoded image
-
 
 T = TypeVar("T")
 
