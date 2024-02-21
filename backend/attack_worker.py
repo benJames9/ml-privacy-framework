@@ -1,6 +1,7 @@
 import base64
 from common import WorkerCommunication
 from breaching.attack_script import breaching, AttackParameters, AttackProgress, AttackStatistics, setup_attack, perform_attack, get_metrics
+from multiprocessing import Event as mpEvent
 import time
 import random
 import GPUtil
