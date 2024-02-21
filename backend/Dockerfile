@@ -1,5 +1,6 @@
 # python base image
-FROM python:3.9
+# FROM python:3.9
+FROM pytorch/pytorch:latest
 
 # Workdir for output
 WORKDIR /app
@@ -8,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install requirements
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy application files
 COPY . .

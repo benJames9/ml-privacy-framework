@@ -86,6 +86,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       PSNR: 0,
       SSIM: 0
     },
+    true_image: "",
     reconstructed_image: ""
   });
 
@@ -115,11 +116,15 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           delete data.message_type;
           setAttackProgress(data);
 
-          if (data.current_iteration === data.max_iterations) {
-            // let them see the full attack progress bar for a bit
-            await wait_ms(500);
-            setPageState(PageState.FINAL_SCREEN);
+          if (data.true_image != "" && data.reconstructed_image != ""){
+            if (data.current_iteration === data.max_iterations 
+            && data.current_restart === data.max_restarts) {
+              // let them see the full attack progress bar for a bit
+              await wait_ms(500);
+              setPageState(PageState.FINAL_SCREEN);
           }
+          }
+          
           break;
         case "error":
           if (pageState !== PageState.FINAL_SCREEN) {
@@ -155,9 +160,9 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     case PageState.ATTACKING:
       content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
         <HorizontalBar
-          current={attackProgress.current_iteration}
+          current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
           min={0}
-          max={attackProgress.max_iterations}
+          max={attackProgress.max_restarts * attackProgress.max_iterations}
           text="Attacking..."
           color="bg-green-600"
         />
@@ -174,6 +179,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           <HBar />
           <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
           <ReconstructedImage image={attackProgress.reconstructed_image} />
+          <ReconstructedImage image={attackProgress.true_image} />
         </div>
       </div>
   }
