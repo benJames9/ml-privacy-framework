@@ -5,6 +5,7 @@ import time
 import random
 import GPUtil
 import uuid
+import os
 # from unittest.mock import Mock
 
 def attack_worker(queues: WorkerCommunication):
@@ -13,7 +14,7 @@ def attack_worker(queues: WorkerCommunication):
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
-
+    print(os.listdir())
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
@@ -26,8 +27,7 @@ def attack_worker(queues: WorkerCommunication):
                                                                           torch_model=None)
 
         response = request_token, queues.response_channel
-        r_user_data, t_user_data, server_payload = perform_attack(cfg, setup, user, server, attacker, model, loss_fn, 
-                                                                  response=response)
+        r_user_data, t_user_data, server_payload = perform_attack(cfg, setup, user, server, attacker, model, loss_fn, response=response)
         get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
 
 # Limit GPU access with GPUtil
@@ -42,18 +42,18 @@ def limit_gpu_percentage(percentage):
 # Use this for testing?
 if __name__ == "__main__":
     pars = AttackParameters(
-        model='resnet18',
-        datasetStructure='test',
+        model='ResNet-18',
+        datasetStructure='folders',
         csvPath='~/data',
-        datasetSize=50000,
-        numClasses=10,
+        datasetSize=350,
+        numClasses=7,
         batchSize=1,
         numRestarts=1,
         stepSize=0.1,
-        maxIterations=10,
-        callbackInterval=1,
-        ptFilePath='nothing',
-        zipFilePath='nothing',
+        maxIterations=1,
+        callbackInterval=10,
+        ptFilePath='resnet18_pretrained.pt',
+        zipFilePath='small_foldered_set.zip',
         budget=100
     )
 
