@@ -8,10 +8,16 @@ import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
 import LoggingParams from "@/components/LoggingParams";
 import EvaluateButton from "@/components/EvaluateButton";
+import AttackSelect from "@/components/AttackSelect";
 
 export default function Home() {
-  const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
-  const [model, setSelectedModel] = useState<string>(models[0]);
+  const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
+  const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
+  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
+
+  const [model, setSelectedModel] = useState<string>(imageModels[0]);
+  const [attack, setSelectedAttack] = useState<string>(attacks[0]);
+
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
@@ -148,8 +154,11 @@ export default function Home() {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Model</h2>
-        <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
+        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Attack</h2>
+        <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
+        <HBar />
+        <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
+        <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
         <div className="mb-4">
@@ -164,24 +173,27 @@ export default function Home() {
           )}
         </div>
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
-        <div className="mb-4">
-          <FileUpload
-            expectedFileType="zip"
-            label="Select File (.zip)"
-            onFileChange={handleZipFileChange}
-            nextElement="data-params-header"
-          />
-          {zipFile && (
-            <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
-          )}
-        </div>
-        <HBar />
+        {attack === "Inverting Gradients\n(Single Step)" && <div>
+          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <div className="mb-4">
+            <FileUpload
+              expectedFileType="zip"
+              label="Select File (.zip)"
+              onFileChange={handleZipFileChange}
+              nextElement="data-params-header"
+            />
+            {zipFile && (
+              <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
+            )}
+          </div>
+          <HBar />
+        </div>}
         <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">Dataset Parameters</h3>
         <DatasetParams
           datasetStructure={datasetStructure}
           handleStructureChange={handleStructureChange}
           handleDataParamsChange={handleDataParamsChange}
+          attack={attack}
         />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
