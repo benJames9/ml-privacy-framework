@@ -172,24 +172,27 @@ export default function Home() {
           )}
         </div>
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
-        <div className="mb-4">
-          <FileUpload
-            expectedFileType="zip"
-            label="Select File (.zip)"
-            onFileChange={handleZipFileChange}
-            nextElement="data-params-header"
-          />
-          {zipFile && (
-            <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
-          )}
-        </div>
-        <HBar />
+        {attack === "Inverting Gradients\n(Single Step)" && <div>
+          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <div className="mb-4">
+            <FileUpload
+              expectedFileType="zip"
+              label="Select File (.zip)"
+              onFileChange={handleZipFileChange}
+              nextElement="data-params-header"
+            />
+            {zipFile && (
+              <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
+            )}
+          </div>
+          <HBar />
+        </div>}
         <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">Dataset Parameters</h3>
         <DatasetParams
           datasetStructure={datasetStructure}
           handleStructureChange={handleStructureChange}
           handleDataParamsChange={handleDataParamsChange}
+          attack={attack}
         />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
