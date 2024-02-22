@@ -8,9 +8,12 @@ import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
 import LoggingParams from "@/components/LoggingParams";
 import EvaluateButton from "@/components/EvaluateButton";
+import AttackSelect from "@/components/AttackSelect";
 
 export default function Home() {
-  const models: string[] = ["ResNet-18", "Model 2", "Model 3", "Model 4"];
+  const models: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
+  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
+
   const [model, setSelectedModel] = useState<string>(models[0]);
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
@@ -148,7 +151,10 @@ export default function Home() {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Model</h2>
+        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Attack</h2>
+        <AttackSelect attacks={attacks} onChange={(attack: string) => { console.log(attack) }} />
+        <HBar />
+        <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
         <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
