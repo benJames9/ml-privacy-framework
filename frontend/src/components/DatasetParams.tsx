@@ -3,6 +3,7 @@ import Radio from "./Radio";
 import TextInput from "./TextInput";
 import NumberInput from "./NumberInput";
 import ThreeNumberInput from "./ThreeNumberInput";
+import SelectInput from "./SelectInput";
 
 interface DatasetParamsProps {
   datasetStructure: "Foldered" | "CSV";
@@ -56,6 +57,11 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
         />
       </div>}
       {attack === "TAG\n(Text Attack)" && <div>
+        <SelectInput
+            label="Text Dataset:"
+          options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
+          onChange={(e) => handleDataParamsChange("textDataset", e.target.value)}
+        />
         <NumberInput
           label="No. data points:"
           onChange={(e) => handleDataParamsChange("numDataPoints", e.target.value)}

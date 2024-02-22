@@ -11,10 +11,11 @@ import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 
 export default function Home() {
-  const models: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
+  const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
+  const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
 
-  const [model, setSelectedModel] = useState<string>(models[0]);
+  const [model, setSelectedModel] = useState<string>(imageModels[0]);
   const [attack, setSelectedAttack] = useState<string>(attacks[0]);
 
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
@@ -157,7 +158,7 @@ export default function Home() {
         <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
         <HBar />
         <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
-        <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
+        <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
         <div className="mb-4">
