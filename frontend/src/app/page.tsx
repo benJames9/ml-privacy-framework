@@ -15,6 +15,8 @@ export default function Home() {
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
 
   const [model, setSelectedModel] = useState<string>(models[0]);
+  const [attack, setSelectedAttack] = useState<string>(attacks[0]);
+
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
@@ -152,7 +154,7 @@ export default function Home() {
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
         <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Attack</h2>
-        <AttackSelect attacks={attacks} onChange={(attack: string) => { console.log(attack) }} />
+        <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
         <HBar />
         <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
         <ModelSelect models={models} onChange={(model: string) => { setSelectedModel(model) }} />
