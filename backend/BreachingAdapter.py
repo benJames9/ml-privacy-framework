@@ -12,16 +12,7 @@ import asyncio
 
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
-        self._breaching_response_queue = WorkerQueue[BreachingAttackProgress]()
         self._worker_response_queue = worker_response_queue
-        
-        # self._forward_response_from_breaching_thread = Thread(
-        #     target=self._forward_response_from_breaching
-        # )
-        
-    def start(self):
-        # self._forward_response_from_breaching_thread.start()
-        asyncio.run(self._forward_response_from_breaching())
     
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
         match attack_params.data_type:
@@ -204,10 +195,12 @@ class BreachingAdapter:
         shared_data, true_user_data = user.compute_local_updates(server_payload)
         breachinglib.utils.overview(server, user, attacker)
         
-        response = request_token, self._breaching_response_queue
+        response = request_token, self._worker_response_queue
         user.plot(true_user_data, saveFile="true_data")
         print("reconstructing attack")
-        reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {}, dryrun=cfg.dryrun, response=response)
+        reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {}, 
+                                                              dryrun=cfg.dryrun, token=request_token, 
+                                                              add_response_to_channel=self._add_progress_to_channel)
         user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         return reconstructed_user_data, true_user_data, server_payload
         
@@ -264,11 +257,11 @@ class BreachingAdapter:
     ''')
         model.eval()
         return model
-        
+    
     async def _forward_response_from_breaching(self):
         print("waiting for response from breaching")
         while True:
-            request_token, response_data = await self._breaching_response_queue.get()
+            request_token, response_data = await asyncio.to_thread(self._breaching_response_queue.get())
             if request_token is None:
                 break
             
@@ -285,3 +278,17 @@ class BreachingAdapter:
             )
             
             self._worker_response_queue.put(request_token, progress)
+
+    # Callback to be passed into submodule to add progress to the channel
+    def _add_progress_to_channel(self, request_token: str, response_data: BreachingAttackProgress):
+        progress = AttackProgress(
+                message_type="AttackProgress",
+                current_iteration=response_data.current_iteration,
+                max_iterations=response_data.max_iterations,
+                current_restart=response_data.current_restart,
+                max_restarts=response_data.max_restarts,
+                current_batch=response_data.current_batch,
+                max_batches=response_data.max_batches
+        )
+        
+        self._worker_response_queue.put(request_token, progress)

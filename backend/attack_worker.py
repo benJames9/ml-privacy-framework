@@ -17,7 +17,6 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
     """
     print(os.listdir())
     breaching = BreachingAdapter(queues.response_channel)
-    breaching.start()
     while True:
         print("waiting for data...")
         cancel.clear()
