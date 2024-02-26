@@ -1,15 +1,27 @@
 import torch
-import breaching.breaching as breaching
-from common import AttackParameters, AttackProgress, AttackStatistics
+from common import AttackParameters, AttackProgress, AttackStatistics, WorkerQueue
+from breaching.breaching.attacks.attack_progress import AttackProgress as BreachingAttackProgress
+import breaching.breaching as breachinglib
 from torchvision import models
 import logging, sys
+from threading import Thread
 import base64
 import zipfile
 import os, shutil
+import asyncio
 
 class BreachingAdapter:
-    def __init__(self):
-        pass
+    def __init__(self, worker_response_queue):
+        self._breaching_response_queue = WorkerQueue[BreachingAttackProgress]()
+        self._worker_response_queue = worker_response_queue
+        
+        # self._forward_response_from_breaching_thread = Thread(
+        #     target=self._forward_response_from_breaching
+        # )
+        
+    def start(self):
+        # self._forward_response_from_breaching_thread.start()
+        asyncio.run(self._forward_response_from_breaching())
     
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
         match attack_params.data_type:
@@ -36,10 +48,10 @@ class BreachingAdapter:
                 print("Could not match dataset structure")
                 match attack_params.data_type:
                     case "images":
-                        cfg.case.data = breaching.get_config(overrides=["case/data=CIFAR10"]).case.data
+                        cfg.case.data = breachinglib.get_config(overrides=["case/data=CIFAR10"]).case.data
                         print("defaulted to CIFAR10")
                     case "text":
-                        cfg.case.data = breaching.get_config(overrides=["case/data=wikitext"]).case.data
+                        cfg.case.data = breachinglib.get_config(overrides=["case/data=wikitext"]).case.data
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(f"Data type of attack: {attack_params.data_type} does not match anything.")
@@ -63,7 +75,7 @@ class BreachingAdapter:
     def _construct_text_cfg(self, attack_params: AttackParameters):
         match attack_params.attack:
             case 'TAG':
-                cfg = breaching.get_config(overrides=["attack=tag"])
+                cfg = breachinglib.get_config(overrides=["attack=tag"])
             case _:
                 raise TypeError(f'No text attack match; {attack_params.attack}')
 
@@ -106,15 +118,15 @@ class BreachingAdapter:
     def _construct_images_cfg(self, attack_params: AttackParameters):
         match attack_params.attack:
             case 'invertinggradients':
-                cfg = breaching.get_config()
+                cfg = breachinglib.get_config()
                 cfg.case.data.partition="unique-class"
                 # default case.model=ResNet18
             case 'modern':
-                cfg = breaching.get_config(overrides=["attack=modern"])
+                cfg = breachinglib.get_config(overrides=["attack=modern"])
                 cfg.case.data.partition="unique-class"
                 cfg.attack.regularization.deep_inversion.scale=1e-4
             case 'fishing_for_user_data':
-                cfg = breaching.get_config(overrides=["case/server=malicious-fishing", "attack=clsattack", "case/user=multiuser_aggregate"])
+                cfg = breachinglib.get_config(overrides=["case/server=malicious-fishing", "attack=clsattack", "case/user=multiuser_aggregate"])
                 cfg.case.user.user_range = [0, 1]
                 cfg.case.data.partition = "random" # This is the average case
                 cfg.case.user.num_data_points = 256
@@ -123,21 +135,21 @@ class BreachingAdapter:
                 cfg.case.server.target_cls_idx = 0 # Which class to attack?
             # Less important attacks
             case 'analytic':
-                cfg = breaching.get_config(overrides=["attack=analytic", "case.model=linear"])
+                cfg = breachinglib.get_config(overrides=["attack=analytic", "case.model=linear"])
                 cfg.case.data.partition="balanced"
                 cfg.case.data.default_clients = 50
                 cfg.case.user.num_data_points = 256 # User batch size 
             case 'rgap':
-                cfg = breaching.get_config(overrides=["attack=rgap", "case.model=cnn6", "case.user.provide_labels=True"])
+                cfg = breachinglib.get_config(overrides=["attack=rgap", "case.model=cnn6", "case.user.provide_labels=True"])
                 cfg.case.user.num_data_points = 1
             case 'april_analytic':
-                cfg = breaching.get_config(overrides=["attack=april_analytic", "case.model=vit_small_april"])
+                cfg = breachinglib.get_config(overrides=["attack=april_analytic", "case.model=vit_small_april"])
                 cfg.case.data.partition="unique-class"
                 cfg.case.user.num_data_points = 1
                 cfg.case.server.pretrained = True
                 cfg.case.user.provide_labels = False
             case 'deepleakage':
-                cfg = breaching.get_config(overrides=["attack=deepleakage", "case.model=ConvNet"])
+                cfg = breachinglib.get_config(overrides=["attack=deepleakage", "case.model=ConvNet"])
                 cfg.case.data.partition="unique-class"
                 cfg.case.user.provide_labels=False
 
@@ -150,7 +162,7 @@ class BreachingAdapter:
         device = torch.device(f'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
         if cfg == None:
-            cfg = breaching.get_config()
+            cfg = breachinglib.get_config()
 
         if torch_model is None:
             torch_model = self._buildUploadedModel(attack_params.model, attack_params.ptFilePath)
@@ -174,9 +186,9 @@ class BreachingAdapter:
         
         print(cfg)
 
-        user, server, model, loss_fn = breaching.cases.construct_case(cfg.case, setup, prebuilt_model=torch_model)
-        attacker = breaching.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
-        breaching.utils.overview(server, user, attacker)
+        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=torch_model)
+        attacker = breachinglib.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
+        breachinglib.utils.overview(server, user, attacker)
 
 
         if torch_model is not None:
@@ -187,11 +199,12 @@ class BreachingAdapter:
         
         return cfg, setup, user, server, attacker, model, loss_fn
 
-    def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, response):
+    def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
         server_payload = server.distribute_payload()
         shared_data, true_user_data = user.compute_local_updates(server_payload)
-        breaching.utils.overview(server, user, attacker)
-
+        breachinglib.utils.overview(server, user, attacker)
+        
+        response = request_token, self._breaching_response_queue
         user.plot(true_user_data, saveFile="true_data")
         print("reconstructing attack")
         reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {}, dryrun=cfg.dryrun, response=response)
@@ -199,7 +212,7 @@ class BreachingAdapter:
         return reconstructed_user_data, true_user_data, server_payload
         
     def get_metrics(self, reconstructed_user_data, true_user_data, server_payload, server, cfg, setup, response):
-        metrics = breaching.analysis.report(reconstructed_user_data, true_user_data, [server_payload], 
+        metrics = breachinglib.analysis.report(reconstructed_user_data, true_user_data, [server_payload], 
                                         server.model, order_batch=True, compute_full_iip=False, 
                                         cfg_case=cfg.case, setup=setup, compute_lpips=False)
         print(metrics)
@@ -251,3 +264,24 @@ class BreachingAdapter:
     ''')
         model.eval()
         return model
+        
+    async def _forward_response_from_breaching(self):
+        print("waiting for response from breaching")
+        while True:
+            request_token, response_data = await self._breaching_response_queue.get()
+            if request_token is None:
+                break
+            
+            print("forwarding response for " + request_token)
+            
+            progress = AttackProgress(
+                message_type="AttackProgress",
+                current_iteration=response_data.iteration,
+                max_iterations=response_data.max_iterations,
+                current_restart=response_data.restart,
+                max_restarts=response_data.max_restarts,
+                current_batch=response_data.batch,
+                max_batches=response_data.max_batches
+            )
+            
+            self._worker_response_queue.put(request_token, progress)

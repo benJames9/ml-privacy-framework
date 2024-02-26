@@ -1,7 +1,6 @@
 from typing import Optional, Tuple, TypeVar, Generic
 from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
-from breaching.attack_script import AttackParameters, AttackProgress
 
 class PositionInQueue(BaseModel):
     message_type: str = "PositionInQueue"

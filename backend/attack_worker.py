@@ -1,7 +1,6 @@
 import base64
 from BreachingAdapter import BreachingAdapter
 from common import WorkerCommunication
-from breaching.attack_script import breaching, AttackParameters, AttackProgress, AttackStatistics, setup_attack, perform_attack, get_metrics
 from multiprocessing import Event as mpEvent
 import time
 import random
@@ -17,7 +16,8 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
       and run the attack with the given parameters.
     """
     print(os.listdir())
-    breaching = BreachingAdapter()
+    breaching = BreachingAdapter(queues.response_channel)
+    breaching.start()
     while True:
         print("waiting for data...")
         cancel.clear()
@@ -31,7 +31,7 @@ def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
                                                                           torch_model=None)
 
         response = request_token, queues.response_channel
-        r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker, model, loss_fn, response=response)
+        r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker, model, loss_fn, request_token=request_token)
         breaching.get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
 
 # Limit GPU access with GPUtil
