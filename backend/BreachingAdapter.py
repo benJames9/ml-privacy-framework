@@ -15,13 +15,13 @@ class BreachingAdapter:
         self._worker_response_queue = worker_response_queue
     
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
-        match attack_params.data_type:
+        match attack_params.modality:
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
             case "text":
                 cfg = self._construct_text_cfg(attack_params)
             case _:
-                raise TypeError(f"Data type of attack: {attack_params.data_type} does not match anything.")
+                raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
             
         assert(attack_params is not None)
         
@@ -37,7 +37,7 @@ class BreachingAdapter:
                 cfg.case.data.name = "CustomFolders"
             case _:
                 print("Could not match dataset structure")
-                match attack_params.data_type:
+                match attack_params.modality:
                     case "images":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=CIFAR10"]).case.data
                         print("defaulted to CIFAR10")
@@ -45,7 +45,7 @@ class BreachingAdapter:
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=wikitext"]).case.data
                         print("defaulted to wikitext")
                     case _:
-                        raise TypeError(f"Data type of attack: {attack_params.data_type} does not match anything.")
+                        raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
         
         match dataset_path:
             case None:

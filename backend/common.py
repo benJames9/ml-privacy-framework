@@ -44,7 +44,7 @@ class WorkerCommunication:
 class AttackParameters(BaseModel):
     model: str
     attack: str = "invertinggradients"
-    data_type: str = "images"
+    modality: str = "images"
     user_idx: int = 0
     number_of_clients: int = 1
     datasetStructure: str
