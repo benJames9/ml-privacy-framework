@@ -21,7 +21,7 @@ def attack_worker(queues: WorkerCommunication):
         request_token, data = queues.task_channel.get()
         print(data)
         
-        limit_gpu_percentage(data.budget)
+        # limit_gpu_percentage(data.budget)
 
         try:
             cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data, 
