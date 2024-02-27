@@ -1,16 +1,20 @@
 # python base image
-FROM python:3.9
+# FROM python:3.9
+FROM pytorch/pytorch:latest
 
 # Workdir for output
 WORKDIR /app
 
+# Set environment variables for dev environment
 ENV PYTHONUNBUFFERED=1
 
 # Copy requirements.txt to workdir
 COPY requirements.txt .
 
 # Install requirements
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+# RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Run API on container port 8000
 CMD uvicorn main:app --host 0.0.0.0 --port 8000 --reload

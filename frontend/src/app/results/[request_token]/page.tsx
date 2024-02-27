@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import HorizontalBar from "@/components/ProgressBar";
 
 import { AttackStatistics } from "@/components/AttackStatistics";
+import CancelButton from "@/components/CancelButton";
 
 interface SearchParam {
   params: {
@@ -38,6 +39,21 @@ enum PageState {
 
 async function wait_ms(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+const onCancel = async (requestToken: number) => {
+  const res = await fetch(`/api/cancel/${requestToken}`, {
+    method: 'POST',
+  });
+
+  if (res.ok) {
+    window.location.href = "/";
+
+    // Modify the browser history to prevent navigation back to this page
+    window.history.replaceState(null, '', '/');
+  } else {
+    console.error('Failed to cancel attack');
+  }
 }
 
 /**
@@ -70,6 +86,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       PSNR: 0,
       SSIM: 0
     },
+    true_image: "",
     reconstructed_image: ""
   });
 
@@ -85,24 +102,33 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       switch (data.message_type) {
         case "PositionInQueue":
           setPageState(PageState.LOADING_QUEUED)
-
           setQueuednMax(data.total);
           setQueuedCurrent(data.position);
           break;
         case "AttackProgress":
           setQueuedCurrent(0);
-          // let them see the full queue progress bar for a bit
-          await wait_ms(500);
-
-          setPageState(PageState.ATTACKING)
+          if (data.current_iteration !== data.max_iterations) {
+            // let them see the full queue progress bar for a bit
+            await wait_ms(500);
+            setPageState(PageState.ATTACKING)
+          }
 
           delete data.message_type;
           setAttackProgress(data);
 
-          if (data.current_iteration === data.max_iterations) {
-            // let them see the full attack progress bar for a bit
-            await wait_ms(500);
-            setPageState(PageState.FINAL_SCREEN);
+          if (data.true_image != "" && data.reconstructed_image != ""){
+            if (data.current_iteration === data.max_iterations 
+            && data.current_restart === data.max_restarts) {
+              // let them see the full attack progress bar for a bit
+              await wait_ms(500);
+              setPageState(PageState.FINAL_SCREEN);
+          }
+          }
+          
+          break;
+        case "error":
+          if (pageState !== PageState.FINAL_SCREEN) {
+            window.location.href = `/server-disconnect?error=${encodeURIComponent(data.error)}`;
           }
           break;
         default:
@@ -126,16 +152,22 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     case PageState.LOADING_QUEUED:
       content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
         <HorizontalBar min={0} max={Math.max(queuedMax + 1, 10)} current={Math.max(queuedMax + 1, 10) - queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
+        />
       </div>
       break;
     case PageState.ATTACKING:
       content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
         <HorizontalBar
-          current={attackProgress.current_iteration}
+          current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
           min={0}
-          max={attackProgress.max_iterations}
+          max={attackProgress.max_restarts * attackProgress.max_iterations}
           text="Attacking..."
           color="bg-green-600"
+        />
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
         />
       </div>
       break;
@@ -147,6 +179,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           <HBar />
           <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
           <ReconstructedImage image={attackProgress.reconstructed_image} />
+          <ReconstructedImage image={attackProgress.true_image} />
         </div>
       </div>
   }

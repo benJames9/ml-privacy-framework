@@ -59,6 +59,7 @@ async def submit_attack(
     stepSize: int = Form(...),
     maxIterations: int = Form(...),
     callbackInterval: int = Form(...),
+    budget: int = Form(...),
 ):
     request_token = str(uuid.uuid4())
 
@@ -83,9 +84,15 @@ async def submit_attack(
         callbackInterval=callbackInterval,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
+        budget=budget,
     )
 
-    background_task_manager.submit_task(request_token, attack_params)
+    await background_task_manager.submit_task(request_token, attack_params)
     await background_task_manager._psw.register_route(request_token)
 
     return request_token
+
+# Cancel an attack associated with token
+@app.post(f"/api/cancel/{{request_token}}")
+async def cancel_attack(request_token: str):
+    await background_task_manager.cancel_task(request_token)

@@ -21,6 +21,10 @@ const AttackParams: React.FC<AttackParamsProps> = ({ handleAttackParamsChange })
         label="Maximum iterations:"
         onChange={(e) => handleAttackParamsChange("maxIterations", e.target.value)}
       />
+      <NumberInput
+        label="Budget:"
+        onChange={(e) => handleAttackParamsChange("budget", e.target.value)}
+      />
     </div>
   );
 

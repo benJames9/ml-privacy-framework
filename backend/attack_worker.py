@@ -1,8 +1,13 @@
 import base64
-from common import WorkerCommunication, AttackProgress, AttackStatistics
+from BreachingAdapter import BreachingAdapter
+from common import WorkerCommunication, AttackProgress
+from multiprocessing import Event as mpEvent
 import time
 import random
-
+import GPUtil
+import uuid
+import os
+# from unittest.mock import Mock
 
 def attack_worker(queues: WorkerCommunication):
     """
@@ -10,28 +15,61 @@ def attack_worker(queues: WorkerCommunication):
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
-
+    breaching = BreachingAdapter(queues.response_channel)
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
+        
+        limit_gpu_percentage(data.budget)
 
-        time.sleep(1)
-        for i in range(10):
-            time.sleep(1)
-            print(f"doing work {i}")
-            queues.response_channel.put(
-                request_token, AttackProgress(current_iteration=i, max_iterations=10)
-            )
+        try:
+            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data, 
+                                                                            cfg=None, 
+                                                                            torch_model=None)
+            
+            # Get response channel and request token to pass into breaching
+            response = request_token, queues.response_channel
+            r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker, 
+                                                                                model, loss_fn, request_token=request_token)
+            breaching.get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
+            
+        # Report any errors to task manager
+        except Exception as e:
+            progress = AttackProgress(message_type="error", error_message=f'Attack Configuration Error: {str(e)}')
+            queues.response_channel.put(request_token, progress)
+            break
 
-        time.sleep(1)
-        stats = AttackStatistics(MSE=random.random(), SSIM=random.random(), PSNR=random.random())
+# Limit GPU access with GPUtil
+def limit_gpu_percentage(percentage):
+    gpus = GPUtil.getGPUs()
+    if gpus:
+        gpu = gpus[0]  # Assuming you have only one GPU
+        gpu.set_power_limit(percentage=percentage)
+    else:
+        print("No GPU found.")
 
-        image_data = None
-        with open("./demo.jpg", 'rb') as image_file:
-            image_data = image_file.read()
-        base64_encoded_data = base64.b64encode(image_data).decode('utf-8')
+# Use this for testing?
+if __name__ == "__main__":
+    pars = AttackParameters(
+        model='ResNet-18',
+        datasetStructure='folders',
+        csvPath='~/data',
+        datasetSize=350,
+        numClasses=7,
+        batchSize=1,
+        numRestarts=1,
+        stepSize=0.1,
+        maxIterations=1,
+        callbackInterval=10,
+        ptFilePath='resnet18_pretrained.pt',
+        zipFilePath='small_foldered_set.zip',
+        budget=100
+    )
 
-        queues.response_channel.put(
-            request_token, AttackProgress(current_iteration=999, max_iterations=999, statistics=stats, reconstructed_image=base64_encoded_data)
-        )
+    req_tok = str(uuid.uuid4())
+
+    queue = WorkerCommunication()
+    queue.task_channel.put(req_tok, pars)
+
+    attack_worker(queue)
