@@ -24,7 +24,6 @@ class BackgroundTasks:
 
         self._resp_aio_queue: aioQueue = aioQueue()
         self._worker_queues = WorkerCommunication()
-        self._cancel_current = mpEvent()
 
         self._psw = PubSubWs()
     
@@ -33,11 +32,15 @@ class BackgroundTasks:
         # Creates the websocket server with given base path 
         self._psw.setup(app, "/ws/attack-progress")
 
-        self._worker_process = Process(target=worker_fn, args=(self._worker_queues, self._cancel_current))
+        self._worker_fn = worker_fn
+        self._setup_worker()
 
         self._response_reading_thread = Thread(
             target=self._response_reader, args=(asyncio.get_event_loop(),)
         )
+        
+    def _setup_worker(self):
+        self._worker_process = Process(target=self._worker_fn, args=(self._worker_queues))
 
     # Start the worker proces, the response reader and event loop tasks
     def start(self):
@@ -134,12 +137,15 @@ class BackgroundTasks:
                     in_buffer = True
                     break
         
-        # Either signal worker to cancel current task or remove from buffer
+        # Either restart worker to cancel current task or remove from buffer
         if in_buffer:
             self._num_buffered_requests_changed.set()
         else:
-            self._cancel_current.set()
+            self._worker_process.terminate()
+            self._worker_process.join()
+            self._setup_worker()
+            self._worker_process.start()
         
         # Never got result so deregister route
-        self._psw.deregister_route(request_token)
+        await self._psw.deregister_route(request_token)
             

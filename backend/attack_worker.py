@@ -9,17 +9,15 @@ import uuid
 import os
 # from unittest.mock import Mock
 
-def attack_worker(queues: WorkerCommunication, cancel: mpEvent):
+def attack_worker(queues: WorkerCommunication):
     """
     This shows how the worker process should be structured.
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
-    print(os.listdir())
     breaching = BreachingAdapter(queues.response_channel)
     while True:
         print("waiting for data...")
-        cancel.clear()
         request_token, data = queues.task_channel.get()
         print(data)
         
