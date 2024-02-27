@@ -28,6 +28,7 @@ interface AttackProgress {
   time_taken: number;
   statistics: AttackStatistics;
   reconstructed_image: string;
+  true_image: string;
 }
 
 enum PageState {
