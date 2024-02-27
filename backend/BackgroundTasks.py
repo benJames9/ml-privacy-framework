@@ -40,7 +40,7 @@ class BackgroundTasks:
         )
         
     def _setup_worker(self):
-        self._worker_process = Process(target=self._worker_fn, args=(self._worker_queues))
+        self._worker_process = Process(target=self._worker_fn, args=(self._worker_queues,))
 
     # Start the worker proces, the response reader and event loop tasks
     def start(self):
