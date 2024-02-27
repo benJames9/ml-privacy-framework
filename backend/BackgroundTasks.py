@@ -105,6 +105,12 @@ class BackgroundTasks:
     def _response_reader(self, event_loop):
         while not self._process_is_dead:
             response = self._worker_queues.response_channel.get()
+            
+            if response is not None:
+                token, progress = response
+                if progress is not None and progress.message_type == "error":
+                    event_loop.create_task(self._psw.close_tokens_websockets(token, progress.error_message))
+                    self._restart_worker()
 
             # Safely push to asyncio queue on the main thread
             run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
@@ -141,11 +147,14 @@ class BackgroundTasks:
         if in_buffer:
             self._num_buffered_requests_changed.set()
         else:
-            self._worker_process.terminate()
-            self._worker_process.join()
-            self._setup_worker()
-            self._worker_process.start()
+            self._restart_worker()
         
         # Never got result so deregister route
         await self._psw.deregister_route(request_token)
-            
+    
+    # Restart the worker process, cancels the current task if exists
+    def _restart_worker (self):     
+        self._worker_process.terminate()
+        self._worker_process.join()
+        self._setup_worker()
+        self._worker_process.start()

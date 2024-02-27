@@ -48,15 +48,14 @@ class PubSubWs:
         await sleep(WEBSOCKET_TIMEOUT_SECONDS)
         
         # Close the websocket
-        await self._close_websocket(ws, request_token, "Timeout")
+        await self._close_websocket(ws, request_token, "Websocket Error: Timeout")
         
     # Close websocket and handle routes
     async def _close_websocket(self, ws: WebSocket, request_token: str, error: str):
-
         # Wrap lock around closure so closing and removing is atomic
         async with self._dict_lock:
             if ws.client_state != WebSocketState.DISCONNECTED:
-                error_message = self._generate_error(f"WebSocket error: {error}")
+                error_message = self._generate_error(error)
                 await ws.send_text(json.dumps(error_message))
                 await ws.close()
             
@@ -64,6 +63,11 @@ class PubSubWs:
             if request_token in self._route_dict:
                 if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
+    
+    # Close all websockets for a given token
+    async def close_tokens_websockets(self, request_token: str, error: str):
+        for ws in self._route_dict[request_token]:
+            await self._close_websocket(ws, request_token, error)
     
     # Generate JSON error message to send to client       
     def _generate_error(self, error: str):

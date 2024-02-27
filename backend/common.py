@@ -79,3 +79,4 @@ class AttackProgress(BaseModel):
     statistics: AttackStatistics = AttackStatistics()
     true_image: Optional[str] = None # base64 encoded image
     reconstructed_image: Optional[str] = None # base64 encoded image
+    error_message: str = None # Optional error message
