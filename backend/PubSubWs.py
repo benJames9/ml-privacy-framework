@@ -1,6 +1,5 @@
-from fastapi import FastAPI, WebSocket, Request
-from fastapi.responses import JSONResponse
-from starlette.websockets import WebSocketState
+from fastapi import FastAPI, WebSocket, status
+from starlette.websockets import WebSocketState, WebSocketDisconnect
 from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
@@ -19,8 +18,7 @@ class PubSubWs:
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             if request_token not in self._route_dict:
-                await self._close_websocket(ws, request_token, "Non-existent route")
-                return
+                raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
 
             await ws.accept()
 
