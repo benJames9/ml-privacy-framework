@@ -28,8 +28,8 @@ jobs:
     - name: Build and push nginx image
       run: |
         docker build -t benjames9/ml-privacy-nginx:latest \
-          --build-arg FRONTEND_VM_IP="frontend" \
-          --build-arg BACKEND_VM_IP="backend" \
+          --build-arg FRONTEND_VM_IP="${{ secrets.SSH_FRONTEND_HOST }}" \
+          --build-arg BACKEND_VM_IP="${{ secrets.SSH_BACKEND_HOST }}" \
           ./nginx && docker push benjames9/ml-privacy-nginx:latest
 
   deploy:
