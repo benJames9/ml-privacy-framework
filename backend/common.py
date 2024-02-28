@@ -59,13 +59,13 @@ class AttackParameters(BaseModel):
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
     budget: int
-    
+
 
 class AttackStatistics(BaseModel):
     MSE: float = 0
     PSNR: float = 0
     SSIM: float = 0
-    
+
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"

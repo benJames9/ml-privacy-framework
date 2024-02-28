@@ -11,7 +11,7 @@ from common import AttackParameters, WorkerCommunication, PositionInQueue
 
 WorkerFunction = Callable[[WorkerCommunication], NoReturn]
 
-# Background task manager, responsible for managing the worker process 
+# Background task manager, responsible for managing the worker process
 # and the communication between the worker process and the web server
 class BackgroundTasks:
     def __init__(self):
@@ -26,10 +26,10 @@ class BackgroundTasks:
         self._worker_queues = WorkerCommunication()
 
         self._psw = PubSubWs()
-    
+
     # Setup relevant modules and processes
     def setup(self, app, worker_fn):
-        # Creates the websocket server with given base path 
+        # Creates the websocket server with given base path
         self._psw.setup(app, "/ws/attack-progress")
 
         self._worker_fn = worker_fn
@@ -38,7 +38,7 @@ class BackgroundTasks:
         self._response_reading_thread = Thread(
             target=self._response_reader, args=(asyncio.get_event_loop(),)
         )
-        
+
     def _setup_worker(self):
         self._worker_process = Process(target=self._worker_fn, args=(self._worker_queues,))
 
@@ -105,7 +105,7 @@ class BackgroundTasks:
     def _response_reader(self, event_loop):
         while not self._process_is_dead:
             response = self._worker_queues.response_channel.get()
-            
+
             if response is not None:
                 token, progress = response
                 if progress is not None and progress.message_type == "error":
@@ -134,7 +134,7 @@ class BackgroundTasks:
         loop.create_task(self._put_requests_to_thread())
 
     # Cancel a task either in buffer or currently being processed
-    async def cancel_task(self, request_token: str): 
+    async def cancel_task(self, request_token: str):
         in_buffer = False
         async with self._buffered_requests_lock:
             for (buffered_request_token, _) in self._buffered_requests:
@@ -142,18 +142,18 @@ class BackgroundTasks:
                     self._buffered_requests.remove((request_token, _))
                     in_buffer = True
                     break
-        
+
         # Either restart worker to cancel current task or remove from buffer
         if in_buffer:
             self._num_buffered_requests_changed.set()
         else:
             self._restart_worker()
-        
+
         # Never got result so deregister route
         await self._psw.deregister_route(request_token)
-    
+
     # Restart the worker process, cancels the current task if exists
-    def _restart_worker (self):     
+    def _restart_worker (self):
         self._worker_process.terminate()
         self._worker_process.join()
         self._setup_worker()

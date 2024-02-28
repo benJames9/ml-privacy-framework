@@ -20,20 +20,20 @@ def attack_worker(queues: WorkerCommunication):
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
-        
+
         # limit_gpu_percentage(data.budget)
 
         try:
-            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data, 
-                                                                            cfg=None, 
+            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
+                                                                            cfg=None,
                                                                             torch_model=None)
-            
+
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
-            r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker, 
+            r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker,
                                                                                 model, loss_fn, request_token=request_token)
             breaching.get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
-            
+
         # Report any errors to task manager
         except Exception as e:
             progress = AttackProgress(message_type="error", error_message=f'Attack Configuration Error: {str(e)}')

@@ -1,7 +1,7 @@
 interface CancelButtonProps {
     onClick: () => void;
   }
-  
+
   const CancelButton: React.FC<CancelButtonProps> = ({ onClick }) => {
     return (
       <button
@@ -13,6 +13,5 @@ interface CancelButtonProps {
       </button>
     )
   }
-  
+
   export default CancelButton;
-  

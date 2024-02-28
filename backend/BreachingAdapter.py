@@ -13,7 +13,7 @@ import asyncio
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
-    
+
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
         match attack_params.modality:
             case "images":
@@ -22,9 +22,9 @@ class BreachingAdapter:
                 cfg = self._construct_text_cfg(attack_params)
             case _:
                 raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
-            
+
         assert(attack_params is not None)
-        
+
         #setup all customisable parameters
         cfg.case.model = attack_params.model
 
@@ -46,7 +46,7 @@ class BreachingAdapter:
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
-        
+
         match dataset_path:
             case None:
                 cfg.case.data.path = 'dataset'
@@ -60,9 +60,9 @@ class BreachingAdapter:
         cfg.case.user.user_idx = attack_params.user_idx
         cfg.case.data.default_clients = attack_params.number_of_clients
         cfg.attack.restarts.num_trials = attack_params.numRestarts
-            
+
         return cfg
-        
+
     def _construct_text_cfg(self, attack_params: AttackParameters):
         match attack_params.attack:
             case 'TAG':
@@ -85,7 +85,7 @@ class BreachingAdapter:
                     cfg.case.model=attack_params.model
                 except AssertionError as a:
                     raise TypeError(f"no model match for text: {attack_params.model}")
-        
+
         match attack_params.tokenizer:
             case "bert":
                 cfg.case.data.tokenizer="bert-base-uncased"
@@ -100,8 +100,8 @@ class BreachingAdapter:
                 cfg.case.model="transformer3"
             case _:
                 raise TypeError(f"no model match for tokenizer: {attack_params.model}")
-                
-        
+
+
         cfg.case.data.shape = attack_params.shape
 
 
@@ -129,7 +129,7 @@ class BreachingAdapter:
                 cfg = breachinglib.get_config(overrides=["attack=analytic", "case.model=linear"])
                 cfg.case.data.partition="balanced"
                 cfg.case.data.default_clients = 50
-                cfg.case.user.num_data_points = 256 # User batch size 
+                cfg.case.user.num_data_points = 256 # User batch size
             case 'rgap':
                 cfg = breachinglib.get_config(overrides=["attack=rgap", "case.model=cnn6", "case.user.provide_labels=True"])
                 cfg.case.user.num_data_points = 1
@@ -147,9 +147,9 @@ class BreachingAdapter:
         return cfg
 
     def setup_attack(self, attack_params:AttackParameters=None, cfg=None, torch_model=None):
-        
+
         print(f'~~~[Attack Params]~~~ {attack_params}')
-        
+
         device = torch.device(f'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
         if cfg == None:
@@ -157,7 +157,7 @@ class BreachingAdapter:
 
         if torch_model is None:
             torch_model = self._buildUploadedModel(attack_params.model, attack_params.ptFilePath)
-            
+
         # unzipped_directory = attack_params.zipFilePath.split('.')[0]
         print(os.listdir())
         if (os.path.exists('dataset')):
@@ -165,16 +165,16 @@ class BreachingAdapter:
         with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
             zip_ref.extractall('./dataset')
         print(os.listdir('dataset'))
-        
+
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
 
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
-        logger = logging.getLogger() 
+        logger = logging.getLogger()
 
         cfg = self._construct_cfg(attack_params)
-        
+
         print(cfg)
 
         user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=torch_model)
@@ -184,29 +184,29 @@ class BreachingAdapter:
 
         if torch_model is not None:
             model = torch_model
-        
+
         if not self._check_image_size(model, cfg.case.data.shape):
             raise ValueError("Mismatched dimensions")
-        
+
         return cfg, setup, user, server, attacker, model, loss_fn
 
     def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
         server_payload = server.distribute_payload()
         shared_data, true_user_data = user.compute_local_updates(server_payload)
         breachinglib.utils.overview(server, user, attacker)
-        
+
         response = request_token, self._worker_response_queue
         user.plot(true_user_data, saveFile="true_data")
         print("reconstructing attack")
-        reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {}, 
-                                                              dryrun=cfg.dryrun, token=request_token, 
+        reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {},
+                                                              dryrun=cfg.dryrun, token=request_token,
                                                               add_response_to_channel=self._add_progress_to_channel)
         user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         return reconstructed_user_data, true_user_data, server_payload
-        
+
     def get_metrics(self, reconstructed_user_data, true_user_data, server_payload, server, cfg, setup, response):
-        metrics = breachinglib.analysis.report(reconstructed_user_data, true_user_data, [server_payload], 
-                                        server.model, order_batch=True, compute_full_iip=False, 
+        metrics = breachinglib.analysis.report(reconstructed_user_data, true_user_data, [server_payload],
+                                        server.model, order_batch=True, compute_full_iip=False,
                                         cfg_case=cfg.case, setup=setup, compute_lpips=False)
         print(metrics)
         # stats = AttackStatistics(MSE=0, SSIM=0, PSNR=0)
@@ -216,22 +216,22 @@ class BreachingAdapter:
         with open("./reconstructed_data.png", 'rb') as image_file:
             image_data_rec = image_file.read()
         base64_reconstructed = base64.b64encode(image_data_rec).decode('utf-8')
-        
+
         with open("./true_data.png", 'rb') as image_file:
             image_data_true = image_file.read()
         base64_true = base64.b64encode(image_data_true).decode('utf-8')
 
         iterations = cfg.attack.optim.max_iterations
         restarts = cfg.attack.restarts.num_trials
-        channel.put(token, AttackProgress(current_iteration=iterations, 
+        channel.put(token, AttackProgress(current_iteration=iterations,
                                         current_restart=restarts,
                                         max_iterations=iterations,
                                         max_restarts=restarts,
-                                        statistics=stats, 
+                                        statistics=stats,
                                         true_image=base64_true,
                                         reconstructed_image=base64_reconstructed))
         return metrics
-        
+
     def _check_image_size(self, model, shape):
         return True
 
@@ -239,10 +239,10 @@ class BreachingAdapter:
         model = None
         if model_type == "ResNet-18":
             model = models.resnet18()
-        
+
         if not model:
             raise TypeError("given model type did not match any of the options")
-        
+
         try:
             model.load_state_dict(torch.load(state_dict_path))
         except RuntimeError as r:
@@ -257,16 +257,16 @@ class BreachingAdapter:
     ''')
         model.eval()
         return model
-    
+
     async def _forward_response_from_breaching(self):
         print("waiting for response from breaching")
         while True:
             request_token, response_data = await asyncio.to_thread(self._breaching_response_queue.get())
             if request_token is None:
                 break
-            
+
             print("forwarding response for " + request_token)
-            
+
             progress = AttackProgress(
                 message_type="AttackProgress",
                 current_iteration=response_data.iteration,
@@ -276,7 +276,7 @@ class BreachingAdapter:
                 current_batch=response_data.batch,
                 max_batches=response_data.max_batches
             )
-            
+
             self._worker_response_queue.put(request_token, progress)
 
     # Callback to be passed into submodule to add progress to the channel
@@ -290,5 +290,5 @@ class BreachingAdapter:
                 current_batch=response_data.current_batch,
                 max_batches=response_data.max_batches
         )
-        
+
         self._worker_response_queue.put(request_token, progress)
