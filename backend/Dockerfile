@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy files to workdir
-COPY . . 
+COPY . .
 
 # Run API on container port 8000
-CMD uvicorn main:app --host 0.0.0.0 --port 8000
+CMD uvicorn --workers 4 main:app --host 0.0.0.0 --port 8000
