@@ -16,19 +16,21 @@ const TimeEstimate: React.FC<TimeEstimateProps> = ({ attackProgress, startTime, 
   useEffect(() => {
     if (!attackProgress || !startTime || previousTimes.length === 0) return;
 
-    const currentIterationTime = performance.now() - startTime;
-    const averageTimePerIteration = previousTimes.reduce((a, b) => a + b, 0) / previousTimes.length;
+    const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
 
-    const currentIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
-    const remainingIterations = totalIterations - currentIteration;
+    if (newIteration !== currentIteration) {
+      const currentIterationTime = (performance.now() - startTime) / 1000;
+      const averageTimePerIteration = previousTimes.reduce((a, b) => a + b, 0) / previousTimes.length;
+      const remainingIterations = totalIterations - currentIteration;
 
-    if (currentIteration <= totalIterations) {
-      setCurrentIteration(currentIteration);
-    }
+      if (newIteration <= totalIterations) {
+        setCurrentIteration(newIteration);
+      }
 
-    const timeEstimate = remainingIterations * averageTimePerIteration - currentIterationTime;
-    if (timeEstimate > 0) {
-      setTimeRemaining(timeEstimate);
+      const timeEstimate = remainingIterations * averageTimePerIteration - currentIterationTime;
+      if (timeEstimate > 0) {
+        setTimeRemaining(timeEstimate);
+      }
     }
   }, [attackProgress, startTime, previousTimes]);
 

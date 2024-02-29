@@ -84,12 +84,14 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
 
   useEffect(() => {
-    if (!startTime) return;
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
     if (newIteration !== currentIteration) {
       setCurrentIteration(newIteration);
-      setPreviousTimes([...previousTimes, performance.now() - startTime]);
+      if (startTime) {
+        setPreviousTimes([...previousTimes, (performance.now() - startTime) / 1000]);
+      }
     }
+    setStartTime(performance.now());
   }, [attackProgress]);
 
   useEffect(() => {
@@ -110,7 +112,6 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           if (data.current_iteration !== data.max_iterations) {
             // let them see the full queue progress bar for a bit
             await wait_ms(500);
-            setStartTime(performance.now());
             setPageState(PageState.ATTACKING)
           }
 
