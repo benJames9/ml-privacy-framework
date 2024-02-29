@@ -6,7 +6,6 @@ import HBar from "@/components/HBar";
 import ModelSelect from "@/components/ModelSelect";
 import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
-import LoggingParams from "@/components/LoggingParams";
 import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 
@@ -37,9 +36,6 @@ export default function Home() {
   const [maxIterations, setMaxIterations] = useState<number>(0);
   const [budget, setBudget] = useState<number>(0);
 
-  // Logging parameters
-  const [callbackInterval, setCallbackInterval] = useState<number>(0);
-
   const onClick = async () => {
     const formData = new FormData();
 
@@ -57,7 +53,6 @@ export default function Home() {
     formData.append("numRestarts", numRestarts.toString());
     formData.append("stepSize", stepSize.toString());
     formData.append("maxIterations", maxIterations.toString());
-    formData.append("callbackInterval", callbackInterval.toString());
     formData.append("budget", budget.toString());
 
     const res = await fetch("/api/submit-attack", {
@@ -144,10 +139,6 @@ export default function Home() {
       default:
         break;
     }
-  }
-
-  const handleLoggingParamsChange = (value: string) => {
-    setCallbackInterval(parseInt(value));
   }
 
   return (

@@ -56,7 +56,7 @@ class BreachingAdapter:
         cfg.case.data.batch_size = attack_params.batchSize
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
-        cfg.attack.optim.callback = attack_params.callbackInterval
+        cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = attack_params.user_idx
         cfg.case.data.default_clients = attack_params.number_of_clients
         cfg.attack.restarts.num_trials = attack_params.numRestarts
