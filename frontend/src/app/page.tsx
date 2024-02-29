@@ -198,9 +198,6 @@ export default function Home() {
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
         <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
-        <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-4">Logging Parameters</h3>
-        <LoggingParams handleLoggingParamsChange={handleLoggingParamsChange} />
         <EvaluateButton onClick={onClick} />
       </div>
     </main>
