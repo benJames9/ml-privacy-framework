@@ -6,7 +6,6 @@ import HBar from "@/components/HBar";
 import ModelSelect from "@/components/ModelSelect";
 import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
-import LoggingParams from "@/components/LoggingParams";
 import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 
@@ -37,9 +36,6 @@ export default function Home() {
   const [maxIterations, setMaxIterations] = useState<number>(0);
   const [budget, setBudget] = useState<number>(0);
 
-  // Logging parameters
-  const [callbackInterval, setCallbackInterval] = useState<number>(0);
-
   const onClick = async () => {
     const formData = new FormData();
 
@@ -57,7 +53,6 @@ export default function Home() {
     formData.append("numRestarts", numRestarts.toString());
     formData.append("stepSize", stepSize.toString());
     formData.append("maxIterations", maxIterations.toString());
-    formData.append("callbackInterval", callbackInterval.toString());
     formData.append("budget", budget.toString());
 
     const res = await fetch("/api/submit-attack", {
@@ -146,10 +141,6 @@ export default function Home() {
     }
   }
 
-  const handleLoggingParamsChange = (value: string) => {
-    setCallbackInterval(parseInt(value));
-  }
-
   return (
     <main>
       <Navbar />
@@ -166,7 +157,7 @@ export default function Home() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement="upload-zip-header"
+            nextElement={attack === "Inverting Gradients\n(Single Step)" ? "upload-zip-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
@@ -174,7 +165,7 @@ export default function Home() {
         </div>
         <HBar />
         {attack === "Inverting Gradients\n(Single Step)" && <div>
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
           <div className="mb-4">
             <FileUpload
               expectedFileType="zip"
@@ -198,9 +189,6 @@ export default function Home() {
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
         <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
-        <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-4">Logging Parameters</h3>
-        <LoggingParams handleLoggingParamsChange={handleLoggingParamsChange} />
         <EvaluateButton onClick={onClick} />
       </div>
     </main>

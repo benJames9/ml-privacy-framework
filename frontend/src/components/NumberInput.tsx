@@ -10,6 +10,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, onChange }) => {
       <input
         type="number"
         onChange={onChange}
+        onWheel={e => { e.currentTarget.blur() }}
         className="text-black bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
     </div>
   )

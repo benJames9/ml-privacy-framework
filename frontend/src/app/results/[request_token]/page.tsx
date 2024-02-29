@@ -8,28 +8,15 @@ import Stats from "@/components/Stats";
 import React, { useEffect, useState } from "react";
 import HorizontalBar from "@/components/ProgressBar";
 
-import { AttackStatistics } from "@/components/AttackStatistics";
+import { AttackProgress } from "@/components/AttackProgress";
 import CancelButton from "@/components/CancelButton";
+import TimeEstimate from "@/components/TimeEstimate";
 
 interface SearchParam {
   params: {
     request_token: number
   }
 };
-
-// TypeScript interface for AttackProgress
-interface AttackProgress {
-  current_iteration: number;
-  max_iterations: number;
-  current_restart: number;
-  max_restarts: number;
-  current_batch: number;
-  max_batches: number;
-  time_taken: number;
-  statistics: AttackStatistics;
-  reconstructed_image: string;
-  true_image: string;
-}
 
 enum PageState {
   LOADING_SPINNER,
@@ -90,8 +77,20 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     true_image: "",
     reconstructed_image: ""
   });
+  const [currentIteration, setCurrentIteration] = useState<number>(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
+  const [pageState, setPageState] = useState<PageState>(PageState.ATTACKING);
+
+  useEffect(() => {
+    if (!startTime) return;
+    const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
+    if (newIteration !== currentIteration) {
+      setCurrentIteration(newIteration);
+      setPreviousTimes([...previousTimes, performance.now() - startTime]);
+    }
+  }, [attackProgress]);
 
   useEffect(() => {
     const ws_url = construct_ws_url(`/ws/attack-progress/${request_token}`)
@@ -111,19 +110,20 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           if (data.current_iteration !== data.max_iterations) {
             // let them see the full queue progress bar for a bit
             await wait_ms(500);
+            setStartTime(performance.now());
             setPageState(PageState.ATTACKING)
           }
 
           delete data.message_type;
           setAttackProgress(data);
 
-          if (data.true_image != "" && data.reconstructed_image != ""){
+          if (data.true_image != "" && data.reconstructed_image != "") {
             if (data.current_iteration === data.max_iterations
-            && data.current_restart === data.max_restarts) {
+              && data.current_restart === data.max_restarts) {
               // let them see the full attack progress bar for a bit
               await wait_ms(500);
               setPageState(PageState.FINAL_SCREEN);
-          }
+            }
           }
 
           break;
@@ -166,6 +166,11 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           max={attackProgress.max_restarts * attackProgress.max_iterations}
           text="Attacking..."
           color="bg-green-600"
+        />
+        <TimeEstimate
+          attackProgress={attackProgress}
+          startTime={startTime}
+          previousTimes={previousTimes}
         />
         <CancelButton
           onClick={() => onCancel(params.request_token)}

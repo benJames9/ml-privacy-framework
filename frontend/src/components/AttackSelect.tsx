@@ -10,7 +10,7 @@ const AttackSelect: React.FC<AttackSelectProps> = ({
   attacks,
   onChange,
 }) => {
-  const [internalSelectedAttack, setInternalSelectedAttack] = useState(attacks[0]);
+  const [internalSelectedAttack, setInternalSelectedAttack] = useState("");
   const handleAttackSelect = (attack: string) => {
     setInternalSelectedAttack(attack);
     onChange(attack);
