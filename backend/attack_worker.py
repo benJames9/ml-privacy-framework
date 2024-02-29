@@ -51,10 +51,11 @@ def limit_gpu_percentage(percentage):
 
 # Use this for testing?
 if __name__ == "__main__":
+    from common import AttackParameters
     pars = AttackParameters(
         model='ResNet-18',
-        datasetStructure='folders',
-        csvPath='~/data',
+        datasetStructure='Foldered',
+        csvPath='~/data/images',
         datasetSize=350,
         numClasses=7,
         batchSize=1,
@@ -62,9 +63,11 @@ if __name__ == "__main__":
         stepSize=0.1,
         maxIterations=1,
         callbackInterval=10,
-        ptFilePath='resnet18_pretrained.pt',
-        zipFilePath='small_foldered_set.zip',
-        budget=100
+        ptFilePath='../resnet18_pretrained.pt',
+        zipFilePath='../small_foldered_set.zip',
+        budget=100,
+        means=[0.46, 0.56, 0.57],
+        stds=[0.32, 0.28, 0.27]
     )
 
     req_tok = str(uuid.uuid4())

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, TypeVar, Generic
+from typing import Optional, Tuple, TypeVar, Generic, List
 from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
 
@@ -51,6 +51,8 @@ class AttackParameters(BaseModel):
     csvPath: Optional[str]
     datasetSize: int
     numClasses: int
+    means: List[int]
+    stds: List[int]
     batchSize: int
     numRestarts: int
     stepSize: float
