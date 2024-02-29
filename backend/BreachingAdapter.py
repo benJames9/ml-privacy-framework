@@ -239,24 +239,25 @@ class BreachingAdapter:
 
     def _buildUploadedModel(self, model_type, state_dict_path):
         model = None
-        if model_type == "ResNet-18":
-            model = models.resnet18()
+        model_type = model_type.replace('-', '').lower()
 
-        if not model:
+        if not hasattr(models, model_type):
             raise TypeError("given model type did not match any of the options")
+        model = getattr(models, model_type)()
 
-        try:
-            model.load_state_dict(torch.load(state_dict_path))
-        except RuntimeError as r:
-            print(f'''Runtime error loading torch model from file:
-    {r}
-    Model is loaded from default values.
-    ''')
-        except FileNotFoundError as f:
-            print(f'''Runtime error loading torch model from file:
-    {f}
-    Model is loaded from default values.
-    ''')
+        if state_dict_path is not None:
+            try:
+                model.load_state_dict(torch.load(state_dict_path))
+            except RuntimeError as r:
+                print(f'''Runtime error loading torch model from file:
+        {r}
+        Model is loaded from default values.
+        ''')
+            except FileNotFoundError as f:
+                print(f'''Runtime error loading torch model from file:
+        {f}
+        Model is loaded from default values.
+        ''')
         model.eval()
         return model
 
