@@ -41,8 +41,10 @@ export default function Home() {
 
   useEffect(() => {
     // Scroll to loading icon
-    const loadingIcon = document.getElementById("loading-icon");
-    loadingIcon!.scrollIntoView({ behavior: "smooth" });
+    if (submitted) {
+      const loadingIcon = document.getElementById("loading-icon");
+      loadingIcon!.scrollIntoView({ behavior: "smooth" });
+    }
   }, [submitted]);
 
   const onClick = async () => {
@@ -137,7 +139,7 @@ export default function Home() {
         setNumRestarts(parseInt(value));
         break;
       case "stepSize":
-        setStepSize(parseInt(value));
+        setStepSize(parseFloat(value));
         break;
       case "maxIterations":
         setMaxIterations(parseInt(value));

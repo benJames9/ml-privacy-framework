@@ -56,7 +56,7 @@ async def submit_attack(
     numClasses: int = Form(...),
     batchSize: int = Form(...),
     numRestarts: int = Form(...),
-    stepSize: int = Form(...),
+    stepSize: float = Form(...),
     maxIterations: int = Form(...),
     budget: int = Form(...),
 ):

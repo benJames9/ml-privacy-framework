@@ -81,7 +81,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.ATTACKING);
+  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
 
   useEffect(() => {
     if (!startTime) return;
