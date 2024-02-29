@@ -166,7 +166,7 @@ export default function Home() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement="upload-zip-header"
+            nextElement={attack === "Inverting Gradients\n(Single Step)" ? "upload-zip-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
@@ -174,7 +174,7 @@ export default function Home() {
         </div>
         <HBar />
         {attack === "Inverting Gradients\n(Single Step)" && <div>
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
           <div className="mb-4">
             <FileUpload
               expectedFileType="zip"

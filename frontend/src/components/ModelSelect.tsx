@@ -10,7 +10,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   models,
   onChange,
 }) => {
-  const [internalSelectedModel, setInternalSelectedModel] = useState(models[0]);
+  const [internalSelectedModel, setInternalSelectedModel] = useState("");
   const handleModelSelect = (model: string) => {
     setInternalSelectedModel(model);
     onChange(model);

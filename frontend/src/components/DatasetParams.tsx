@@ -58,7 +58,7 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
       </div>}
       {attack === "TAG\n(Text Attack)" && <div>
         <SelectInput
-            label="Text Dataset:"
+          label="Text Dataset:"
           options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
           onChange={(e) => handleDataParamsChange("textDataset", e.target.value)}
         />

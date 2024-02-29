@@ -25,7 +25,7 @@ const TimeEstimate: React.FC<TimeEstimateProps> = ({ attackProgress, startTime, 
     if (currentIteration <= totalIterations) {
       setCurrentIteration(currentIteration);
     }
-    
+
     const timeEstimate = remainingIterations * averageTimePerIteration - currentIterationTime;
     if (timeEstimate > 0) {
       setTimeRemaining(timeEstimate);
