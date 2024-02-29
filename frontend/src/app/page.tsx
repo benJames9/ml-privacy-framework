@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DatasetParams from "@/components/DatasetParams";
 import FileUpload from "@/components/FileUpload";
 import HBar from "@/components/HBar";
@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import AttackParams from "@/components/AttackParams";
 import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
+import LoadingIcon from "@/components/LoadingIcon";
 
 export default function Home() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
@@ -35,6 +36,14 @@ export default function Home() {
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
   const [budget, setBudget] = useState<number>(0);
+
+  const [submitted, setSubmitted] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Scroll to loading icon
+    const loadingIcon = document.getElementById("loading-icon");
+    loadingIcon!.scrollIntoView({ behavior: "smooth" });
+  }, [submitted]);
 
   const onClick = async () => {
     const formData = new FormData();
@@ -189,7 +198,15 @@ export default function Home() {
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
         <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
-        <EvaluateButton onClick={onClick} />
+        <EvaluateButton onClick={() => {
+          if (!submitted) {
+            setSubmitted(true);
+            onClick();
+          }
+        }} />
+        <div id="loading-icon">
+          {submitted && <LoadingIcon />}
+        </div>
       </div>
     </main>
   )
