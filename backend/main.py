@@ -55,6 +55,8 @@ async def submit_attack(
     datasetSize: int = Form(...),
     numClasses: int = Form(...),
     batchSize: int = Form(...),
+    mean: str = Form(...),
+    std: str = Form(...),
     numRestarts: int = Form(...),
     stepSize: float = Form(...),
     maxIterations: int = Form(...),
@@ -77,6 +79,8 @@ async def submit_attack(
         datasetSize=datasetSize,
         numClasses=numClasses,
         batchSize=batchSize,
+        means=[float(i) for i in mean.strip("[]").split(",")],
+        stds=[float(i) for i in std.strip("[]").split(",")],
         numRestarts=numRestarts,
         stepSize=stepSize,
         maxIterations=maxIterations,
@@ -90,7 +94,8 @@ async def submit_attack(
 
     return request_token
 
-# Cancel an attack associated with token
+
+# Cancel an attack associated with token
 @app.post(f"/api/cancel/{{request_token}}")
 async def cancel_attack(request_token: str):
     await background_task_manager.cancel_task(request_token)

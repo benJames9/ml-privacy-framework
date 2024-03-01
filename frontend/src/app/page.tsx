@@ -60,6 +60,8 @@ export default function Home() {
     formData.append("csvPath", csvPath);
     formData.append("datasetSize", datasetSize.toString());
     formData.append("numClasses", numClasses.toString());
+    formData.append("mean", JSON.stringify(mean));
+    formData.append("std", JSON.stringify(std));
     formData.append("batchSize", batchSize.toString());
     formData.append("numRestarts", numRestarts.toString());
     formData.append("stepSize", stepSize.toString());
