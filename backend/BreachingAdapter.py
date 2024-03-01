@@ -153,6 +153,11 @@ class BreachingAdapter:
         print(f'~~~[Attack Params]~~~ {attack_params}')
 
         device = torch.device(f'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+        
+        # Limit the GPU memory usage based on user budget
+        if torch.cuda.is_available():
+            print(f'limiting cuda process memory')
+            torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
 
         if cfg == None:
             cfg = breachinglib.get_config()
