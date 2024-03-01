@@ -9,6 +9,7 @@ import uuid
 import os
 # from unittest.mock import Mock
 
+# Attack worker function to run on separate process and complete attacks
 def attack_worker(queues: WorkerCommunication):
     """
     This shows how the worker process should be structured.
@@ -21,12 +22,10 @@ def attack_worker(queues: WorkerCommunication):
         request_token, data = queues.task_channel.get()
         print(data)
 
-        # limit_gpu_percentage(data.budget)
-
         try:
             cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
-                                                                            cfg=None,
-                                                                            torch_model=None)
+                                                                                        cfg=None,
+                                                                                        torch_model=None)
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
@@ -39,15 +38,6 @@ def attack_worker(queues: WorkerCommunication):
             progress = AttackProgress(message_type="error", error_message=f'Attack Configuration Error: {str(e)}')
             queues.response_channel.put(request_token, progress)
             break
-
-# Limit GPU access with GPUtil
-def limit_gpu_percentage(percentage):
-    gpus = GPUtil.getGPUs()
-    if gpus:
-        gpu = gpus[0]  # Assuming you have only one GPU
-        gpu.set_power_limit(percentage=percentage)
-    else:
-        print("No GPU found.")
 
 # Use this for testing?
 if __name__ == "__main__":
