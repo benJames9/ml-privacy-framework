@@ -18,7 +18,8 @@ class PubSubWs:
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             if request_token not in self._route_dict:
-                raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
+                await self._close_websocket(ws, request_token, "Non-existent route")
+                return
 
             await ws.accept()
 
