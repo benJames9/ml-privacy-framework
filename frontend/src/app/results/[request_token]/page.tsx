@@ -79,7 +79,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.FINAL_SCREEN);
+  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_QUEUED);
   const [attackModality, setAttackModality] = useState<"image" | "text">("image");
 
   useEffect(() => {

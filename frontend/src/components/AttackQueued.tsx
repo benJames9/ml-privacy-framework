@@ -1,5 +1,6 @@
 import CancelButton from "./CancelButton";
 import HorizontalBar from "./ProgressBar";
+import SaveTokenButton from "./SaveTokenButton";
 
 interface AttackQueuedProps {
   queuedCurrent: number;
@@ -14,11 +15,16 @@ interface AttackQueuedProps {
 const AttackQueued: React.FC<AttackQueuedProps> = ({ queuedCurrent, queuedMax, onCancel, params }) => {
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
+    <div className="flex flex-col items-center py-[25vh] bg-gradient-to-r from-black to-blue-950">
       <HorizontalBar min={0} max={Math.max(queuedMax + 1, 10)} current={Math.max(queuedMax + 1, 10) - queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
-      <CancelButton
-        onClick={() => onCancel(params.request_token)}
-      />
+      <div className="flex mt-8">
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
+        />
+        <SaveTokenButton
+          token={params.request_token}
+        />
+      </div>
     </div>
   );
 }
