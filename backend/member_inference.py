@@ -147,4 +147,13 @@ class MembershipInferenceAttack:
         in_gaussian, out_gaussian = self._fit_gaussians()
         target_model_confidence = self._model_confidence(self._target_model, self._target_point)
         return self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
+    
+    class Resnet18MIA (MembershipInferenceAttack):
+        def _train_model(self, data):
+            # Train a ResNet18 model on the given data
+            pass
+        
+        def _transform(self, image):
+            # Transform image to the format expected by the model
+            pass
 
