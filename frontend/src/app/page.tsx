@@ -24,8 +24,6 @@ export default function Home() {
   // Dataset parameters
   const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
   const [csvPath, setCsvPath] = useState<string>("");
-  const [datasetSize, setDatasetSize] = useState<number>(0);
-  const [numClasses, setNumClasses] = useState<number>(0);
   const [batchSize, setBatchSize] = useState<number>(0);
   const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
@@ -58,8 +56,6 @@ export default function Home() {
     formData.append("model", model);
     formData.append("datasetStructure", datasetStructure);
     formData.append("csvPath", csvPath);
-    formData.append("datasetSize", datasetSize.toString());
-    formData.append("numClasses", numClasses.toString());
     formData.append("mean", JSON.stringify(mean));
     formData.append("std", JSON.stringify(std));
     formData.append("batchSize", batchSize.toString());
@@ -93,12 +89,6 @@ export default function Home() {
     switch (field) {
       case "csvPath":
         setCsvPath(value);
-        break;
-      case "datasetSize":
-        setDatasetSize(parseInt(value));
-        break;
-      case "numClasses":
-        setNumClasses(parseInt(value));
         break;
       case "batchSize":
         setBatchSize(parseInt(value));

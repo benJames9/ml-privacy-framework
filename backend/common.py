@@ -49,8 +49,6 @@ class AttackParameters(BaseModel):
     number_of_clients: int = 1
     datasetStructure: str
     csvPath: Optional[str]
-    datasetSize: int
-    numClasses: int
     means: List[float] = [0.46, 0.56, 0.57]
     stds: List[float] = [0.32, 0.28, 0.27]
     batchSize: int
