@@ -30,8 +30,6 @@ class BreachingAdapter:
 
         cfg.case.data.size = datasetSize
         cfg.case.data.classes = numClasses
-        print(attack_params.datasetSize, datasetSize)
-        print(attack_params.numClasses, numClasses)
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
