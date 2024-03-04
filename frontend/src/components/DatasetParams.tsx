@@ -27,6 +27,7 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
           <TextInput
             label="Path to CSV file"
             onChange={(e) => handleDataParamsChange("csvPath", e.target.value)}
+            isRequired={true}
           />
         )}
         <ThreeNumberInput
