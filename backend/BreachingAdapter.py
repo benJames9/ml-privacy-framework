@@ -30,6 +30,10 @@ class BreachingAdapter:
         cfg.case.model = attack_params.model
         cfg.case.data.size = datasetSize
         cfg.case.data.classes = numClasses
+        if attack_params.zipFilePath == None:
+            print("No file path given")
+            attack_params.datasetStructure = "test"
+            dataset_path = "~/data"
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
@@ -168,20 +172,31 @@ class BreachingAdapter:
             torch_model = self._buildUploadedModel(attack_params.model, attack_params.ptFilePath)
             
         extract_dir = "./dataset"
+        
+        num_classes = 0
+        dataset_size = 0
 
         # unzipped_directory = attack_params.zipFilePath.split('.')[0]
         print(os.listdir())
         if (os.path.exists(extract_dir)):
             shutil.rmtree(extract_dir)
-        with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
+        print(f"attack params file path: {attack_params.zipFilePath}")
+        if attack_params.zipFilePath is not None:
+            with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
         
-        num_files = 0
-        _, dirs, _ = next(os.walk("./dataset"))
-        num_dirs = len(dirs)
-        for _, dirs, files in os.walk(extract_dir):
-            num_files += len(files)
-
+            num_files = 0
+            _, dirs, _ = next(os.walk("./dataset"))
+            num_dirs = len(dirs)
+            for _, dirs, files in os.walk(extract_dir):
+                num_files += len(files)
+            
+            num_classes = num_dirs
+            dataset_size = num_dirs
+        else:
+            num_classes = 10 #
+            dataset_size = 50000 #
+        
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
@@ -189,7 +204,7 @@ class BreachingAdapter:
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
         logger = logging.getLogger()
 
-        cfg = self._construct_cfg(attack_params, num_files, num_dirs)
+        cfg = self._construct_cfg(attack_params, num_classes, dataset_size)
 
         print(cfg)
 
