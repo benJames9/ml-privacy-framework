@@ -148,13 +148,13 @@ export default function Home() {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Attack</h2>
+        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">Select Attack <span className="text-sm text-red-500">*</span></h2>
         <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
         <HBar />
-        <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
+        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">Select Model <span className="text-sm text-red-500">*</span></h2>
         <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters <span className="text-sm text-red-500">*</span></h3>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
@@ -168,7 +168,7 @@ export default function Home() {
         </div>
         <HBar />
         {attack === "Inverting Gradients\n(Single Step)" && <div>
-          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">Upload Custom Dataset <span className="text-sm text-red-500">*</span></h3>
           <div className="mb-4">
             <FileUpload
               expectedFileType="zip"
