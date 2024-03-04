@@ -2,6 +2,9 @@
 # FROM python:3.9
 FROM pytorch/pytorch:latest
 
+# Check python version
+RUN python --version
+
 # Workdir for output
 WORKDIR /app
 

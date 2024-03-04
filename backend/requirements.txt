@@ -7,5 +7,19 @@ GPUtil
 hydra-core
 scipy
 matplotlib
-# torch>=2.1.0,<2.2.0
-# torchvision>=0.16.0,<0.17.0
+datasets
+tokenizers
+transformers
+# pytorch==1.10.1
+torchvision
+# cudatoolkit==11.3
+torchvision
+scipy
+scikit-learn
+scikit-image
+tensorboard
+torchtext
+transformers
+datasets
+tensorflow
+lpips

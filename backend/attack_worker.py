@@ -1,6 +1,6 @@
 import base64
 from BreachingAdapter import BreachingAdapter
-from common import WorkerCommunication, AttackProgress
+from common import WorkerCommunication, AttackProgress, AttackParameters
 from multiprocessing import Event as mpEvent
 import time
 import random
@@ -24,8 +24,7 @@ def attack_worker(queues: WorkerCommunication):
 
         try:
             cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
-                                                                                        cfg=None,
-                                                                                        torch_model=None)
+                                                                                        cfg=None)
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
@@ -41,23 +40,26 @@ def attack_worker(queues: WorkerCommunication):
 
 # Use this for testing?
 if __name__ == "__main__":
-    from common import AttackParameters
     pars = AttackParameters(
-        model='ResNet-18',
-        datasetStructure='Foldered',
-        csvPath='~/data/images',
-        datasetSize=350,
-        numClasses=7,
+        modality="text",
+        model='transformer3',
+        attack="TAG",
+        datasetStructure='text',
+        # csvPath='~/data/images',
+        # datasetSize=350,
+        # numClasses=7,
         batchSize=1,
         numRestarts=1,
         stepSize=0.1,
-        maxIterations=1,
-        callbackInterval=10,
-        ptFilePath='../resnet18_pretrained.pt',
-        zipFilePath='../small_foldered_set.zip',
+        maxIterations=1000,
+        callbackInterval=100,
+        ptFilePath=None,
+        # zipFilePath='../small_foldered_set.zip',
         budget=100,
-        means=[0.46, 0.56, 0.57],
-        stds=[0.32, 0.28, 0.27]
+        # means=[0.46, 0.56, 0.57],
+        # stds=[0.32, 0.28, 0.27],
+        tokenizer="gpt2",
+        shape=[50]
     )
 
     req_tok = str(uuid.uuid4())

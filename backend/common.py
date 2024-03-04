@@ -43,23 +43,26 @@ class WorkerCommunication:
 
 class AttackParameters(BaseModel):
     model: str
-    attack: str = "invertinggradients"
-    modality: str = "images"
+    attack: str
+    modality: str
     user_idx: int = 0
     number_of_clients: int = 1
     datasetStructure: str
-    csvPath: Optional[str]
-    datasetSize: int
-    numClasses: int
+    csvPath: Optional[str] = None
+    datasetSize: int = None
+    numClasses: int = None
     means: List[float] = [0.46, 0.56, 0.57]
     stds: List[float] = [0.32, 0.28, 0.27]
-    batchSize: int
+    batchSize: int = None
     numRestarts: int
     stepSize: float
     maxIterations: int
-    ptFilePath: Optional[str]
-    zipFilePath: Optional[str]
-    budget: int
+    ptFilePath: Optional[str] = None
+    zipFilePath: Optional[str] = None
+    budget: int = None
+    tokenizer: str = None
+    shape: List[int] = None
+    callbackInterval: int
 
 
 class AttackStatistics(BaseModel):
