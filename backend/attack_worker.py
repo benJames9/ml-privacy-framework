@@ -46,8 +46,6 @@ if __name__ == "__main__":
         model='ResNet-18',
         datasetStructure='Foldered',
         csvPath='~/data/images',
-        datasetSize=350,
-        numClasses=7,
         batchSize=1,
         numRestarts=1,
         stepSize=0.1,

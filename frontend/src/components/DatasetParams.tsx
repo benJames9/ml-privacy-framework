@@ -29,14 +29,6 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
             onChange={(e) => handleDataParamsChange("csvPath", e.target.value)}
           />
         )}
-        <NumberInput
-          label="Size of dataset:"
-          onChange={(e) => handleDataParamsChange("datasetSize", e.target.value)}
-        />
-        <NumberInput
-          label="Number of classes:"
-          onChange={(e) => handleDataParamsChange("numClasses", e.target.value)}
-        />
         <ThreeNumberInput
           label="Image shape:"
           onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
