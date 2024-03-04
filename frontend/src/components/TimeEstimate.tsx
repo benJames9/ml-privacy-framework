@@ -49,7 +49,7 @@ const TimeEstimate: React.FC<TimeEstimateProps> = ({ attackProgress, startTime, 
   };
 
   return (
-    <div className="w-4/5 flex justify-between items-center -mt-8 text-gray-200">
+    <div className="w-4/5 flex justify-between items-center mt-2 text-gray-200">
       <p>Iteration: {currentIteration}/{totalIterations}</p>
       <p>Estimated time remaining: ~{formatTime(timeRemaining)}</p>
     </div>

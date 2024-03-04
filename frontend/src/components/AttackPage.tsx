@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { AttackProgress } from "./AttackProgress";
 import CancelButton from "./CancelButton";
 import HorizontalBar from "./ProgressBar";
 import TimeEstimate from "./TimeEstimate";
+import SaveTokenButton from "./SaveTokenButton";
+import SuccessAlert from "./SuccessAlert";
 
 interface AttackPageProps {
   attackProgress: AttackProgress;
@@ -14,8 +17,16 @@ interface AttackPageProps {
 }
 
 const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, previousTimes, onCancel, params }) => {
+  const [copied, setCopied] = useState<boolean>(false);
+
+  const copyToken = () => {
+    navigator.clipboard.writeText(params.request_token.toString());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
+    <div className="flex min-h-screen flex-col items-center py-[25vh] bg-gradient-to-r from-black to-blue-950">
       <HorizontalBar
         current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
         min={0}
@@ -28,9 +39,15 @@ const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, prev
         startTime={startTime}
         previousTimes={previousTimes}
       />
-      <CancelButton
-        onClick={() => onCancel(params.request_token)}
-      />
+      <div className="flex mt-8 mb-8">
+        <CancelButton
+          onClick={() => onCancel(params.request_token)}
+        />
+        <SaveTokenButton
+          onClick={copyToken}
+        />
+      </div>
+      {copied && <SuccessAlert text="Token successfully copied to clipboard!" onClose={() => { setCopied(false) }} />}
     </div>
   )
 }
