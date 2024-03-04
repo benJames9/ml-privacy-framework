@@ -45,8 +45,6 @@ class AttackParameters(BaseModel):
     model: str
     attack: str = "invertinggradients"
     modality: str = "images"
-    user_idx: int = 0
-    number_of_clients: int = 1
     datasetStructure: str
     csvPath: Optional[str]
     means: List[float] = [0.46, 0.56, 0.57]

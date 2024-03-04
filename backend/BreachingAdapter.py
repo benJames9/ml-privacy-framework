@@ -9,6 +9,7 @@ import base64
 import zipfile
 import os, shutil
 import asyncio
+import random
 
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
@@ -27,7 +28,6 @@ class BreachingAdapter:
 
         #setup all customisable parameters
         cfg.case.model = attack_params.model
-
         cfg.case.data.size = datasetSize
         cfg.case.data.classes = numClasses
         match attack_params.datasetStructure:
@@ -62,8 +62,7 @@ class BreachingAdapter:
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
         cfg.attack.optim.callback = 1
-        cfg.case.user.user_idx = attack_params.user_idx
-        cfg.case.data.default_clients = attack_params.number_of_clients
+        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.numRestarts
 
         return cfg
@@ -115,7 +114,7 @@ class BreachingAdapter:
         match attack_params.attack:
             case 'invertinggradients':
                 cfg = breachinglib.get_config()
-                cfg.case.data.partition="unique-class"
+                cfg.case.data.partition="random"
                 # default case.model=ResNet18
             case 'modern':
                 cfg = breachinglib.get_config(overrides=["attack=modern"])
