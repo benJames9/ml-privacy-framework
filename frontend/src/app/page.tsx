@@ -15,8 +15,8 @@ export default function Home() {
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
 
-  const [model, setSelectedModel] = useState<string>(imageModels[0]);
-  const [attack, setSelectedAttack] = useState<string>(attacks[0]);
+  const [model, setSelectedModel] = useState<string>("");
+  const [attack, setSelectedAttack] = useState<string>("");
 
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
@@ -36,6 +36,8 @@ export default function Home() {
   const [budget, setBudget] = useState<number>(0);
 
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [isInvalid, setIsInvalid] = useState<boolean>(false);
+  let errors: string[] = [];
 
   useEffect(() => {
     // Scroll to loading icon
@@ -45,12 +47,57 @@ export default function Home() {
     }
   }, [submitted]);
 
+  const isValidInput: () => boolean = () => {
+    errors = [];
+    if (attack === "") {
+      errors.push("Please select an attack");
+    }
+    if (model === "") {
+      errors.push("Please select a model");
+    }
+    if (!ptFile) {
+      errors.push("Please upload a model parameter file");
+    }
+    if (attack === "Inverting Gradients\n(Single Step)" && !zipFile) {
+      errors.push("Please upload a dataset file");
+    }
+    if (datasetStructure === "CSV" && csvPath === "") {
+      errors.push("Please enter the path to the CSV file");
+    }
+    if (batchSize === 0) {
+      errors.push("Please enter a batch size > 0");
+    }
+    if (numRestarts === 0) {
+      errors.push("Please enter a number of restarts > 0");
+    }
+    if (stepSize === 0) {
+      errors.push("Please enter a step size > 0");
+    }
+    if (maxIterations === 0) {
+      errors.push("Please enter a maximum number of iterations > 0");
+    }
+    if (budget === 0) {
+      errors.push("Please enter a budget > 0");
+    }
+    return errors.length === 0;
+  }
+
+
   const onClick = async () => {
     const formData = new FormData();
 
     // Append files to formData
     if (ptFile) formData.append("ptFile", ptFile);
     if (zipFile) formData.append("zipFile", zipFile);
+
+    if (!isValidInput()) {
+      setSubmitted(false);
+      setIsInvalid(true);
+      console.log(errors);
+      return;
+    }
+
+    setIsInvalid(false);
 
     // Append text fields to formData
     formData.append("model", model);
