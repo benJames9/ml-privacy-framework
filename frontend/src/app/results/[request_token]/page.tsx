@@ -124,6 +124,11 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
               // let them see the full attack progress bar for a bit
               await wait_ms(500);
               setPageState(PageState.FINAL_SCREEN);
+
+              // since we're only now displaying those components
+              // we need to set the data that they should have again
+              // since they wouldn't have had the data set before they were enabled
+              setAttackProgress(data);
             }
           }
 
