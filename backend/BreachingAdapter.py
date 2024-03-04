@@ -53,8 +53,11 @@ class BreachingAdapter:
             case _:
                 cfg.case.data.path = dataset_path
 
-        cfg.case.data.mean = attack_params.means
-        cfg.case.data.std = attack_params.stds
+        if any(attack_params.means) and any(attack_params.stds):
+            cfg.case.data.mean = attack_params.means
+            cfg.case.data.std = attack_params.stds
+            cfg.case.data.normalize = False
+        
         cfg.case.data.batch_size = attack_params.batchSize
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
