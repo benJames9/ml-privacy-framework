@@ -79,7 +79,8 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
+  const [pageState, setPageState] = useState<PageState>(PageState.FINAL_SCREEN);
+  const [attackModality, setAttackModality] = useState<"image" | "text">("image");
 
   useEffect(() => {
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
@@ -116,13 +117,15 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           delete data.message_type;
           setAttackProgress(data);
 
-          if (data.true_image != "" && data.reconstructed_image != "") {
-            if (data.current_iteration === data.max_iterations
-              && data.current_restart === data.max_restarts) {
-              // let them see the full attack progress bar for a bit
-              await wait_ms(500);
-              setPageState(PageState.FINAL_SCREEN);
+          if (data.current_iteration === data.max_iterations
+            && data.current_restart === data.max_restarts) {
+            if (data.true_image === "" && data.reconstructed_image === "") {
+              setAttackModality("text");
             }
+
+            // let them see the full attack progress bar for a bit
+            await wait_ms(500);
+            setPageState(PageState.FINAL_SCREEN);
           }
 
           break;
@@ -164,7 +167,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       />
       break;
     case PageState.FINAL_SCREEN:
-      content = <AttackResults attackProgress={attackProgress} />
+      content = <AttackResults attackProgress={attackProgress} modality={attackModality} />
   }
 
   return (
