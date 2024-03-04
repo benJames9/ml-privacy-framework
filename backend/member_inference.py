@@ -10,6 +10,7 @@ class MembershipInferenceAttack:
         self._in_models = []
         self._out_models = []
     
+    @abstractmethod
     def _train_model(data):
         """
         Train a shadow model on the given data.
@@ -20,19 +21,28 @@ class MembershipInferenceAttack:
         Returns:
             model: Trained shadow model.
         """
-        # Placeholder for training a shadow model
-        model = None
-        return model
-
-    
+       pass
+   
+    @abstractmethod
+    def _transform(self, image):
+        """
+        Transform image to the format expected by the model.
+        
+        Parameters:
+            image: Image to transform.
+        
+        Returns:
+            image: Transformed image.
+        """
+        pass
+        
     def _train_shadow_models(self, data, n):
         """
         Train N shadow models on random samples from the data distribution D.
         
         Parameters:
             data (numpy.ndarray): The dataset.
-            target_point (tuple): The target point (x, y).
-            N (int): Number of shadow models to train.
+            n (int): The amount of data points to train each model on
             
         Returns:
             in_models (list): List of models trained on the target point.
@@ -53,10 +63,6 @@ class MembershipInferenceAttack:
     def _fit_gaussians(self):
         """
         Fit two Gaussians to the confidences of the models on the target point.
-        
-        Parameters:
-            models (list): List of shadow models.
-            target_point (tuple): The target point (x, y).
             
         Returns:
             in_gaussian (GaussianMixture): Gaussian fitted to IN models.
@@ -65,34 +71,55 @@ class MembershipInferenceAttack:
         in_confidences = []
         out_confidences = []
         
+        # Generate list of confidences for the target point
         for i in range(self._N):
             in_confidence = self._model_confidence(self._in_models[i], self._target_point)
             out_confidence = self._model_confidence(self._out_models[i], self._target_point)
             in_confidences.append(in_confidence)
             out_confidences.append(out_confidence)
         
+        # Fit Gaussians to the confidences
         in_gaussian = GaussianMixture(n_components=2)
         in_gaussian.fit(np.log(in_confidences).reshape(-1, 1))
-        
         out_gaussian = GaussianMixture(n_components=2)
         out_gaussian.fit(np.log(out_confidences).reshape(-1, 1))
         
         return in_gaussian, out_gaussian
 
-    def _model_confidence(self):
+    def _model_confidence(self, model, target_point):
         """
         Query the confidence of the model on the target point.
         
         Parameters:
-            model: The shadow model.
-            target_point (tuple): The target point (x, y).
+            model: The model to query.
+            target_point: The point to query the model on.
             
         Returns:
             confidence: Confidence of the model on the target point.
         """
-        # Placeholder for querying the confidence of the model
-        confidence = None
-        return confidence
+        
+        # Load and preprocess the image
+        image = Image.open(target_point[0])
+        image = self._transform(image)
+        
+        # Reshape the image for model input
+        image = image.unsqueeze(0)
+
+        # Make prediction
+        model.eval()
+        with torch.no_grad():
+            logits = model(image)
+        
+        # Apply softmax to get probabilities
+        probabilities = torch.softmax(logits, dim=1)
+        
+        # Get the predicted probability for the true label
+        predicted_probability = probabilities[:, target_point[1]].item()
+        
+        # Apply logit transformation
+        logit_scaled_confidence = torch.log(predicted_probability / (1 - predicted_probability)).item()
+        
+        return logit_scaled_confidence
 
     def _likelihood_ratio_test(self, target_model_confidence, in_gaussian, out_gaussian):
         """
@@ -106,12 +133,15 @@ class MembershipInferenceAttack:
         Returns:
             result: Result of the likelihood-ratio test.
         """
+        
+        # Calculate likelihoods of the target model under the two Gaussians
         in_likelihood = np.exp(in_gaussian.score_samples(np.log(target_model_confidence).reshape(1, -1)))
         out_likelihood = np.exp(out_gaussian.score_samples(np.log(target_model_confidence).reshape(1, -1)))
-        result = in_likelihood / out_likelihood
         
-        return result
+        # Return ratio of likelihoods
+        return in_likelihood / out_likelihood
     
+    # Carry out an attack given an initialised MembershipInferenceAttack object
     def run_inference(self, data, n):
         self._train_shadow_models(data, n)
         in_gaussian, out_gaussian = self._fit_gaussians()
