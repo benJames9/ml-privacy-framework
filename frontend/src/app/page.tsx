@@ -9,6 +9,7 @@ import AttackParams from "@/components/AttackParams";
 import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
+import ErrorAlert from "@/components/ErrorAlert";
 
 export default function Home() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
@@ -64,19 +65,19 @@ export default function Home() {
     if (datasetStructure === "CSV" && csvPath === "") {
       errorMsgs.push("Please enter the path to the CSV file");
     }
-    if (batchSize === 0) {
+    if (batchSize === 0 || isNaN(batchSize)) {
       errorMsgs.push("Please enter a batch size > 0");
     }
-    if (numRestarts === 0) {
+    if (numRestarts === 0 || isNaN(numRestarts)) {
       errorMsgs.push("Please enter a number of restarts > 0");
     }
-    if (stepSize === 0) {
+    if (stepSize === 0 || isNaN(stepSize)) {
       errorMsgs.push("Please enter a step size > 0");
     }
-    if (maxIterations === 0) {
+    if (maxIterations === 0 || isNaN(maxIterations)) {
       errorMsgs.push("Please enter a maximum number of iterations > 0");
     }
-    if (budget === 0) {
+    if (budget === 0 || isNaN(budget)) {
       errorMsgs.push("Please enter a budget > 0");
     }
     setErrors(errorMsgs);
@@ -247,6 +248,7 @@ export default function Home() {
         <div id="loading-icon">
           {submitted && <LoadingIcon />}
         </div>
+        {isInvalid && <ErrorAlert errors={errors} />}
       </div>
     </main>
   )
