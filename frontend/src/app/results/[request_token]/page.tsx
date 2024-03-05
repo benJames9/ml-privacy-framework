@@ -165,6 +165,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       break;
     case PageState.ATTACKING:
       content = <AttackPage attackProgress={attackProgress}
+        modality={attackModality}
         startTime={startTime}
         previousTimes={previousTimes}
         onCancel={onCancel}
