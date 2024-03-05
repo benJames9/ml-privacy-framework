@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
 import os
+import math
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
@@ -126,10 +127,15 @@ class MembershipInferenceAttack(ABC):
         
         # Generate list of confidences for the target point
         for i in range(self._N // 2):
+            print('calculating in confidence...')
             in_confidence = self._model_confidence(self._in_models[i], self._target_point)
+            print('calculating in confidence...') 
             out_confidence = self._model_confidence(self._out_models[i], self._target_point)
             in_confidences.append(in_confidence)
             out_confidences.append(out_confidence)
+            
+        print(f'in confs: {in_confidences}')
+        print(f'out confs: {out_confidences}')
         
         # Fit Gaussians to the confidences
         in_gaussian = GaussianMixture(n_components=2)
@@ -155,15 +161,31 @@ class MembershipInferenceAttack(ABC):
         model.eval()
         with torch.no_grad():
             logits = model(self._target_point[0].unsqueeze(0))
+            
+        # Normalise output
+        logits -= torch.max(logits, dim=1, keepdim=True)[0]
+        
+        print(f'logits: {logits}')
         
         # Apply softmax to get probabilities
         probabilities = torch.softmax(logits, dim=1)
         
+        print(f'probs: {probabilities}')
+        
         # Get the predicted probability for the true label
-        predicted_probability = probabilities[:, target_point[1]]
+        predicted_probability = probabilities[:, target_point[1]].item()
+        
+        print(f'pred prob: {predicted_probability}')
+        
+        if predicted_probability == 0:
+            predicted_probability = 0.0000000001
+        if predicted_probability == 1:
+            predicted_probability = 0.9999999999
         
         # Apply logit transformation
-        logit_scaled_confidence = torch.log(predicted_probability / (1 - predicted_probability)).item()
+        logit_scaled_confidence = math.log(predicted_probability / (1 - predicted_probability))
+        
+        print(f'logit scaled conf: {logit_scaled_confidence}')
         
         return logit_scaled_confidence
 
@@ -247,5 +269,5 @@ if __name__ == '__main__':
     target_model = models.resnet18(pretrained=True)
     target_point = ('shark.JPEG', 1)
     attack = Resnet18MIA(target_model, target_point, N=2)
-    print(attack.run_inference('small_foldered_set.zip', n=10, epochs=10, batch_size=10, lr=0.001))
+    print(attack.run_inference('small_foldered_set.zip', n=10, epochs=2, batch_size=10, lr=0.001))
 
