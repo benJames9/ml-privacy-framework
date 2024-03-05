@@ -1,7 +1,12 @@
 import asyncio
 
 from multiprocessing import Process, Event as mpEvent
-from asyncio import Queue as aioQueue, run_coroutine_threadsafe, Event as aioEvent, Lock as aioLock
+from asyncio import (
+    Queue as aioQueue,
+    run_coroutine_threadsafe,
+    Event as aioEvent,
+    Lock as aioLock,
+)
 from threading import Thread
 from typing import Callable, NoReturn, Deque, Tuple
 from collections import deque
@@ -10,6 +15,7 @@ from PubSubWs import PubSubWs
 from common import AttackParameters, WorkerCommunication, PositionInQueue
 
 WorkerFunction = Callable[[WorkerCommunication], NoReturn]
+
 
 # Background task manager, responsible for managing the worker process
 # and the communication between the worker process and the web server
@@ -40,7 +46,9 @@ class BackgroundTasks:
         )
 
     def _setup_worker(self):
-        self._worker_process = Process(target=self._worker_fn, args=(self._worker_queues,))
+        self._worker_process = Process(
+            target=self._worker_fn, args=(self._worker_queues,)
+        )
 
     # Start the worker proces, the response reader and event loop tasks
     def start(self):
@@ -78,7 +86,8 @@ class BackgroundTasks:
                 num_jobs_in_queue = len(self._buffered_requests)
                 for i, (req_token, _) in enumerate(self._buffered_requests):
                     await self._psw.publish_serialisable_data(
-                        req_token, PositionInQueue(position=i + 1, total=num_jobs_in_queue)
+                        req_token,
+                        PositionInQueue(position=i + 1, total=num_jobs_in_queue),
                     )
 
     # Transfer requests from the buffer to the worker process
@@ -109,7 +118,9 @@ class BackgroundTasks:
             if response is not None:
                 token, progress = response
                 if progress is not None and progress.message_type == "error":
-                    event_loop.create_task(self._psw.close_tokens_websockets(token, progress.error_message))
+                    event_loop.create_task(
+                        self._psw.close_tokens_websockets(token, progress.error_message)
+                    )
                     self._restart_worker()
 
             # Safely push to asyncio queue on the main thread
@@ -137,7 +148,7 @@ class BackgroundTasks:
     async def cancel_task(self, request_token: str):
         in_buffer = False
         async with self._buffered_requests_lock:
-            for (buffered_request_token, _) in self._buffered_requests:
+            for buffered_request_token, _ in self._buffered_requests:
                 if buffered_request_token == request_token:
                     self._buffered_requests.remove((request_token, _))
                     in_buffer = True
@@ -153,7 +164,7 @@ class BackgroundTasks:
         await self._psw.deregister_route(request_token)
 
     # Restart the worker process, cancels the current task if exists
-    def _restart_worker (self):
+    def _restart_worker(self):
         self._worker_process.terminate()
         self._worker_process.join()
         self._setup_worker()

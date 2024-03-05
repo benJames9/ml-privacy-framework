@@ -5,6 +5,7 @@ import HorizontalBar from "./ProgressBar";
 import TimeEstimate from "./TimeEstimate";
 import SaveTokenButton from "./SaveTokenButton";
 import SuccessAlert from "./SuccessAlert";
+import AttackResults from "./AttackResults";
 
 interface AttackPageProps {
   attackProgress: AttackProgress;
@@ -16,7 +17,7 @@ interface AttackPageProps {
   }
 }
 
-const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, previousTimes, onCancel, params }) => {
+const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, startTime, previousTimes, onCancel, params }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const copyToken = () => {
@@ -26,7 +27,7 @@ const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, prev
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center py-[25vh] bg-gradient-to-r from-black to-blue-950">
+    <div className="flex min-h-screen flex-col items-center py-[5vh] bg-gradient-to-r from-black to-blue-950">
       <HorizontalBar
         current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
         min={0}
@@ -48,6 +49,9 @@ const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, prev
         />
       </div>
       {copied && <SuccessAlert text="Token successfully copied to clipboard!" onClose={() => { setCopied(false) }} />}
+      <div className="flex flex-col items-center pt-[5vh]">
+        <AttackResults modality={modality} attackProgress={attackProgress} />
+      </div>
     </div>
   )
 }

@@ -15,7 +15,7 @@ const ConnectionClosedPage = () => {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center text-center px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <h1 className="text-3xl font-bold text-white-600 mt-16 mb-8">
+        <h1 className="text-3xl font-bold text-white font-semibold mt-16 mb-8">
           {error || "Unknown Error"}
         </h1>
         <button
