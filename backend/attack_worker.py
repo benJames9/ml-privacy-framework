@@ -24,8 +24,7 @@ def attack_worker(queues: WorkerCommunication):
 
         try:
             cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
-                                                                                        cfg=None,
-                                                                                        torch_model=None)
+                                                                                        cfg=None)
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
@@ -43,19 +42,19 @@ def attack_worker(queues: WorkerCommunication):
 if __name__ == "__main__":
     from common import AttackParameters
     pars = AttackParameters(
-        model='ResNet-18',
+        model='AlexNet',
         datasetStructure='Foldered',
-        csvPath='~/data/images',
+        csvPath=None,
         batchSize=1,
         numRestarts=1,
         stepSize=0.1,
         maxIterations=1,
         callbackInterval=10,
-        ptFilePath='../resnet18_pretrained.pt',
+        ptFilePath=None,
         zipFilePath='../small_foldered_set.zip',
         budget=100,
-        means=[0.46, 0.56, 0.57],
-        stds=[0.32, 0.28, 0.27]
+        means=[],
+        stds=[]
     )
 
     req_tok = str(uuid.uuid4())
