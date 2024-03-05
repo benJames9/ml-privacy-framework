@@ -69,13 +69,13 @@ class ConfigBuilder:
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):
-        match attack_params.attack:
-            case 'TAG':
+        match attack_params.attack.lower():
+            case 'tag':
                 cfg = breachinglib.get_config(overrides=["attack=tag"])
             case _:
                 raise TypeError(f'No text attack match; {attack_params.attack}')
 
-        match attack_params.model:
+        match attack_params.model.lower():
             case "bert":
                 cfg.case.model="bert-base-uncased"
             case "gpt2":
@@ -106,8 +106,8 @@ class ConfigBuilder:
             case _:
                 raise TypeError(f"no model match for tokenizer: {attack_params.model}")
 
-
         cfg.case.data.shape = attack_params.shape
+        return cfg
 
 
 

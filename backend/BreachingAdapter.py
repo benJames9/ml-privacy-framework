@@ -5,13 +5,12 @@ from breaching.breaching.attacks.attack_progress import (
 )
 import breaching.breaching as breachinglib
 from torchvision import models as visionModels
+from torchtext import models as textModels
 import logging, sys
 import base64
 import zipfile
 import os, shutil
-import random
 from ConfigBuilder import ConfigBuilder
-from breaching.breaching.cases.models.model_preparation import VisionContainer
 import tempfile
 from functools import partial
 from dataclasses import dataclass
@@ -81,8 +80,10 @@ class BreachingAdapter:
         print(cfg)
         
         if torch_model is None:
-            torch_model = self._getTorchVisionModel(attack_params.model)
+            modelset = textModels if attack_params.modality == "text" else visionModels
+            torch_model = self._getTorchModelFromSet(attack_params.model, modelset)
             torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
+        print(torch_model)
             
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=torch_model
@@ -200,12 +201,12 @@ class BreachingAdapter:
     def _check_image_size(self, model, shape):
         return True
     
-    def _getTorchVisionModel(self, model_name):
+    def _getTorchModelFromSet(self, model_name, modelSet):
         model_name = model_name.replace('-', '').lower()
-        if not hasattr(visionModels, model_name):
+        if not hasattr(modelSet, model_name):
             print("no torch model found")
             raise TypeError("given model type did not match any of the options")
-        model = getattr(visionModels, model_name)()
+        model = getattr(modelSet, model_name)()
         return model
         
 

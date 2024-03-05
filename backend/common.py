@@ -59,6 +59,8 @@ class AttackParameters(BaseModel):
     zipFilePath: Optional[str]
     budget: int
     reconstruction_frequency: int = 100
+    tokenizer: Optional[str] = 'gpt2'
+    shape: Optional[int] = 16
 
 
 class AttackStatistics(BaseModel):
