@@ -7,10 +7,10 @@ class ConfigBuilder:
     def __init__(self, attack_params: AttackParameters) -> None:
         self.attack_params=attack_params
 
-    def build(self, num_classes, dataset_size):
-        return self._construct_cfg(self.attack_params, num_classes, dataset_size)
+    def build(self):
+        return self._construct_cfg(self.attack_params)
     
-    def _construct_cfg(self, attack_params: AttackParameters, numClasses: int, datasetSize: int, dataset_path=None):
+    def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
         match attack_params.modality:
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
@@ -20,17 +20,20 @@ class ConfigBuilder:
                 raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
 
         assert(attack_params is not None)
+
+        #setup all customisable parameters
+        cfg.case.model = attack_params.model
         
+        if attack_params.zipFilePath is None:
+            attack_params.datasetStructure = "default"
+            print("defaulting")
+            
         match dataset_path:
             case None:
                 cfg.case.data.path = 'dataset'
             case _:
-                cfg.case.data.path = dataset_path
+                cfg.case.data.path = dataset_path  
                 
-        #setup all customisable parameters
-        cfg.case.model = attack_params.model
-        cfg.case.data.size = datasetSize
-        cfg.case.data.classes = numClasses
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
@@ -42,17 +45,12 @@ class ConfigBuilder:
                     case "images":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=CIFAR10"]).case.data
                         print("defaulted to CIFAR10")
+                        # cfg.case.data.
                     case "text":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=wikitext"]).case.data
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
-
-        match dataset_path:
-            case None:
-                cfg.case.data.path = 'dataset'
-            case _:
-                cfg.case.data.path = dataset_path
 
         
 
@@ -118,6 +116,7 @@ class ConfigBuilder:
             case 'invertinggradients':
                 cfg = breachinglib.get_config()
                 cfg.case.data.partition="random"
+                cfg.case.data.default_clients = 50
                 # default case.model=ResNet18
             case 'modern':
                 cfg = breachinglib.get_config(overrides=["attack=modern"])

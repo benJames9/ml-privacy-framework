@@ -18,7 +18,7 @@ class BreachingAdapter:
         self._worker_response_queue = worker_response_queue
 
 
-    def setup_attack(self, attack_params:AttackParameters=None, cfg=None):
+    def setup_attack(self, attack_params:AttackParameters=None, cfg=None, torch_model=None):
 
         print(f'~~~[Attack Params]~~~ {attack_params}')
 
@@ -28,28 +28,21 @@ class BreachingAdapter:
         if torch.cuda.is_available():
             print(f'limiting cuda process memory')
             torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
-        
+
         if cfg == None:
             cfg = breachinglib.get_config()
 
-        if torch_model is None:
-            torch_model = self._getTorchVisionModel(attack_params.model)
-            torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
-
+        
+            
         extract_dir = "./dataset"
 
         # unzipped_directory = attack_params.zipFilePath.split('.')[0]
         print(os.listdir())
         if (os.path.exists(extract_dir)):
             shutil.rmtree(extract_dir)
-        with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
-        
-        num_files = 0
-        _, dirs, _ = next(os.walk("./dataset"))
-        num_dirs = len(dirs)
-        for _, dirs, files in os.walk(extract_dir):
-            num_files += len(files)
+        if attack_params.zipFilePath is not None:
+            with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
 
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
@@ -58,10 +51,14 @@ class BreachingAdapter:
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
         logger = logging.getLogger()
 
-        cfg = ConfigBuilder(attack_params).build(num_files, num_dirs)
+        cfg = ConfigBuilder(attack_params).build()
 
         print(cfg)
-
+        
+        if torch_model is None:
+            torch_model = self._getTorchVisionModel(attack_params.model)
+            torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
+            
         user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=torch_model)
         attacker = breachinglib.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
         breachinglib.utils.overview(server, user, attacker)
@@ -74,47 +71,7 @@ class BreachingAdapter:
             raise ValueError("Mismatched dimensions")
 
         return cfg, setup, user, server, attacker, model, loss_fn
-
-        # extract_dir = "./dataset"
-        
-        # print(os.listdir())
-        # if (os.path.exists(extract_dir)):
-        #     shutil.rmtree(extract_dir)
-        # with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
-        #     zip_ref.extractall(extract_dir)
-        # num_files = 0
-        # _, dirs, _ = next(os.walk("./dataset"))
-        # num_dirs = len(dirs)
-        # for _, dirs, files in os.walk(extract_dir):
-        #     num_files += len(files)
-
-        # if cfg == None:
-        #     cfg = breachinglib.get_config()
-            
-        # cfg = ConfigBuilder(attack_params).build(num_dirs, num_files)
-        # torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
-        # setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
-        # # if cfg.case.model == "ResNet-18":
-        # #     cfg.case.model = cfg.case.model.replace('-', '')
-
-        # model = self._getTorchVisionModel(cfg.case.model)
-        # user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=model)
-        # print(os.listdir())
-        # if attack_params.ptFilePath is not None:
-        #     model = self._buildUserModel(model, attack_params.ptFilePath)
-        
-        # logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
-        # logger = logging.getLogger()
-
-        # print(cfg)
-
-        # attacker = breachinglib.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
-        # breachinglib.utils.overview(server, user, attacker)
-
-        # if not self._check_image_size(model, cfg.case.data.shape):
-        #     raise ValueError("Mismatched dimensions")
-
-        # return cfg, setup, user, server, attacker, model, loss_fn
+    
 
     def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
         print("performing")
