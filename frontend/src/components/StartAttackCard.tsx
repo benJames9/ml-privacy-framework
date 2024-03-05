@@ -1,6 +1,6 @@
 const StartAttackCard: React.FC = () => {
   return (
-    <div className="bg-gradient-to-r from-blue-950 to-purple-950 border border-gray-700 rounded-lg p-8 md:p-12">
+    <div className="bg-gradient-to-r from-blue-950 to-purple-950 border border-gray-700 rounded-lg p-8 md:p-12 scale-90">
       <h1 className="text-3xl text-gray-100 font-bold mb-8 text-center">Start New Attack</h1>
       <p className="text-lg font-normal text-gray-300 mb-4">
         Choose between a variety of <strong>image</strong> and <strong>text</strong> attacks to execute on a model of your choice.
