@@ -7,14 +7,16 @@ import zipfile
 from PIL import Image
 import torch
 from torchvision import models, transforms
+from torchvision.datasets import ImageFolder
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
+import os
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
         self._target_model = target_model
-        self._target_point = [Image.open(target_point[0]), target_point[1]]
+        self._target_point = (Image.open(target_point[0]), target_point[1])
         self._N = N
         self._in_models = []
         self._out_models = []
@@ -44,9 +46,9 @@ class MembershipInferenceAttack(ABC):
         
         # Normalise the target point
         transformer = self._transform()
-        self._target_point[0] = transformer(self._target_point[0]).unsqueeze(0)
+        self._target_point = (transformer(self._target_point[0]), self._target_point[1])
         
-    def _load_data(self, path_to_data):
+    def _load_data(self, path_to_data, extract_folder):
         """
         Load the data from the given path.
         
@@ -57,8 +59,7 @@ class MembershipInferenceAttack(ABC):
             data: PyTorch dataset.
         """
         # Extract the data from zip file
-        extract_folder = 'temp_folder'
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        with zipfile.ZipFile(path_to_data, 'r') as zip_ref:
             zip_ref.extractall(extract_folder)
             
         # Load data into dataset
@@ -83,7 +84,7 @@ class MembershipInferenceAttack(ABC):
             transforms.Normalize(mean=self._image_stats.mean, std=self._image_stats.std)
         ])
         
-    def _train_shadow_models(self, data, n):
+    def _train_shadow_models(self, data, n, epochs, batch_size, lr):
         """
         Train N shadow models on random samples from the data distribution D.
         
@@ -95,16 +96,22 @@ class MembershipInferenceAttack(ABC):
             in_models (list): List of models trained on the target point.
             out_models (list): List of models not trained on the target point.
         """
+        print(f'target_point:\n{self._target_point}')
+        print(f'normal point:\n {data[0]}')
         # Half of the models are trained on the target point, and half are not
         for i in range(self._N):
-            sampled_data = np.random.choice(data, n, replace=True)
-            if i < N // 2:
-                sampled_data = np.append(sampled_data, self._target_point, axis=0)
-                model = self._train_model(sampled_data)
+            num_samples = len(data)
+            sampled_indices = np.random.choice(num_samples, n, replace=True)
+            sampled_data = Subset(data, sampled_indices)         
+
+            if i < n // 2:
+                sampled_data = torch.utils.data.ConcatDataset([sampled_data, [self._target_point]])
+                model = self._train_model(sampled_data, epochs, batch_size, lr)
                 self._in_models.append(model)
             else:
-                model = self._train_model(sampled_data)
+                model = self._train_model(sampled_data, epochs, batch_size, lr)
                 self._out_models.append(model)
+            print(f'model {i} trained\n')
 
     def _fit_gaussians(self):
         """
@@ -183,10 +190,18 @@ class MembershipInferenceAttack(ABC):
     # Carry out an attack given an initialised MembershipInferenceAttack object
     def run_inference(self, path_to_data, n, epochs, batch_size, lr):
         self._infer_image_data(path_to_data)
-        data = self._load_data(path_to_data, n)
+        
+        # Load data to pytorch image folder
+        extract_folder = 'temp_folder'
+        data = self._load_data(path_to_data, extract_folder)
         self._train_shadow_models(data, n, epochs, batch_size, lr)
+        os.system(f'rm -rf {extract_folder}')
+        
+        # Fit Gaussians for shadow and target models
         in_gaussian, out_gaussian = self._fit_gaussians()
         target_model_confidence = self._model_confidence(self._target_model, self._target_point)
+        
+        # Perform likelihood ratio test
         return self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
     
 class Resnet18MIA(MembershipInferenceAttack):
@@ -202,10 +217,13 @@ class Resnet18MIA(MembershipInferenceAttack):
         # Define data loader
         batch_size = batch_size
         data_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
+        
+        print('training new model...')
 
         # Train the model
         model.train()
         for epoch in range(epochs):
+            print(f'epoch {epoch}')
             running_loss = 0.0
             for images, labels in data_loader:
                 optimizer.zero_grad()
@@ -222,11 +240,12 @@ class Resnet18MIA(MembershipInferenceAttack):
 
             epoch_loss = running_loss / len(data)
 
+        print('model trained')
         return model
         
 if __name__ == '__main__':
     target_model = models.resnet18(pretrained=True)
-    target_point = ['shark.jpg', 'n01440764']
-    attack = Resnet18MIA(target_model, target_point, N=24)
-    print(attack.run_inference('small_foldered_set.zip', n=100, epochs=10, batch_size=32, lr=0.001))
+    target_point = ('shark.JPEG', 1)
+    attack = Resnet18MIA(target_model, target_point, N=2)
+    print(attack.run_inference('small_foldered_set.zip', n=10, epochs=10, batch_size=10, lr=0.001))
 
