@@ -4,7 +4,8 @@ from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
 
-WEBSOCKET_TIMEOUT_SECONDS = 3600 # Timeout for websocket connections
+WEBSOCKET_TIMEOUT_SECONDS = 3600  # Timeout for websocket connections
+
 
 # Websocket server for publishing attack responses to clients
 class PubSubWs:
@@ -50,7 +51,9 @@ class PubSubWs:
         await self._close_websocket(ws, request_token, "Websocket Error: Timeout", True)
 
     # Close websocket and handle routes
-    async def _close_websocket(self, ws: WebSocket, request_token: str, error: str, delete_route=True):
+    async def _close_websocket(
+        self, ws: WebSocket, request_token: str, error: str, delete_route=True
+    ):
         # Wrap lock around closure so closing and removing is atomic
         async with self._dict_lock:
             if ws.client_state != WebSocketState.DISCONNECTED:
@@ -70,10 +73,7 @@ class PubSubWs:
 
     # Generate JSON error message to send to client
     def _generate_error(self, error: str):
-        return {
-            "message_type": "error",
-            "error": error
-        }
+        return {"message_type": "error", "error": error}
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
@@ -103,7 +103,7 @@ class PubSubWs:
         async with self._dict_lock:
             self._last_published_data[request_token] = data_str
 
-        # Broadcast the data to all clients
+            # Broadcast the data to all clients
             for ws in self._route_dict[request_token]:
                 try:
                     await ws.send_text(data_str)
