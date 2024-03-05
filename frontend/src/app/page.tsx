@@ -56,6 +56,10 @@ export default function Home() {
     }
   }, [isInvalid]);
 
+  const invalidNum: (num: number) => boolean = (num) => {
+    return num <= 0 || isNaN(num);
+  }
+
   const isValidInput: () => boolean = () => {
     let errorMsgs: string[] = [];
     if (attack === "") {
@@ -73,20 +77,27 @@ export default function Home() {
     if (datasetStructure === "CSV" && csvPath === "") {
       errorMsgs.push("Please enter the path to the CSV file");
     }
-    if (batchSize === 0 || isNaN(batchSize)) {
+    if (invalidNum(batchSize)) {
       errorMsgs.push("Please enter a batch size > 0");
     }
-    if (numRestarts === 0 || isNaN(numRestarts)) {
+    if (invalidNum(numRestarts)) {
       errorMsgs.push("Please enter a number of restarts > 0");
     }
-    if (stepSize === 0 || isNaN(stepSize)) {
+    if (invalidNum(stepSize)) {
       errorMsgs.push("Please enter a step size > 0");
     }
-    if (maxIterations === 0 || isNaN(maxIterations)) {
+    if (invalidNum(maxIterations)) {
       errorMsgs.push("Please enter a maximum number of iterations > 0");
     }
-    if (budget === 0 || isNaN(budget)) {
+    if (invalidNum(budget)) {
       errorMsgs.push("Please enter a budget > 0");
+    }
+    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+      errorMsgs.push("Please either enter all values for mean and std or none");
+    }
+    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+      errorMsgs.push("Please either enter all values for image shape or none");
     }
     setErrors(errorMsgs);
     return errorMsgs.length === 0;
