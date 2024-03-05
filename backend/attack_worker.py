@@ -24,8 +24,7 @@ def attack_worker(queues: WorkerCommunication):
 
         try:
             cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
-                                                                                        cfg=None,
-                                                                                        torch_model=None)
+                                                                                        cfg=None)
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
