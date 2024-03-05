@@ -340,11 +340,11 @@ class BreachingAdapter:
             setup=setup,
             compute_lpips=False,
         )
-        print(metrics)
-        # stats = AttackStatistics(MSE=0, SSIM=0, PSNR=0)
-        # SSIM turns up as NaN
+
         stats = AttackStatistics(
-            MSE=metrics.get("mse", 0), SSIM=0, PSNR=metrics.get("psnr", 0)
+            MSE=metrics.get("mse", 0),
+            SSIM=metrics.get("ssim", 0),
+            PSNR=metrics.get("psnr", 0),
         )
         token, channel = response
 
@@ -441,7 +441,9 @@ class BreachingAdapter:
                 compute_lpips=False,
             )
             self.attack_cache.stats = AttackStatistics(
-                MSE=metrics.get("mse", 0), SSIM=0, PSNR=metrics.get("psnr", 0)
+                MSE=metrics.get("mse", 0),
+                SSIM=metrics.get("ssim", 0),
+                PSNR=metrics.get("psnr", 0),
             )
 
         progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
