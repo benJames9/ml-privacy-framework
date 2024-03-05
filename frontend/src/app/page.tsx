@@ -37,7 +37,7 @@ export default function Home() {
 
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
-  let errors: string[] = [];
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     // Scroll to loading icon
@@ -48,40 +48,40 @@ export default function Home() {
   }, [submitted]);
 
   const isValidInput: () => boolean = () => {
-    errors = [];
+    let errorMsgs: string[] = [];
     if (attack === "") {
-      errors.push("Please select an attack");
+      errorMsgs.push("Please select an attack");
     }
     if (model === "") {
-      errors.push("Please select a model");
+      errorMsgs.push("Please select a model");
     }
     if (!ptFile) {
-      errors.push("Please upload a model parameter file");
+      errorMsgs.push("Please upload a model parameter file");
     }
     if (attack === "Inverting Gradients\n(Single Step)" && !zipFile) {
-      errors.push("Please upload a dataset file");
+      errorMsgs.push("Please upload a dataset file");
     }
     if (datasetStructure === "CSV" && csvPath === "") {
-      errors.push("Please enter the path to the CSV file");
+      errorMsgs.push("Please enter the path to the CSV file");
     }
     if (batchSize === 0) {
-      errors.push("Please enter a batch size > 0");
+      errorMsgs.push("Please enter a batch size > 0");
     }
     if (numRestarts === 0) {
-      errors.push("Please enter a number of restarts > 0");
+      errorMsgs.push("Please enter a number of restarts > 0");
     }
     if (stepSize === 0) {
-      errors.push("Please enter a step size > 0");
+      errorMsgs.push("Please enter a step size > 0");
     }
     if (maxIterations === 0) {
-      errors.push("Please enter a maximum number of iterations > 0");
+      errorMsgs.push("Please enter a maximum number of iterations > 0");
     }
     if (budget === 0) {
-      errors.push("Please enter a budget > 0");
+      errorMsgs.push("Please enter a budget > 0");
     }
-    return errors.length === 0;
+    setErrors(errorMsgs);
+    return errorMsgs.length === 0;
   }
-
 
   const onClick = async () => {
     const formData = new FormData();
@@ -93,7 +93,6 @@ export default function Home() {
     if (!isValidInput()) {
       setSubmitted(false);
       setIsInvalid(true);
-      console.log(errors);
       return;
     }
 
