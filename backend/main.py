@@ -52,13 +52,12 @@ async def submit_attack(
     model: str = Form(...),
     datasetStructure: str = Form(...),
     csvPath: str = Form(None),
-    datasetSize: int = Form(...),
-    numClasses: int = Form(...),
     batchSize: int = Form(...),
+    mean: str = Form(...),
+    std: str = Form(...),
     numRestarts: int = Form(...),
-    stepSize: int = Form(...),
+    stepSize: float = Form(...),
     maxIterations: int = Form(...),
-    callbackInterval: int = Form(...),
     budget: int = Form(...),
 ):
     request_token = str(uuid.uuid4())
@@ -75,13 +74,12 @@ async def submit_attack(
         model=model,
         datasetStructure=datasetStructure,
         csvPath=csvPath,
-        datasetSize=datasetSize,
-        numClasses=numClasses,
         batchSize=batchSize,
+        means=[float(i) for i in mean.strip("[]").split(",")],
+        stds=[float(i) for i in std.strip("[]").split(",")],
         numRestarts=numRestarts,
         stepSize=stepSize,
         maxIterations=maxIterations,
-        callbackInterval=callbackInterval,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
         budget=budget,
@@ -92,7 +90,8 @@ async def submit_attack(
 
     return request_token
 
-# Cancel an attack associated with token
+
+# Cancel an attack associated with token
 @app.post(f"/api/cancel/{{request_token}}")
 async def cancel_attack(request_token: str):
     await background_task_manager.cancel_task(request_token)

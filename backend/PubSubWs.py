@@ -4,7 +4,7 @@ from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
 
-WEBSOCKET_TIMEOUT_SECONDS = 600 # Timeout for websocket connections
+WEBSOCKET_TIMEOUT_SECONDS = 3600 # Timeout for websocket connections
 
 # Websocket server for publishing attack responses to clients
 class PubSubWs:
@@ -18,7 +18,8 @@ class PubSubWs:
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             if request_token not in self._route_dict:
-                raise WebSocketDisconnect(code=status.WS_1008_POLICY_VIOLATION)
+                await self._close_websocket(ws, request_token, "Non-existent route")
+                return
 
             await ws.accept()
 
@@ -46,10 +47,10 @@ class PubSubWs:
         await sleep(WEBSOCKET_TIMEOUT_SECONDS)
 
         # Close the websocket
-        await self._close_websocket(ws, request_token, "Websocket Error: Timeout")
+        await self._close_websocket(ws, request_token, "Websocket Error: Timeout", True)
 
     # Close websocket and handle routes
-    async def _close_websocket(self, ws: WebSocket, request_token: str, error: str):
+    async def _close_websocket(self, ws: WebSocket, request_token: str, error: str, delete_route=True):
         # Wrap lock around closure so closing and removing is atomic
         async with self._dict_lock:
             if ws.client_state != WebSocketState.DISCONNECTED:
@@ -58,7 +59,7 @@ class PubSubWs:
                 await ws.close()
 
             # Remove from routes dict
-            if request_token in self._route_dict:
+            if delete_route and request_token in self._route_dict:
                 if ws in self._route_dict[request_token]:
                     self._route_dict[request_token].remove(ws)
 

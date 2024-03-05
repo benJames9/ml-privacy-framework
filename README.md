@@ -12,6 +12,7 @@ Ensure to **write code while in the dev container**, since, especially for the P
 - We'll use conventional commits via the [conventional-commit](https://pypi.org/project/conventional-commit/) pip package, i.e running `commitizen` to make it
 - For branches, we'll eventually have `main` protected, and work primarily on the `develop` branch, branching off of that for `feature` branches and whatnot using [git flow](https://github.com/nvie/gitflow)
 #### Git workflow
+- Ensure git flow is initialised with `git flow init -d`
 - Make sure to commit regularly using `cz commit` - it'll ask you some questions like what the scope of the commit is (what it has affected) etc
 - Make sure to stay up to date with remote changes, `git fetch --all` and `git pull`
 

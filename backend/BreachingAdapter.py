@@ -9,12 +9,13 @@ import base64
 import zipfile
 import os, shutil
 import asyncio
+import random
 
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
 
-    def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
+    def _construct_cfg(self, attack_params: AttackParameters, datasetSize: int, numClasses: int, dataset_path=None):
         match attack_params.modality:
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
@@ -27,9 +28,8 @@ class BreachingAdapter:
 
         #setup all customisable parameters
         cfg.case.model = attack_params.model
-
-        cfg.case.data.size = attack_params.datasetSize
-        cfg.case.data.classes = attack_params.numClasses
+        cfg.case.data.size = datasetSize
+        cfg.case.data.classes = numClasses
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
@@ -53,12 +53,16 @@ class BreachingAdapter:
             case _:
                 cfg.case.data.path = dataset_path
 
+        if any(attack_params.means) and any(attack_params.stds):
+            cfg.case.data.mean = attack_params.means
+            cfg.case.data.std = attack_params.stds
+            cfg.case.data.normalize = False
+        
         cfg.case.data.batch_size = attack_params.batchSize
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
-        cfg.attack.optim.callback = attack_params.callbackInterval
-        cfg.case.user.user_idx = attack_params.user_idx
-        cfg.case.data.default_clients = attack_params.number_of_clients
+        cfg.attack.optim.callback = 1
+        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.numRestarts
 
         return cfg
@@ -110,7 +114,7 @@ class BreachingAdapter:
         match attack_params.attack:
             case 'invertinggradients':
                 cfg = breachinglib.get_config()
-                cfg.case.data.partition="unique-class"
+                cfg.case.data.partition="random"
                 # default case.model=ResNet18
             case 'modern':
                 cfg = breachinglib.get_config(overrides=["attack=modern"])
@@ -151,20 +155,32 @@ class BreachingAdapter:
         print(f'~~~[Attack Params]~~~ {attack_params}')
 
         device = torch.device(f'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+        
+        # Limit the GPU memory usage based on user budget
+        if torch.cuda.is_available():
+            print(f'limiting cuda process memory')
+            torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
 
         if cfg == None:
             cfg = breachinglib.get_config()
 
         if torch_model is None:
             torch_model = self._buildUploadedModel(attack_params.model, attack_params.ptFilePath)
+            
+        extract_dir = "./dataset"
 
         # unzipped_directory = attack_params.zipFilePath.split('.')[0]
         print(os.listdir())
-        if (os.path.exists('dataset')):
-            shutil.rmtree('dataset')
+        if (os.path.exists(extract_dir)):
+            shutil.rmtree(extract_dir)
         with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
-            zip_ref.extractall('./dataset')
-        print(os.listdir('dataset'))
+            zip_ref.extractall(extract_dir)
+        
+        num_files = 0
+        _, dirs, _ = next(os.walk("./dataset"))
+        num_dirs = len(dirs)
+        for _, dirs, files in os.walk(extract_dir):
+            num_files += len(files)
 
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
@@ -173,7 +189,7 @@ class BreachingAdapter:
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
         logger = logging.getLogger()
 
-        cfg = self._construct_cfg(attack_params)
+        cfg = self._construct_cfg(attack_params, num_files, num_dirs)
 
         print(cfg)
 
@@ -237,24 +253,25 @@ class BreachingAdapter:
 
     def _buildUploadedModel(self, model_type, state_dict_path):
         model = None
-        if model_type == "ResNet-18":
-            model = models.resnet18()
+        model_type = model_type.replace('-', '').lower()
 
-        if not model:
+        if not hasattr(models, model_type):
             raise TypeError("given model type did not match any of the options")
+        model = getattr(models, model_type)()
 
-        try:
-            model.load_state_dict(torch.load(state_dict_path))
-        except RuntimeError as r:
-            print(f'''Runtime error loading torch model from file:
-    {r}
-    Model is loaded from default values.
-    ''')
-        except FileNotFoundError as f:
-            print(f'''Runtime error loading torch model from file:
-    {f}
-    Model is loaded from default values.
-    ''')
+        if state_dict_path is not None:
+            try:
+                model.load_state_dict(torch.load(state_dict_path))
+            except RuntimeError as r:
+                print(f'''Runtime error loading torch model from file:
+        {r}
+        Model is loaded from default values.
+        ''')
+            except FileNotFoundError as f:
+                print(f'''Runtime error loading torch model from file:
+        {f}
+        Model is loaded from default values.
+        ''')
         model.eval()
         return model
 

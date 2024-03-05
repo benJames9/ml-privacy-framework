@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, TypeVar, Generic
+from typing import Optional, Tuple, TypeVar, Generic, List
 from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
 
@@ -45,17 +45,14 @@ class AttackParameters(BaseModel):
     model: str
     attack: str = "invertinggradients"
     modality: str = "images"
-    user_idx: int = 0
-    number_of_clients: int = 1
     datasetStructure: str
     csvPath: Optional[str]
-    datasetSize: int
-    numClasses: int
+    means: List[float] = [0.46, 0.56, 0.57]
+    stds: List[float] = [0.32, 0.28, 0.27]
     batchSize: int
     numRestarts: int
     stepSize: float
     maxIterations: int
-    callbackInterval: int
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
     budget: int

@@ -10,20 +10,24 @@ const AttackParams: React.FC<AttackParamsProps> = ({ handleAttackParamsChange })
   return (
     <div>
       <NumberInput
-        label="Number of restarts:"
+        label="Number of restarts"
         onChange={(e) => handleAttackParamsChange("restarts", e.target.value)}
+        isRequired={true}
       />
       <NumberInput
-        label="Step size:"
+        label="Step size"
         onChange={(e) => handleAttackParamsChange("stepSize", e.target.value)}
+        isRequired={true}
       />
       <NumberInput
-        label="Maximum iterations:"
+        label="Maximum iterations"
         onChange={(e) => handleAttackParamsChange("maxIterations", e.target.value)}
+        isRequired={true}
       />
       <NumberInput
-        label="Budget:"
+        label="Budget"
         onChange={(e) => handleAttackParamsChange("budget", e.target.value)}
+        isRequired={true}
       />
     </div>
   );
