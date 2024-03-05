@@ -11,7 +11,7 @@ import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
 import ErrorAlert from "@/components/ErrorAlert";
 
-export default function Home() {
+export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
