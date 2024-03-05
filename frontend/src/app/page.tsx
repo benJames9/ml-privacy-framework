@@ -48,6 +48,14 @@ export default function Home() {
     }
   }, [submitted]);
 
+  useEffect(() => {
+    // Scroll to error alert
+    if (isInvalid) {
+      const errorAlert = document.getElementById("error-alert");
+      errorAlert!.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isInvalid]);
+
   const isValidInput: () => boolean = () => {
     let errorMsgs: string[] = [];
     if (attack === "") {
@@ -248,7 +256,9 @@ export default function Home() {
         <div id="loading-icon">
           {submitted && <LoadingIcon />}
         </div>
-        {isInvalid && <ErrorAlert errors={errors} />}
+        <div id="error-alert">
+          {isInvalid && <ErrorAlert errors={errors} />}
+        </div>
       </div>
     </main>
   )
