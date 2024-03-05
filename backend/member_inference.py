@@ -104,7 +104,7 @@ class MembershipInferenceAttack(ABC):
             sampled_indices = np.random.choice(num_samples, n, replace=True)
             sampled_data = Subset(data, sampled_indices)         
 
-            if i < n // 2:
+            if i % 2 == 0:
                 sampled_data = torch.utils.data.ConcatDataset([sampled_data, [self._target_point]])
                 model = self._train_model(sampled_data, epochs, batch_size, lr)
                 self._in_models.append(model)
@@ -125,7 +125,7 @@ class MembershipInferenceAttack(ABC):
         out_confidences = []
         
         # Generate list of confidences for the target point
-        for i in range(self._N):
+        for i in range(self._N // 2):
             in_confidence = self._model_confidence(self._in_models[i], self._target_point)
             out_confidence = self._model_confidence(self._out_models[i], self._target_point)
             in_confidences.append(in_confidence)
@@ -154,13 +154,13 @@ class MembershipInferenceAttack(ABC):
         # Make prediction
         model.eval()
         with torch.no_grad():
-            logits = model(self._target_point[0])
+            logits = model(self._target_point[0].unsqueeze(0))
         
         # Apply softmax to get probabilities
         probabilities = torch.softmax(logits, dim=1)
         
         # Get the predicted probability for the true label
-        predicted_probability = probabilities[:, target_point[1]].item()
+        predicted_probability = probabilities[:, target_point[1]]
         
         # Apply logit transformation
         logit_scaled_confidence = torch.log(predicted_probability / (1 - predicted_probability)).item()
