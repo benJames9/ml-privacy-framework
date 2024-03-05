@@ -17,7 +17,7 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
     <div>
       {attack === "Inverting Gradients\n(Single Step)" && <div>
         <div className="flex items-center">
-          <h3 className="font-semibold text-white mr-4">Structure of dataset:</h3>
+          <h3 className="font-semibold text-white mr-4 flex items-start whitespace-pre">Structure of dataset <span className="text-sm text-red-500">*</span></h3>
           <div className="flex items-center space-x-3">
             <Radio value="Foldered" checked={datasetStructure === "Foldered"} onChange={handleStructureChange} />
             <Radio value="CSV" checked={datasetStructure === "CSV"} onChange={handleStructureChange} />
@@ -25,24 +25,25 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
         </div>
         {datasetStructure === "CSV" && (
           <TextInput
-            label="Path to CSV file:"
+            label="Path to CSV file"
             onChange={(e) => handleDataParamsChange("csvPath", e.target.value)}
+            isRequired={true}
           />
         )}
         <ThreeNumberInput
-          label="Image shape:"
+          label="Image shape"
           onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
           onChange2={(e) => { handleDataParamsChange("imageShape2", e.target.value) }}
           onChange3={(e) => { handleDataParamsChange("imageShape3", e.target.value) }}
         />
         <ThreeNumberInput
-          label="Mean:"
+          label="Mean"
           onChange1={(e) => { handleDataParamsChange("mean1", e.target.value) }}
           onChange2={(e) => { handleDataParamsChange("mean2", e.target.value) }}
           onChange3={(e) => { handleDataParamsChange("mean3", e.target.value) }}
         />
         <ThreeNumberInput
-          label="Standard deviation:"
+          label="Standard deviation"
           onChange1={(e) => { handleDataParamsChange("std1", e.target.value) }}
           onChange2={(e) => { handleDataParamsChange("std2", e.target.value) }}
           onChange3={(e) => { handleDataParamsChange("std3", e.target.value) }}
@@ -50,22 +51,23 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
       </div>}
       {attack === "TAG\n(Text Attack)" && <div>
         <SelectInput
-          label="Text Dataset:"
+          label="Text Dataset"
           options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
           onChange={(e) => handleDataParamsChange("textDataset", e.target.value)}
         />
         <NumberInput
-          label="No. data points:"
+          label="No. data points"
           onChange={(e) => handleDataParamsChange("numDataPoints", e.target.value)}
         />
         <NumberInput
-          label="Sequence length:"
+          label="Sequence length"
           onChange={(e) => handleDataParamsChange("seqLength", e.target.value)}
         />
       </div>}
       <NumberInput
-        label="Batch size:"
+        label="Batch size"
         onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
+        isRequired={true}
       />
     </div>
   );

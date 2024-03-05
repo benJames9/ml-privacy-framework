@@ -9,14 +9,15 @@ import AttackParams from "@/components/AttackParams";
 import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
+import ErrorAlert from "@/components/ErrorAlert";
 
 export default function Home() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
 
-  const [model, setSelectedModel] = useState<string>(imageModels[0]);
-  const [attack, setSelectedAttack] = useState<string>(attacks[0]);
+  const [model, setSelectedModel] = useState<string>("");
+  const [attack, setSelectedAttack] = useState<string>("");
 
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
@@ -36,6 +37,8 @@ export default function Home() {
   const [budget, setBudget] = useState<number>(0);
 
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [isInvalid, setIsInvalid] = useState<boolean>(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     // Scroll to loading icon
@@ -45,12 +48,75 @@ export default function Home() {
     }
   }, [submitted]);
 
+  useEffect(() => {
+    // Scroll to error alert
+    if (isInvalid) {
+      const errorAlert = document.getElementById("error-alert");
+      errorAlert!.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isInvalid]);
+
+  const invalidNum: (num: number) => boolean = (num) => {
+    return num <= 0 || isNaN(num);
+  }
+
+  const isValidInput: () => boolean = () => {
+    let errorMsgs: string[] = [];
+    if (attack === "") {
+      errorMsgs.push("Please select an attack");
+    }
+    if (model === "") {
+      errorMsgs.push("Please select a model");
+    }
+    if (!ptFile) {
+      errorMsgs.push("Please upload a model parameter file");
+    }
+    if (attack === "Inverting Gradients\n(Single Step)" && !zipFile) {
+      errorMsgs.push("Please upload a dataset file");
+    }
+    if (datasetStructure === "CSV" && csvPath === "") {
+      errorMsgs.push("Please enter the path to the CSV file");
+    }
+    if (invalidNum(batchSize)) {
+      errorMsgs.push("Please enter a batch size > 0");
+    }
+    if (invalidNum(numRestarts)) {
+      errorMsgs.push("Please enter a number of restarts > 0");
+    }
+    if (invalidNum(stepSize)) {
+      errorMsgs.push("Please enter a step size > 0");
+    }
+    if (invalidNum(maxIterations)) {
+      errorMsgs.push("Please enter a maximum number of iterations > 0");
+    }
+    if (invalidNum(budget)) {
+      errorMsgs.push("Please enter a budget > 0");
+    }
+    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+      errorMsgs.push("Please either enter all values for mean and std or none");
+    }
+    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+      errorMsgs.push("Please either enter all values for image shape or none");
+    }
+    setErrors(errorMsgs);
+    return errorMsgs.length === 0;
+  }
+
   const onClick = async () => {
     const formData = new FormData();
 
     // Append files to formData
     if (ptFile) formData.append("ptFile", ptFile);
     if (zipFile) formData.append("zipFile", zipFile);
+
+    if (!isValidInput()) {
+      setSubmitted(false);
+      setIsInvalid(true);
+      return;
+    }
+
+    setIsInvalid(false);
 
     // Append text fields to formData
     formData.append("model", model);
@@ -148,13 +214,13 @@ export default function Home() {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <h2 className="text-3xl font-bold text-gray-400 mb-8">Select Attack</h2>
+        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">Select Attack <span className="text-sm text-red-500">*</span></h2>
         <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
         <HBar />
-        <h2 className="text-3xl font-bold text-gray-400 mb-8" id="model-select-header">Select Model</h2>
+        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">Select Model <span className="text-sm text-red-500">*</span></h2>
         <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">Upload Model Parameters</h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters <span className="text-sm text-red-500">*</span></h3>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
@@ -168,7 +234,7 @@ export default function Home() {
         </div>
         <HBar />
         {attack === "Inverting Gradients\n(Single Step)" && <div>
-          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">Upload Custom Dataset</h3>
+          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">Upload Custom Dataset <span className="text-sm text-red-500">*</span></h3>
           <div className="mb-4">
             <FileUpload
               expectedFileType="zip"
@@ -200,6 +266,9 @@ export default function Home() {
         }} />
         <div id="loading-icon">
           {submitted && <LoadingIcon />}
+        </div>
+        <div id="error-alert">
+          {isInvalid && <ErrorAlert errors={errors} />}
         </div>
       </div>
     </main>
