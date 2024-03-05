@@ -2,7 +2,7 @@ import torch
 from common import AttackParameters, AttackProgress, AttackStatistics, WorkerQueue
 from breaching.breaching.attacks.attack_progress import AttackProgress as BreachingAttackProgress
 import breaching.breaching as breachinglib
-from torchvision import models
+from torchvision import models as visionModels
 import logging, sys
 from threading import Thread
 import base64
@@ -11,6 +11,7 @@ import os, shutil
 import asyncio
 import random
 from ConfigBuilder import ConfigBuilder
+from breaching.breaching.cases.models.model_preparation import VisionContainer
 
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
@@ -38,37 +39,30 @@ class BreachingAdapter:
         print(os.listdir())
         if (os.path.exists(extract_dir)):
             shutil.rmtree(extract_dir)
-        print(f"attack params file path: {attack_params.zipFilePath}")
-        if attack_params.zipFilePath is not None:
-            with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
-                zip_ref.extractall(extract_dir)
+        with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
         
-            num_files = 0
-            _, dirs, _ = next(os.walk("./dataset"))
-            num_dirs = len(dirs)
-            for _, dirs, files in os.walk(extract_dir):
-                num_files += len(files)
-            
-            num_classes = num_dirs
-            dataset_size = num_dirs
-        else:
-            num_classes = 10 #
-            dataset_size = 50000 #
+        num_files = 0
+        _, dirs, _ = next(os.walk("./dataset"))
+        num_dirs = len(dirs)
+        for _, dirs, files in os.walk(extract_dir):
+            num_files += len(files)
 
         if cfg == None:
             cfg = breachinglib.get_config()
-        cfg = ConfigBuilder(attack_params).build(num_classes, dataset_size)
+            
+        cfg = ConfigBuilder(attack_params).build(num_dirs, num_files)
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         if cfg.case.model == "ResNet-18":
             cfg.case.model = cfg.case.model.replace('-', '')
-        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup)
-        # if user_model is None:
-        #     user_model = self._buildUserModel(attack_params.model, attack_params.ptFilePath)
-        #     model=user_model
 
+        model = self._getTorchVisionModel(cfg.case.model)
+        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, premade_model=model)
+        print(os.listdir())
+        if attack_params.ptFilePath is not None:
+            model = self._buildUserModel(model, attack_params.ptFilePath)
         
-
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
         logger = logging.getLogger()
 
@@ -83,9 +77,10 @@ class BreachingAdapter:
         return cfg, setup, user, server, attacker, model, loss_fn
 
     def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
+        print("performing")
         server_payload = server.distribute_payload()
         shared_data, true_user_data = user.compute_local_updates(server_payload)
-
+        print("local updates")
         response = request_token, self._worker_response_queue
         user.plot(true_user_data, saveFile="true_data")
         print("reconstructing attack")
@@ -125,15 +120,19 @@ class BreachingAdapter:
 
     def _check_image_size(self, model, shape):
         return True
-
-    def _buildUserModel(self, model_type, state_dict_path):
-        model = None
-        model_type = model_type.replace('-', '').lower()
-
-        if not hasattr(models, model_type):
+    
+    def _getTorchVisionModel(self, model_name):
+        model_name = model_name.replace('-', '').lower()
+        print("visioning")
+        if not hasattr(visionModels, model_name):
+            print("no torch model found")
             raise TypeError("given model type did not match any of the options")
-        model = getattr(models, model_type)()
+        model = VisionContainer(getattr(visionModels, model_name)())
+        model.name = model_name
+        return model
+        
 
+    def _buildUserModel(self, model, state_dict_path):
         if state_dict_path is not None:
             try:
                 model.load_state_dict(torch.load(state_dict_path))
