@@ -31,11 +31,6 @@ class ConfigBuilder:
         cfg.case.model = attack_params.model
         cfg.case.data.size = datasetSize
         cfg.case.data.classes = numClasses
-        if attack_params.zipFilePath == None:
-            print("No file path given")
-            attack_params.datasetStructure = "test"
-            dataset_path = "~/data"
-            cfg.case.data.path = '~/data'
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
@@ -47,12 +42,17 @@ class ConfigBuilder:
                     case "images":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=CIFAR10"]).case.data
                         print("defaulted to CIFAR10")
-                        
                     case "text":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=wikitext"]).case.data
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
+
+        match dataset_path:
+            case None:
+                cfg.case.data.path = 'dataset'
+            case _:
+                cfg.case.data.path = dataset_path
 
         
 
@@ -65,7 +65,7 @@ class ConfigBuilder:
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
         cfg.attack.optim.callback = 1
-        cfg.case.user.user_idx = 1 #random.randint(0, cfg.case.data.default_clients - 1)
+        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.numRestarts
 
         return cfg

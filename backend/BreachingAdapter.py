@@ -28,14 +28,17 @@ class BreachingAdapter:
         if torch.cuda.is_available():
             print(f'limiting cuda process memory')
             torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
-
         
+        if cfg == None:
+            cfg = breachinglib.get_config()
+
+        if torch_model is None:
+            torch_model = self._getTorchVisionModel(attack_params.model)
+            torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
 
         extract_dir = "./dataset"
-        
-        num_classes = 0
-        dataset_size = 0
 
+        # unzipped_directory = attack_params.zipFilePath.split('.')[0]
         print(os.listdir())
         if (os.path.exists(extract_dir)):
             shutil.rmtree(extract_dir)
@@ -48,33 +51,70 @@ class BreachingAdapter:
         for _, dirs, files in os.walk(extract_dir):
             num_files += len(files)
 
-        if cfg == None:
-            cfg = breachinglib.get_config()
-            
-        cfg = ConfigBuilder(attack_params).build(num_dirs, num_files)
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
-        if cfg.case.model == "ResNet-18":
-            cfg.case.model = cfg.case.model.replace('-', '')
+        print(setup)
 
-        model = self._getTorchVisionModel(cfg.case.model)
-        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, premade_model=model)
-        print(os.listdir())
-        if attack_params.ptFilePath is not None:
-            model = self._buildUserModel(model, attack_params.ptFilePath)
-        
         logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
         logger = logging.getLogger()
 
+        cfg = ConfigBuilder(attack_params).build(num_files, num_dirs)
+
         print(cfg)
 
+        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=torch_model)
         attacker = breachinglib.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
         breachinglib.utils.overview(server, user, attacker)
+
+
+        if torch_model is not None:
+            model = torch_model
 
         if not self._check_image_size(model, cfg.case.data.shape):
             raise ValueError("Mismatched dimensions")
 
         return cfg, setup, user, server, attacker, model, loss_fn
+
+        # extract_dir = "./dataset"
+        
+        # print(os.listdir())
+        # if (os.path.exists(extract_dir)):
+        #     shutil.rmtree(extract_dir)
+        # with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+        #     zip_ref.extractall(extract_dir)
+        # num_files = 0
+        # _, dirs, _ = next(os.walk("./dataset"))
+        # num_dirs = len(dirs)
+        # for _, dirs, files in os.walk(extract_dir):
+        #     num_files += len(files)
+
+        # if cfg == None:
+        #     cfg = breachinglib.get_config()
+            
+        # cfg = ConfigBuilder(attack_params).build(num_dirs, num_files)
+        # torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
+        # setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
+        # # if cfg.case.model == "ResNet-18":
+        # #     cfg.case.model = cfg.case.model.replace('-', '')
+
+        # model = self._getTorchVisionModel(cfg.case.model)
+        # user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup, prebuilt_model=model)
+        # print(os.listdir())
+        # if attack_params.ptFilePath is not None:
+        #     model = self._buildUserModel(model, attack_params.ptFilePath)
+        
+        # logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
+        # logger = logging.getLogger()
+
+        # print(cfg)
+
+        # attacker = breachinglib.attacks.prepare_attack(server.model, server.loss, cfg.attack, setup)
+        # breachinglib.utils.overview(server, user, attacker)
+
+        # if not self._check_image_size(model, cfg.case.data.shape):
+        #     raise ValueError("Mismatched dimensions")
+
+        # return cfg, setup, user, server, attacker, model, loss_fn
 
     def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
         print("performing")
@@ -123,12 +163,10 @@ class BreachingAdapter:
     
     def _getTorchVisionModel(self, model_name):
         model_name = model_name.replace('-', '').lower()
-        print("visioning")
         if not hasattr(visionModels, model_name):
             print("no torch model found")
             raise TypeError("given model type did not match any of the options")
-        model = VisionContainer(getattr(visionModels, model_name)())
-        model.name = model_name
+        model = getattr(visionModels, model_name)()
         return model
         
 
