@@ -30,7 +30,8 @@ def calculate_dataset_statistics(zip_file_path):
     # Calculate statistics for each class
     for class_folder in class_folders:
         class_path = os.path.join('temp_dataset', class_folder)
-        class_images = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')]
+        class_images = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')
+                        or f.endswith('.jpeg') or f.endswith('.JPEG')]
 
         num_images += len(class_images)
 
@@ -48,8 +49,9 @@ def calculate_dataset_statistics(zip_file_path):
             sum_std += np.std(image, axis=(0, 1))
 
     # Calculate mean and std
-    mean = sum_mean / num_images
-    std = sum_std / num_images
+    if num_images != 0:
+        mean = sum_mean / num_images / 255.0
+        std = sum_std / num_images / 255.0 
 
     # Clean up temporary directory
     os.system('rm -rf temp_dataset')

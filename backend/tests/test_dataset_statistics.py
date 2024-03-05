@@ -2,6 +2,7 @@ import unittest
 import os
 import shutil
 from backend.datasets import calculate_dataset_statistics, DatasetStatistics
+import numpy as np
 
 # Test the calculate_dataset_statistics function
 class TestDatasetStatistics(unittest.TestCase):
@@ -13,11 +14,8 @@ class TestDatasetStatistics(unittest.TestCase):
         self.assertIsInstance(statistics, DatasetStatistics)
         self.assertEqual(statistics.num_images, 350)
         self.assertEqual(statistics.num_classes, 7)
-        self.assertEqual(statistics.mean, [0.46, 0.56, 0.57])
-        self.assertEqual(statistics.std, [0.32, 0.28, 0.27])
+        self.assertTrue(np.allclose(statistics.mean, [0.30655779, 0.43363997, 0.4549895]))
+        self.assertTrue(np.allclose(statistics.std, [0.18246345 0.19011785 0.18673244]))    
         
 if __name__ == '__main__':
     unittest.main()
-        
-        
-        

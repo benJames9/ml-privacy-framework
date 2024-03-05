@@ -2,3 +2,4 @@ __pycache__
 backend/reconstructed_data.png
 backend/true_data.png
 backend/dataset
+.DS_Store
