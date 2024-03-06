@@ -44,15 +44,14 @@ class BreachingAdapter:
         numClasses: int,
         dataset_path=None,
     ):
-        match attack_params.modality:
-            case "images":
-                cfg = self._construct_images_cfg(attack_params)
-            case "text":
-                cfg = self._construct_text_cfg(attack_params)
-            case _:
-                raise TypeError(
-                    f"Data type of attack: {attack_params.modality} does not match anything."
-                )
+        if attack_params.modality == "images":
+            cfg = self._construct_images_cfg(attack_params)
+        elif attack_params.modality == "text":
+            cfg = self._construct_text_cfg(attack_params)
+        else:
+            raise TypeError(
+                f"Data type of attack: {attack_params.modality} does not match anything."
+            )
 
         assert attack_params is not None
 
@@ -60,34 +59,31 @@ class BreachingAdapter:
         cfg.case.model = attack_params.model
         cfg.case.data.size = datasetSize
         cfg.case.data.classes = numClasses
-        match attack_params.datasetStructure:
-            case "CSV":
-                cfg.case.data.name = "CustomCsv"
-            case "Foldered":
-                cfg.case.data.name = "CustomFolders"
-            case _:
-                print("Could not match dataset structure")
-                match attack_params.modality:
-                    case "images":
-                        cfg.case.data = breachinglib.get_config(
-                            overrides=["case/data=CIFAR10"]
-                        ).case.data
-                        print("defaulted to CIFAR10")
-                    case "text":
-                        cfg.case.data = breachinglib.get_config(
-                            overrides=["case/data=wikitext"]
-                        ).case.data
-                        print("defaulted to wikitext")
-                    case _:
-                        raise TypeError(
-                            f"Data type of attack: {attack_params.modality} does not match anything."
-                        )
+        if attack_params.datasetStructure == "CSV":
+            cfg.case.data.name = "CustomCsv"
+        elif attack_params.datasetStructure == "Foldered":
+            cfg.case.data.name = "CustomFolders"
+        else:
+            print("Could not match dataset structure")
+            if attack_params.modality == "images":
+                cfg.case.data = breachinglib.get_config(
+                    overrides=["case/data=CIFAR10"]
+                ).case.data
+                print("defaulted to CIFAR10")
+            elif attack_params.modality == "text":
+                cfg.case.data = breachinglib.get_config(
+                    overrides=["case/data=wikitext"]
+                ).case.data
+                print("defaulted to wikitext")
+            else:
+                raise TypeError(
+                    f"Data type of attack: {attack_params.modality} does not match anything."
+                )
 
-        match dataset_path:
-            case None:
-                cfg.case.data.path = "dataset"
-            case _:
-                cfg.case.data.path = dataset_path
+        if dataset_path == None:
+            cfg.case.data.path = "dataset"
+        else:
+            cfg.case.data.path = dataset_path
 
         if any(attack_params.means) and any(attack_params.stds):
             cfg.case.data.mean = attack_params.means
@@ -104,103 +100,99 @@ class BreachingAdapter:
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):
-        match attack_params.attack:
-            case "TAG":
-                cfg = breachinglib.get_config(overrides=["attack=tag"])
-            case _:
-                raise TypeError(f"No text attack match; {attack_params.attack}")
+        if attack_params.attack == "TAG":
+            cfg = breachinglib.get_config(overrides=["attack=tag"])
+        else:
+            raise TypeError(f"No text attack match; {attack_params.attack}")
 
-        match attack_params.model:
-            case "bert":
-                cfg.case.model = "bert-base-uncased"
-            case "gpt2":
-                cfg.case.model = "gpt2"
-            case "transformer3":
-                cfg.case.model = "transformer3"
-            case _:
-                try:
-                    assert (
-                        attack_params.model
-                        in {
-                            # ... list of all supported models
-                        }
-                    )
-                    cfg.case.model = attack_params.model
-                except AssertionError as a:
-                    raise TypeError(f"no model match for text: {attack_params.model}")
+        if attack_params.model == "bert":
+            cfg.case.model = "bert-base-uncased"
+        elif attack_params.model == "gpt2":
+            cfg.case.model = "gpt2"
+        elif attack_params.model == "transformer3":
+            cfg.case.model = "transformer3"
+        else:
+            try:
+                assert (
+                    attack_params.model
+                    in {
+                        # ... list of all supported models
+                    }
+                )
+                cfg.case.model = attack_params.model
+            except AssertionError as a:
+                raise TypeError(f"no model match for text: {attack_params.model}")
 
-        match attack_params.tokenizer:
-            case "bert":
-                cfg.case.data.tokenizer = "bert-base-uncased"
-                cfg.case.data.task = "masked-lm"
-                cfg.case.data.vocab_size = 30522
-                cfg.case.data.mlm_probability = 0.15
-            case "gpt2":
-                cfg.case.model = "gpt2"
-                cfg.case.data.task = "causal-lm"
-                cfg.case.data.vocab_size = 50257
-            case "transformer3":
-                cfg.case.model = "transformer3"
-            case _:
-                raise TypeError(f"no model match for tokenizer: {attack_params.model}")
+        if attack_params.tokenizer == "bert":
+            cfg.case.data.tokenizer = "bert-base-uncased"
+            cfg.case.data.task = "masked-lm"
+            cfg.case.data.vocab_size = 30522
+            cfg.case.data.mlm_probability = 0.15
+        elif attack_params.tokenizer == "gpt2":
+            cfg.case.model = "gpt2"
+            cfg.case.data.task = "causal-lm"
+            cfg.case.data.vocab_size = 50257
+        elif attack_params.tokenizer == "transformer3":
+            cfg.case.model = "transformer3"
+        else:
+            raise TypeError(f"no model match for tokenizer: {attack_params.model}")
 
         cfg.case.data.shape = attack_params.shape
 
     def _construct_images_cfg(self, attack_params: AttackParameters):
-        match attack_params.attack:
-            case "invertinggradients":
-                cfg = breachinglib.get_config()
-                cfg.case.data.partition = "random"
-                # default case.model=ResNet18
-            case "modern":
-                cfg = breachinglib.get_config(overrides=["attack=modern"])
-                cfg.case.data.partition = "unique-class"
-                cfg.attack.regularization.deep_inversion.scale = 1e-4
-            case "fishing_for_user_data":
-                cfg = breachinglib.get_config(
-                    overrides=[
-                        "case/server=malicious-fishing",
-                        "attack=clsattack",
-                        "case/user=multiuser_aggregate",
-                    ]
-                )
-                cfg.case.user.user_range = [0, 1]
-                cfg.case.data.partition = "random"  # This is the average case
-                cfg.case.user.num_data_points = 256
-                cfg.case.data.default_clients = 32
-                cfg.case.user.provide_labels = True  # Mostly out of convenience
-                cfg.case.server.target_cls_idx = 0  # Which class to attack?
-            # Less important attacks
-            case "analytic":
-                cfg = breachinglib.get_config(
-                    overrides=["attack=analytic", "case.model=linear"]
-                )
-                cfg.case.data.partition = "balanced"
-                cfg.case.data.default_clients = 50
-                cfg.case.user.num_data_points = 256  # User batch size
-            case "rgap":
-                cfg = breachinglib.get_config(
-                    overrides=[
-                        "attack=rgap",
-                        "case.model=cnn6",
-                        "case.user.provide_labels=True",
-                    ]
-                )
-                cfg.case.user.num_data_points = 1
-            case "april_analytic":
-                cfg = breachinglib.get_config(
-                    overrides=["attack=april_analytic", "case.model=vit_small_april"]
-                )
-                cfg.case.data.partition = "unique-class"
-                cfg.case.user.num_data_points = 1
-                cfg.case.server.pretrained = True
-                cfg.case.user.provide_labels = False
-            case "deepleakage":
-                cfg = breachinglib.get_config(
-                    overrides=["attack=deepleakage", "case.model=ConvNet"]
-                )
-                cfg.case.data.partition = "unique-class"
-                cfg.case.user.provide_labels = False
+        if attack_params.attack == "invertinggradients":
+            cfg = breachinglib.get_config()
+            cfg.case.data.partition = "random"
+            # default case.model=ResNet18
+        elif attack_params.attack == "modern":
+            cfg = breachinglib.get_config(overrides=["attack=modern"])
+            cfg.case.data.partition = "unique-class"
+            cfg.attack.regularization.deep_inversion.scale = 1e-4
+        elif attack_params.attack == "fishing_for_user_data":
+            cfg = breachinglib.get_config(
+                overrides=[
+                    "case/server=malicious-fishing",
+                    "attack=clsattack",
+                    "case/user=multiuser_aggregate",
+                ]
+            )
+            cfg.case.user.user_range = [0, 1]
+            cfg.case.data.partition = "random"  # This is the average case
+            cfg.case.user.num_data_points = 256
+            cfg.case.data.default_clients = 32
+            cfg.case.user.provide_labels = True  # Mostly out of convenience
+            cfg.case.server.target_cls_idx = 0  # Which class to attack?
+        # Less important attacks
+        elif attack_params.attack == "analytic":
+            cfg = breachinglib.get_config(
+                overrides=["attack=analytic", "case.model=linear"]
+            )
+            cfg.case.data.partition = "balanced"
+            cfg.case.data.default_clients = 50
+            cfg.case.user.num_data_points = 256  # User batch size
+        elif attack_params.attack == "rgap":
+            cfg = breachinglib.get_config(
+                overrides=[
+                    "attack=rgap",
+                    "case.model=cnn6",
+                    "case.user.provide_labels=True",
+                ]
+            )
+            cfg.case.user.num_data_points = 1
+        elif attack_params.attack == "april_analytic":
+            cfg = breachinglib.get_config(
+                overrides=["attack=april_analytic", "case.model=vit_small_april"]
+            )
+            cfg.case.data.partition = "unique-class"
+            cfg.case.user.num_data_points = 1
+            cfg.case.server.pretrained = True
+            cfg.case.user.provide_labels = False
+        elif attack_params.attack == "deepleakage":
+            cfg = breachinglib.get_config(
+                overrides=["attack=deepleakage", "case.model=ConvNet"]
+            )
+            cfg.case.data.partition = "unique-class"
+            cfg.case.user.provide_labels = False
 
         return cfg
 
