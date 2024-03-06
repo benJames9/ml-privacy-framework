@@ -2,8 +2,8 @@ from torchvision import models
 import torch
 import csv
 
-from .mia.member_inference import MembershipInferenceAttack, Resnet18MIA
-from .common import AttackParameters, MiaParams, MiaStatistics, WorkerCommunication, AttackProgress
+from mia.member_inference import MembershipInferenceAttack, Resnet18MIA
+from common import AttackParameters, MiaParams, MiaStatistics, WorkerCommunication, AttackProgress
 
 class MiaAdapter:
     def __init__(self, worker_response_queue):
