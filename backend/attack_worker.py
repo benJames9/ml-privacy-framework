@@ -21,7 +21,7 @@ def attack_worker(queues: WorkerCommunication):
     
     # Initialise adapters for different attacks
     breaching = BreachingAdapter(queues.response_channel)
-    mia = MiaAdapter()
+    mia = MiaAdapter(queues.response_channel)
     
     # Permenantly loop, fetching data from queues
     while True:
@@ -29,9 +29,9 @@ def attack_worker(queues: WorkerCommunication):
         request_token, data = queues.task_channel.get()
         print(data)
         
-        # Model inversion attack
-        if data.attack == 'invertinggradients':
-            try:
+        try:
+            # Model inversion attack
+            if data.attack == 'invertinggradients':
                 # Setup attack using params
                 cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
                     attack_params=data, cfg=None, torch_model=None
@@ -56,18 +56,21 @@ def attack_worker(queues: WorkerCommunication):
                     r_user_data, t_user_data, server_payload, server, cfg, setup, response
                 )
 
-            # Report any errors to task manager
-            except Exception as e:
-                progress = AttackProgress(
-                    message_type="error",
-                    error_message=f"Attack Configuration Error: {str(e)}",
-                )
-                queues.response_channel.put(request_token, progress)
-                # break
-        elif data.attack == 'mia':
-            try:
+            elif data.attack == 'mia':
                 # Perform MIA attack
                 mia.perform_attack(data)
+            
+            else:
+                raise ValueError(f"Attack type {data.attack} not supported")
+                
+            
+        # Report any errors to task manager 
+        except Exception as e:
+            progress = AttackProgress(
+                message_type="error",
+                error_message=f"Attack Configuration Error: {str(e)}",
+            )
+            queues.response_channel.put(request_token, progress)
                 
                     
     

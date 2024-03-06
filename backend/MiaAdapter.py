@@ -2,12 +2,12 @@ from torchvision import models
 import torch
 import csv
 
-from .mia.member_inference import MembershipInferenceAttack, Resnet18MIA
-from .common import AttackParameters, MiaParams
+from mia.member_inference import MembershipInferenceAttack, Resnet18MIA
+from common import AttackParameters, MiaParams
 
 class MiaAdapter:
-    def __init__(self):
-        pass
+    def __init__(self, worker_response_queue):
+        self._worker_response_queue = worker_response_queue
 
     def perform_attack(attack_parameters: AttackParameters): 
         # Get MIA parameters
@@ -49,6 +49,9 @@ class MiaAdapter:
         model.eval()
 
         return model
+    
+    def _add_progress_to_channel(self, request_token, response_data: AttackProgress):
+        self._worker_response_queue.put(request_token, progress)
     
 if __name__ == '__main__':
     perform_attack(AttackParameters(
