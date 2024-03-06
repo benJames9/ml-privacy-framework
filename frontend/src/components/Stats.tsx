@@ -9,7 +9,7 @@ interface StatsProps {
 const Stats: React.FC<StatsProps> = ({ stats, decimalPlaces = 4, modality }) => {
   return (
     <div>
-      {modality === "image" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
+      {modality === "images" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
         <div className="px-8 py-6 text-gray-200 bg-gray-800 border border-gray-900 rounded-s-lg text-center">
           <h1 className="text-4xl font-bold text-white mb-4">{stats.MSE!.toFixed(decimalPlaces)}</h1>
           <h3 className="text-2xl font-bold text-gray-300 mb-4">MSE</h3>

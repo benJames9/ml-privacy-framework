@@ -13,7 +13,7 @@ const AttackResults: React.FC<AttackResultsProps> = ({ attackProgress, modality 
     <div className="flex flex-col items-center">
       <h1 className="text-4xl font-bold text-gray-100">Attack Statistics</h1>
       <Stats stats={attackProgress.statistics} modality={modality} />
-      {modality === "image" && <div>
+      {modality === "images" && <div>
         <HBar />
         <SideBySideImages attackProgress={attackProgress} />
       </div>}
