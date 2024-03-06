@@ -53,6 +53,12 @@ function construct_ws_url(endpoint: string) {
   return `${wsScheme}://${wsHost}${endpoint}`
 }
 
+function does_progress_update_stats_and_images(progress: AttackProgress) {
+  return Object.entries(progress).map((_, v) => v != 0).reduce((acc, curr) => acc ||= curr, false) &&
+    !(progress.reconstructed_image == "" || !progress.reconstructed_image) &&
+    !(progress.true_image == "" || !progress.true_image)
+}
+
 const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const { request_token } = params;
 
@@ -97,9 +103,12 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     const ws_url = construct_ws_url(`/ws/attack-progress/${request_token}`)
     const ws = new WebSocket(ws_url);
 
+    let cached_true_image = attackProgress.true_image
+    let reconstructed_image = attackProgress.reconstructed_image
+    let statistics = attackProgress.statistics
+
     ws.onmessage = async (e) => {
       const data = JSON.parse(e.data)
-      console.log(data)
       switch (data.message_type) {
         case "PositionInQueue":
           setPageState(PageState.LOADING_QUEUED)
@@ -115,7 +124,21 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           }
 
           delete data.message_type;
-          setAttackProgress(data);
+
+          if(does_progress_update_stats_and_images(data)) {
+            cached_true_image = data.true_image
+            reconstructed_image = data.reconstructed_image
+            statistics = data.statistics
+          }
+
+          const augmented_update = {
+            ...data,
+            true_image: cached_true_image,
+            reconstructed_image,
+            statistics
+          }
+
+          setAttackProgress(augmented_update);
 
           if (data.current_iteration === data.max_iterations
             && data.current_restart === data.max_restarts) {
@@ -130,7 +153,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
             // since we're only now displaying those components
             // we need to set the data that they should have again
             // since they wouldn't have had the data set before they were enabled
-            setAttackProgress(data);
+            setAttackProgress(augmented_update);
           }
 
           break;
