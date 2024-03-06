@@ -79,11 +79,11 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       SSIM: 0
     },
     true_image: "",
-    reconstructed_image: ""
+    reconstructed_image: "",
+    attack_start_time_s: 0
   });
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
   const [attackModality, setAttackModality] = useState<"images" | "text">("images");
@@ -92,9 +92,6 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
     if (newIteration !== currentIteration) {
       setCurrentIteration(newIteration);
-      if (startTime) {
-        setPreviousTimes([...previousTimes, (performance.now() - startTime) / 1000]);
-      }
     }
     setStartTime(performance.now());
   }, [attackProgress]);
@@ -190,7 +187,6 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       content = <AttackPage attackProgress={attackProgress}
         modality={attackModality}
         startTime={startTime}
-        previousTimes={previousTimes}
         onCancel={onCancel}
         params={params}
       />

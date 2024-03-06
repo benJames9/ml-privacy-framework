@@ -7,7 +7,6 @@ interface StatsProps {
 }
 
 function stats_contains_non_zero_val(stats: AttackStatistics) {
-  console.log(Object.values(stats))
   return Object.values(stats).reduce((acc, curr) => acc ||= (curr != 0), false)
 }
 
