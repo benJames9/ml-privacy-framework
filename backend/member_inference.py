@@ -18,12 +18,17 @@ from backend.datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
+        # Check if N is even
+        if N % 2 != 0:
+            raise ValueError("Number of shadow models must be even")
+        
+        # Initialise values
         self._target_model = target_model
         self._target_image = Image.open(target_point[0])
         self._target_label = target_point[1]
         self._N = N
         self._in_models = []
-        self._out_models = [] 
+        self._out_models = []
     
     @abstractmethod
     def _train_model(self, data):
@@ -48,6 +53,9 @@ class MembershipInferenceAttack(ABC):
         statistics = calculate_dataset_statistics(path_to_data)
         self._image_stats = statistics
         
+        if statistics.num_classes != self._target_model.fc.out_features:
+            raise ValueError("Number of classes in the dataset does not match target model")
+        
         # Normalise the target image
         transformer = self._transform()
         target_label_idx = statistics.classes.index(self._target_label)
@@ -62,6 +70,7 @@ class MembershipInferenceAttack(ABC):
         
         Parameters:
             path_to_data: The path to dataset.
+            extract_folder: The folder to extract the data to.
             
         Returns:
             data: PyTorch dataset.
@@ -78,7 +87,7 @@ class MembershipInferenceAttack(ABC):
         Transformation to be applied to images to the format expected by the model.
         
         Returns:
-            Transformation: Transformed to apply to image.
+            Transformation: Transform to apply to image.
         """
         if self._image_stats is None:
             raise ValueError("Image statistics not set")
@@ -94,19 +103,21 @@ class MembershipInferenceAttack(ABC):
         
     def _train_shadow_models(self, data, n, epochs, batch_size, lr):
         """
-        Train N shadow models on random samples from the data distribution D.
+        Train N shadow models on random samples from the data distribution D. 
+        Saved as class property. 
         
         Parameters:
             data: PyTorch dataset.
-            n (int): The amount of data points to train each model on
+            n (int): The amount of data points to train each model on.
+            epochs (int): The number of epochs to train each model for.
+            batch_size (int): The batch size to use for training.
+            lr (float): The learning rate to use for training.
             
-        Returns:
-            in_models (list): List of models trained on the target point.
-            out_models (list): List of models not trained on the target point.
         """
+        # Check n is valid input
+        if n > len(data):
+            raise ValueError("Shadow model training points larger than dataset")
                 
-        print(f'target_point:\n{self._target_point}')
-        print(f'normal point:\n {data[0]}')
         # Half of the models are trained on the target point, and half are not
         for i in range(self._N):
             num_samples = len(data)
@@ -288,10 +299,6 @@ class Resnet18MIA(MembershipInferenceAttack):
                 # Backward pass and optimization
                 loss.backward()
                 optimizer.step()
-
-                running_loss += loss.item() * images.size(0)
-
-            epoch_loss = running_loss / len(data)
 
         print('model trained')
         return model
