@@ -54,6 +54,7 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
           label="Text Dataset"
           options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
           onChange={(e) => handleDataParamsChange("textDataset", e.target.value)}
+          isRequired={true}
         />
         <NumberInput
           label="No. data points"
