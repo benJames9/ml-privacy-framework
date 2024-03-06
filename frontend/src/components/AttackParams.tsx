@@ -24,11 +24,6 @@ const AttackParams: React.FC<AttackParamsProps> = ({ handleAttackParamsChange })
         onChange={(e) => handleAttackParamsChange("maxIterations", e.target.value)}
         isRequired={true}
       />
-      <NumberInput
-        label="Budget"
-        onChange={(e) => handleAttackParamsChange("budget", e.target.value)}
-        isRequired={true}
-      />
     </div>
   );
 
