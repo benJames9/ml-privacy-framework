@@ -68,9 +68,6 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (!ptFile) {
-      errorMsgs.push("Please upload a model parameter file");
-    }
     if (attack === "Inverting Gradients\n(Single Step)" && !zipFile) {
       errorMsgs.push("Please upload a dataset file");
     }
@@ -220,7 +217,7 @@ export default function SetupPage() {
         <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">Select Model <span className="text-sm text-red-500">*</span></h2>
         <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters <span className="text-sm text-red-500">*</span></h3>
+        <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters</h3>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
