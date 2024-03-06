@@ -286,7 +286,11 @@ class MembershipInferenceAttack(ABC):
         target_model_confidence = self._model_confidence(self._target_model, self._target_point)
         
         # Perform likelihood ratio test
-        return self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
+        ratio = self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
+        
+        # Update final progress
+        progress_callback(request_token, self._max_epochs, self._max_epochs, ratio)
+        return ratio
     
 class Resnet18MIA(MembershipInferenceAttack):
     def _train_model(self, data, epochs, batch_size, lr, current_model, request_token, progress_callback):

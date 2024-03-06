@@ -52,13 +52,14 @@ class MiaAdapter:
         return model
     
     def _add_progress_to_channel(self, request_token, max_epochs, 
-                                 current_epoch, result: MiaStatistics = None):
+                                 current_epoch, result=None):
         # Construct progress type to update user
         progress = AttackProgress(
             message_type="progress",
             current_iteration = current_epoch,
             max_iterations=max_epochs,
-            mia_stats = result
+            if result:
+                mia_stats = AttackStatistics(likelihood_ratio=result)
         )
         
         self._worker_response_queue.put(request_token, progress)
