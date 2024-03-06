@@ -56,11 +56,14 @@ class MiaAdapter:
         # Construct progress type to update user
         progress = AttackProgress(
             message_type="progress",
-            current_iteration = current_epoch,
-            max_iterations=max_epochs,
-            if result:
-                mia_stats = AttackStatistics(likelihood_ratio=result)
+            current_iteration=current_epoch,
+            max_iterations=max_epochs
         )
+
+        # Add final result
+        if result is not None:
+            mia_stats = AttackStatistics(likelihood_ratio=result)
+            progress.mia_stats = mia_stats
         
         self._worker_response_queue.put(request_token, progress)
     
