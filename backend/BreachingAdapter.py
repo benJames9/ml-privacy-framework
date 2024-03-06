@@ -40,8 +40,6 @@ class BreachingAdapter:
     def _construct_cfg(
         self,
         attack_params: AttackParameters,
-        datasetSize: int,
-        numClasses: int,
         dataset_path=None,
     ):
         match attack_params.modality:
@@ -57,8 +55,6 @@ class BreachingAdapter:
         
         # setup all customisable parameters
         cfg.case.model = attack_params.model
-        cfg.case.data.size = datasetSize
-        cfg.case.data.classes = numClasses
         match attack_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
@@ -248,7 +244,7 @@ class BreachingAdapter:
             format="%(message)s",
         )
         logger = logging.getLogger()
-        cfg = self._construct_cfg(attack_params, 0, 0)
+        cfg = self._construct_cfg(attack_params)
         
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=torch_model
