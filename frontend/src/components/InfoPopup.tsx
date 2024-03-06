@@ -1,4 +1,5 @@
 import { useState } from "react";
+import parse from "html-react-parser";
 
 interface InfoPopupProps {
   text: string;
@@ -8,7 +9,7 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ text }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex items-center">
+    <div className="flex items-start">
       <button
         className="relative ml-4 bg-gray-800 hover:bg-gray-600 rounded-full p-2"
         aria-describedby="upload-pt-info"
@@ -26,7 +27,7 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ text }) => {
           id="upload-pt-info"
         >
           <div className="w-full px-4 py-3 text-sm text-gray-400 whitespace-pre-wrap">
-            {text}
+            {parse(text)}
           </div>
         </div>
       )}
