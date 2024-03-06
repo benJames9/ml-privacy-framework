@@ -4,12 +4,13 @@ import numpy as np
 from PIL import Image
 
 class DatasetStatistics:
-    def __init__(self, image_shape, mean, std, num_images, num_classes):
+    def __init__(self, image_shape, mean, std, num_images, num_classes, classes):
         self.image_shape = image_shape
         self.mean = mean
         self.std = std
         self.num_images = num_images
         self.num_classes = num_classes
+        self._classes = classes
 
 # Calculate information of a given dataset
 def calculate_dataset_statistics(zip_file_path):
@@ -26,9 +27,11 @@ def calculate_dataset_statistics(zip_file_path):
     sum_mean = np.zeros(3)
     sum_std = np.zeros(3)
     image_shape = None
+    classes = []
 
     # Calculate statistics for each class
     for class_folder in class_folders:
+        classes.append(class_folder)
         class_path = os.path.join('temp_dataset', class_folder)
         class_images = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')
                         or f.endswith('.jpeg') or f.endswith('.JPEG')]
@@ -56,4 +59,4 @@ def calculate_dataset_statistics(zip_file_path):
     # Clean up temporary directory
     os.system('rm -rf temp_dataset')
 
-    return DatasetStatistics(image_shape, mean, std, num_images, num_classes)
+    return DatasetStatistics(image_shape, mean, std, num_images, num_classes, classes)
