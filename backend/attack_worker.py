@@ -1,4 +1,5 @@
 import base64
+from MiaAdapter import MiaAdapter
 from BreachingAdapter import BreachingAdapter
 from common import WorkerCommunication, AttackProgress
 from multiprocessing import Event as mpEvent
@@ -17,7 +18,12 @@ def attack_worker(queues: WorkerCommunication):
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
+    
+    # Initialise adapters for different attacks
     breaching = BreachingAdapter(queues.response_channel)
+    mia = MiaAdapter()
+    
+    # Permenantly loop, fetching data from queues
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
@@ -60,7 +66,9 @@ def attack_worker(queues: WorkerCommunication):
                 # break
         elif data.attack == 'mia':
             try:
-                model = 
+                # Perform MIA attack
+                mia.perform_attack(data)
+                
                     
     
 # Use this for testing?
