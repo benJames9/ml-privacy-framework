@@ -17,7 +17,7 @@ import math
 from .datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
-    def __init__(self, target_model, target_point, N):
+    def __init__(self, target_model, target_point, N, class_dict):
         # Check if N is even
         if N % 2 != 0:
             raise ValueError("Number of shadow models must be even")
@@ -29,6 +29,9 @@ class MembershipInferenceAttack(ABC):
         self._N = N
         self._in_models = []
         self._out_models = []
+        
+        # Set the target label value from the class dictionary
+        self._load_classes(class_dict)
     
     @abstractmethod
     def _train_model(self, data):
@@ -42,6 +45,19 @@ class MembershipInferenceAttack(ABC):
             model: Trained shadow model.
         """
         pass
+    
+    def _load_classes(self, class_dict):
+        """
+        Sets the target label value from the class dictionary.
+
+        Parameters:
+            class_dict (dict): Dictionary of class names to class indices.
+
+        """
+        if self._target_label not in class_dict:
+            raise ValueError("Target label not in target model classes")
+        
+        self._target_label_val = class_dict[self._target_label]
    
     def _infer_image_data(self, path_to_data):
         """
@@ -58,10 +74,9 @@ class MembershipInferenceAttack(ABC):
         
         # Normalise the target image
         transformer = self._transform()
-        target_label_idx = statistics.classes.index(self._target_label)
         
         # Define the target point for training
-        self._target_point = (transformer(self._target_image), target_label_idx)
+        self._target_point = (transformer(self._target_image), self._target_label_val)
         print(f'target point: {self._target_point}')
         
     def _load_data(self, path_to_data, extract_folder):
@@ -304,8 +319,8 @@ class Resnet18MIA(MembershipInferenceAttack):
         return model
         
 if __name__ == '__main__':
+    class_dict = {'n01440764': 0, 'n01443537': 1, 'n01484850': 2, 'n01491361': 3, 'n01494475': 4, 'n01496331': 5, 'n01498041': 6}
     target_model = models.resnet18(pretrained=True)
     target_point = ('shark.JPEG', 'n01440764')
-    attack = Resnet18MIA(target_model, target_point, N=4)
+    attack = Resnet18MIA(target_model, target_point, N=4, class_dict=class_dict)
     print(attack.run_inference('small_foldered_set.zip', n=10, epochs=2, batch_size=10, lr=0.001))
-
