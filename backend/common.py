@@ -57,7 +57,7 @@ class AttackParameters(BaseModel):
     maxIterations: int
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
-    budget: int
+    budget: int = 100
     reconstruction_frequency: int = 100
 
 

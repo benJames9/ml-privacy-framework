@@ -35,7 +35,6 @@ export default function SetupPage() {
   const [numRestarts, setNumRestarts] = useState<number>(0);
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
-  const [budget, setBudget] = useState<number>(0);
 
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
@@ -87,9 +86,6 @@ export default function SetupPage() {
     if (invalidNum(maxIterations)) {
       errorMsgs.push("Please enter a maximum number of iterations > 0");
     }
-    if (invalidNum(budget)) {
-      errorMsgs.push("Please enter a budget > 0");
-    }
     if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
       && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
       errorMsgs.push("Please either enter all values for mean and std or none");
@@ -128,7 +124,6 @@ export default function SetupPage() {
     formData.append("numRestarts", numRestarts.toString());
     formData.append("stepSize", stepSize.toString());
     formData.append("maxIterations", maxIterations.toString());
-    formData.append("budget", budget.toString());
 
     const res = await fetch("/api/submit-attack", {
       method: 'POST',
@@ -201,9 +196,6 @@ export default function SetupPage() {
         break;
       case "maxIterations":
         setMaxIterations(parseInt(value));
-        break;
-      case "budget":
-        setBudget(parseInt(value));
         break;
       default:
         break;
