@@ -10,7 +10,7 @@ class DatasetStatistics:
         self.std = std
         self.num_images = num_images
         self.num_classes = num_classes
-        self._classes = classes
+        self.classes = classes
 
 # Calculate information of a given dataset
 def calculate_dataset_statistics(zip_file_path):

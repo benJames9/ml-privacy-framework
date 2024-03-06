@@ -11,16 +11,18 @@ from torchvision.datasets import ImageFolder
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
+import torch.nn.functional as F
 import os
 import math
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
         self._target_model = target_model
-        self._target_point = (Image.open(target_point[0]), target_point[1])
+        self._target_image = Image.open(target_point[0])
+        self._target_label = target_point[1]
         self._N = N
         self._in_models = []
-        self._out_models = []
+        self._out_models = [] 
     
     @abstractmethod
     def _train_model(self, data):
@@ -45,9 +47,13 @@ class MembershipInferenceAttack(ABC):
         statistics = calculate_dataset_statistics(path_to_data)
         self._image_stats = statistics
         
-        # Normalise the target point
+        # Normalise the target image
         transformer = self._transform()
-        self._target_point = (transformer(self._target_point[0]), self._target_point[1])
+        target_label_idx = statistics.classes.index(self._target_label)
+        
+        # Define the target point for training
+        self._target_point = (transformer(self._target_image), target_label_idx)
+        print(f'target point: {self._target_point}')
         
     def _load_data(self, path_to_data, extract_folder):
         """
@@ -139,9 +145,9 @@ class MembershipInferenceAttack(ABC):
         
         # Fit Gaussians to the confidences
         in_gaussian = GaussianMixture(n_components=2)
-        in_gaussian.fit(np.log(in_confidences).reshape(-1, 1))
+        in_gaussian.fit(np.asarray(in_confidences).reshape(-1, 1))
         out_gaussian = GaussianMixture(n_components=2)
-        out_gaussian.fit(np.log(out_confidences).reshape(-1, 1))
+        out_gaussian.fit(np.asarray(out_confidences).reshape(-1, 1))
         
         return in_gaussian, out_gaussian
 
@@ -162,28 +168,38 @@ class MembershipInferenceAttack(ABC):
         with torch.no_grad():
             logits = model(self._target_point[0].unsqueeze(0))
             
-        # Normalise output
-        logits -= torch.max(logits, dim=1, keepdim=True)[0]
-        
         print(f'logits: {logits}')
+            
+        # One hot encode the target label
+        target_index = self._image_stats.classes.index(self._target_label)
+        target_label = torch.zeros(self._image_stats.num_classes)
+        target_label[target_index] = 1
         
-        # Apply softmax to get probabilities
-        probabilities = torch.softmax(logits, dim=1)
+        # Reshape target for calculating CE
+        target_label = target_label.view(1, -1)
+
+        print(f'one hot: {target_label}')
+            
+        criterion = nn.CrossEntropyLoss()
+        loss = criterion(logits, target_label)
         
-        print(f'probs: {probabilities}')
+        print(f'loss: {loss}')
         
-        # Get the predicted probability for the true label
-        predicted_probability = probabilities[:, target_point[1]].item()
+        confidence = math.exp(-loss)
         
-        print(f'pred prob: {predicted_probability}')
+        print(f'confidence: {confidence}')
         
-        if predicted_probability == 0:
-            predicted_probability = 0.0000000001
-        if predicted_probability == 1:
-            predicted_probability = 0.9999999999
+        # Convert 0s and 1s from rounding errors
+        min_size = 1e-5
+        if confidence < min_size:
+            confidence = min_size
+        elif 1 - confidence < min_size:
+            confidence = 1 - min_size
+        
+        print(f'confidence after conversion: {confidence}')
         
         # Apply logit transformation
-        logit_scaled_confidence = math.log(predicted_probability / (1 - predicted_probability))
+        logit_scaled_confidence = math.log(confidence / (1 - confidence))
         
         print(f'logit scaled conf: {logit_scaled_confidence}')
         
@@ -267,7 +283,7 @@ class Resnet18MIA(MembershipInferenceAttack):
         
 if __name__ == '__main__':
     target_model = models.resnet18(pretrained=True)
-    target_point = ('shark.JPEG', 1)
-    attack = Resnet18MIA(target_model, target_point, N=2)
+    target_point = ('shark.JPEG', 'n01440764')
+    attack = Resnet18MIA(target_model, target_point, N=4)
     print(attack.run_inference('small_foldered_set.zip', n=10, epochs=2, batch_size=10, lr=0.001))
 
