@@ -18,6 +18,7 @@ export default function SetupPage() {
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
+  const [modality, setModality] = useState<"images" | "text">("images");
 
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
@@ -68,7 +69,7 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (attack === "Inverting Gradients\n(Single Step)" && !zipFile) {
+    if (attack === "invertinggradients" && !zipFile) {
       errorMsgs.push("Please upload a dataset file");
     }
     if (datasetStructure === "CSV" && csvPath === "") {
@@ -117,6 +118,8 @@ export default function SetupPage() {
 
     // Append text fields to formData
     formData.append("model", model);
+    formData.append("attack", attack);
+    formData.append("modality", modality);
     formData.append("datasetStructure", datasetStructure);
     formData.append("csvPath", csvPath);
     formData.append("mean", JSON.stringify(mean));
@@ -207,15 +210,25 @@ export default function SetupPage() {
     }
   }
 
+  const onAttackSelect = (attack: string) => {
+    if (attack === "Inverting Gradients\n(Single Step)") {
+      setSelectedAttack("invertinggradients");
+      setModality("images");
+    } else {
+      setSelectedAttack("tag");
+      setModality("text");
+    }
+  }
+
   return (
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
         <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">Select Attack <span className="text-sm text-red-500">*</span></h2>
-        <AttackSelect attacks={attacks} onChange={(attack: string) => { setSelectedAttack(attack) }} />
+        <AttackSelect attacks={attacks} onChange={onAttackSelect} />
         <HBar />
         <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">Select Model <span className="text-sm text-red-500">*</span></h2>
-        <ModelSelect models={attack === "TAG\n(Text Attack)" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
+        <ModelSelect models={attack === "tag" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
         <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters</h3>
         <div className="mb-4">
@@ -223,14 +236,14 @@ export default function SetupPage() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement={attack === "Inverting Gradients\n(Single Step)" ? "upload-zip-header" : "data-params-header"}
+            nextElement={attack === "invertinggradients" ? "upload-zip-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
           )}
         </div>
         <HBar />
-        {attack === "Inverting Gradients\n(Single Step)" && <div>
+        {attack === "invertinggradients" && <div>
           <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">Upload Custom Dataset <span className="text-sm text-red-500">*</span></h3>
           <div className="mb-4">
             <FileUpload

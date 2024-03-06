@@ -80,7 +80,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
-  const [attackModality, setAttackModality] = useState<"image" | "text">("image");
+  const [attackModality, setAttackModality] = useState<"images" | "text">("images");
 
   useEffect(() => {
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
