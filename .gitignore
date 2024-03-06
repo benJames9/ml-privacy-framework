@@ -6,3 +6,4 @@ backend/dataset
 venv/
 backend/test_dataset/
 backend/temp_dataset/
+.DS_Store
