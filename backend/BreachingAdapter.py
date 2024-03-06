@@ -53,9 +53,8 @@ class BreachingAdapter:
                 raise TypeError(
                     f"Data type of attack: {attack_params.modality} does not match anything."
                 )
-
         assert attack_params is not None
-
+        
         # setup all customisable parameters
         cfg.case.model = attack_params.model
         cfg.case.data.size = datasetSize
@@ -94,7 +93,7 @@ class BreachingAdapter:
             cfg.case.data.std = attack_params.stds
             cfg.case.data.normalize = False
 
-        cfg.case.data.batch_size = attack_params.batchSize
+        cfg.case.user.num_data_points = attack_params.batchSize
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
         cfg.attack.optim.callback = 1
@@ -201,7 +200,6 @@ class BreachingAdapter:
                 )
                 cfg.case.data.partition = "unique-class"
                 cfg.case.user.provide_labels = False
-
         return cfg
 
     def setup_attack(
@@ -234,15 +232,12 @@ class BreachingAdapter:
         print(os.listdir())
         if os.path.exists(extract_dir):
             shutil.rmtree(extract_dir)
-        with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
-            zip_ref.extractall(extract_dir)
-
-        num_files = 0
-        _, dirs, _ = next(os.walk("./dataset"))
-        num_dirs = len(dirs)
-        for _, dirs, files in os.walk(extract_dir):
-            num_files += len(files)
-
+        if attack_params.zipFilePath is not None:
+            with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
+                zip_ref.extractall(extract_dir)
+        else:
+            attack_params.datasetStructure = "test"
+        
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
@@ -253,14 +248,12 @@ class BreachingAdapter:
             format="%(message)s",
         )
         logger = logging.getLogger()
-
-        cfg = self._construct_cfg(attack_params, num_files, num_dirs)
-
-        print(cfg)
-
+        cfg = self._construct_cfg(attack_params, 0, 0)
+        
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=torch_model
         )
+        print(cfg)
         attacker = breachinglib.attacks.prepare_attack(
             server.model, server.loss, cfg.attack, setup
         )
