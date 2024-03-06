@@ -10,6 +10,7 @@ import EvaluateButton from "@/components/EvaluateButton";
 import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
 import ErrorAlert from "@/components/ErrorAlert";
+import InfoPopup from "@/components/InfoPopup";
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
@@ -216,13 +217,28 @@ export default function SetupPage() {
     <main>
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
+        {/* Attack Select */}
         <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">Select Attack <span className="text-sm text-red-500">*</span></h2>
         <AttackSelect attacks={attacks} onChange={onAttackSelect} />
         <HBar />
-        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">Select Model <span className="text-sm text-red-500">*</span></h2>
+
+        {/* Model Select */}
+        <div className="flex items-start">
+          <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="model-select-header">
+            Select Model <span className="text-sm text-red-500">*</span>
+          </h2>
+          <InfoPopup text="Select one of our suppported models to perform the attack on." />
+        </div>
         <ModelSelect models={attack === "tag" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">Upload Model Parameters</h3>
+
+        {/* Upload pt file */}
+        <div className="flex items-start">
+          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">
+            Upload Model Parameters
+          </h3>
+          <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
+        </div>
         <div className="mb-4">
           <FileUpload
             expectedFileType="pt"
@@ -235,8 +251,16 @@ export default function SetupPage() {
           )}
         </div>
         <HBar />
+
         {attack === "invertinggradients" && <div>
-          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">Upload Custom Dataset <span className="text-sm text-red-500">*</span></h3>
+          {/* Upload zip file */}
+          <div className="flex items-start">
+            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
+              Upload Custom Dataset <span className="text-sm text-red-500">*</span>
+            </h3>
+            <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
+          </div>
+
           <div className="mb-4">
             <FileUpload
               expectedFileType="zip"
