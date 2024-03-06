@@ -69,9 +69,6 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (attack === "invertinggradients" && !zipFile) {
-      errorMsgs.push("Please upload a dataset file");
-    }
     if (datasetStructure === "CSV" && csvPath === "") {
       errorMsgs.push("Please enter the path to the CSV file");
     }
@@ -281,8 +278,8 @@ export default function SetupPage() {
         {attack === "invertinggradients" && <div>
           {/* Upload zip file */}
           <div className="flex items-start">
-            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
-              Upload Custom Dataset <span className="text-sm text-red-500">*</span>
+            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">
+              Upload Custom Dataset
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
