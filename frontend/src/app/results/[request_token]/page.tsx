@@ -91,7 +91,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       }
     }
     setStartTime(performance.now());
-  }, [attackProgress, currentIteration, previousTimes, startTime]);
+  }, [attackProgress]);
 
   useEffect(() => {
     const ws_url = construct_ws_url(`/ws/attack-progress/${request_token}`)
@@ -148,7 +148,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     return () => {
       ws.close();
     };
-  }, [request_token, pageState]); // Dependency array to only re-run effect if params.request_token changes
+  }, [params.request_token]); // Dependency array to only re-run effect if params.request_token changes
 
   let content = null;
   switch (pageState) {

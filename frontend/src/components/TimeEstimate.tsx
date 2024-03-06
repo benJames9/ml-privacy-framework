@@ -32,7 +32,7 @@ const TimeEstimate: React.FC<TimeEstimateProps> = ({ attackProgress, startTime, 
         setTimeRemaining(timeEstimate);
       }
     }
-  }, [attackProgress, startTime, previousTimes, currentIteration, totalIterations]);
+  }, [attackProgress, startTime, previousTimes]);
 
   const formatTime = (time: number) => {
     const hours = Math.floor(time / 3600);
