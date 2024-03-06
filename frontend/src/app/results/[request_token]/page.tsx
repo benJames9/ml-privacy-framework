@@ -1,16 +1,14 @@
 'use client'
 
-import HBar from "@/components/HBar";
 import Navbar from "@/components/Navbar";
-import ReconstructedImage from "@/components/ReconstructedImage";
-import Stats from "@/components/Stats";
 
 import React, { useEffect, useState } from "react";
-import HorizontalBar from "@/components/ProgressBar";
 
 import { AttackProgress } from "@/components/AttackProgress";
-import CancelButton from "@/components/CancelButton";
-import TimeEstimate from "@/components/TimeEstimate";
+import AttackLoading from "@/components/AttackLoading";
+import AttackQueued from "@/components/AttackQueued";
+import AttackPage from "@/components/AttackPage";
+import AttackResultsPage from "@/components/AttackResultsPage";
 
 interface SearchParam {
   params: {
@@ -55,6 +53,12 @@ function construct_ws_url(endpoint: string) {
   return `${wsScheme}://${wsHost}${endpoint}`
 }
 
+function does_progress_update_stats_and_images(progress: AttackProgress) {
+  return Object.entries(progress).map((_, v) => v != 0).reduce((acc, curr) => acc ||= curr, false) &&
+    !(progress.reconstructed_image == "" || !progress.reconstructed_image) &&
+    !(progress.true_image == "" || !progress.true_image)
+}
+
 const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const { request_token } = params;
 
@@ -75,21 +79,19 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       SSIM: 0
     },
     true_image: "",
-    reconstructed_image: ""
+    reconstructed_image: "",
+    attack_start_time_s: 0
   });
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
+  const [attackModality, setAttackModality] = useState<"images" | "text">("images");
 
   useEffect(() => {
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
     if (newIteration !== currentIteration) {
       setCurrentIteration(newIteration);
-      if (startTime) {
-        setPreviousTimes([...previousTimes, (performance.now() - startTime) / 1000]);
-      }
     }
     setStartTime(performance.now());
   }, [attackProgress]);
@@ -98,9 +100,12 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     const ws_url = construct_ws_url(`/ws/attack-progress/${request_token}`)
     const ws = new WebSocket(ws_url);
 
+    let cached_true_image = attackProgress.true_image
+    let reconstructed_image = attackProgress.reconstructed_image
+    let statistics = attackProgress.statistics
+
     ws.onmessage = async (e) => {
       const data = JSON.parse(e.data)
-      console.log(data)
       switch (data.message_type) {
         case "PositionInQueue":
           setPageState(PageState.LOADING_QUEUED)
@@ -116,15 +121,36 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           }
 
           delete data.message_type;
-          setAttackProgress(data);
 
-          if (data.true_image != "" && data.reconstructed_image != "") {
-            if (data.current_iteration === data.max_iterations
-              && data.current_restart === data.max_restarts) {
-              // let them see the full attack progress bar for a bit
-              await wait_ms(500);
-              setPageState(PageState.FINAL_SCREEN);
+          if(does_progress_update_stats_and_images(data)) {
+            cached_true_image = data.true_image
+            reconstructed_image = data.reconstructed_image
+            statistics = data.statistics
+          }
+
+          const augmented_update = {
+            ...data,
+            true_image: cached_true_image,
+            reconstructed_image,
+            statistics
+          }
+
+          setAttackProgress(augmented_update);
+
+          if (data.current_iteration === data.max_iterations
+            && data.current_restart === data.max_restarts) {
+            if (data.true_image === "" && data.reconstructed_image === "") {
+              setAttackModality("text");
             }
+            
+            // let them see the full attack progress bar for a bit
+            await wait_ms(500);
+            setPageState(PageState.FINAL_SCREEN);
+
+            // since we're only now displaying those components
+            // we need to set the data that they should have again
+            // since they wouldn't have had the data set before they were enabled
+            setAttackProgress(augmented_update);
           }
 
           break;
@@ -147,48 +173,26 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   let content = null;
   switch (pageState) {
     case PageState.LOADING_SPINNER:
-      content = <div className="flex min-h-screen py-[30vh] justify-center bg-gradient-to-r from-black to-blue-950">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white-900"></div>
-      </div>
+      content = <AttackLoading />
       break;
     case PageState.LOADING_QUEUED:
-      content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
-        <HorizontalBar min={0} max={Math.max(queuedMax + 1, 10)} current={Math.max(queuedMax + 1, 10) - queuedCurrent} text={`Position in queue: #${queuedCurrent}`} />
-        <CancelButton
-          onClick={() => onCancel(params.request_token)}
-        />
-      </div>
+      content = <AttackQueued
+        queuedCurrent={queuedCurrent}
+        queuedMax={queuedMax}
+        onCancel={onCancel}
+        params={params}
+      />
       break;
     case PageState.ATTACKING:
-      content = <div className="flex min-h-screen flex-col items-center justify-between py-[25vh] bg-gradient-to-r from-black to-blue-950">
-        <HorizontalBar
-          current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
-          min={0}
-          max={attackProgress.max_restarts * attackProgress.max_iterations}
-          text="Attacking..."
-          color="bg-green-600"
-        />
-        <TimeEstimate
-          attackProgress={attackProgress}
-          startTime={startTime}
-          previousTimes={previousTimes}
-        />
-        <CancelButton
-          onClick={() => onCancel(params.request_token)}
-        />
-      </div>
+      content = <AttackPage attackProgress={attackProgress}
+        modality={attackModality}
+        startTime={startTime}
+        onCancel={onCancel}
+        params={params}
+      />
       break;
     case PageState.FINAL_SCREEN:
-      content = <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
-        <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-bold text-gray-100">Attack Statistics</h1>
-          <Stats stats={attackProgress.statistics} />
-          <HBar />
-          <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
-          <ReconstructedImage image={attackProgress.reconstructed_image} />
-          <ReconstructedImage image={attackProgress.true_image} />
-        </div>
-      </div>
+      content = <AttackResultsPage attackProgress={attackProgress} modality={attackModality} />
   }
 
   return (

@@ -1,35 +1,62 @@
 import torch
 from common import AttackParameters, AttackProgress, AttackStatistics, WorkerQueue
-from breaching.breaching.attacks.attack_progress import AttackProgress as BreachingAttackProgress
+from breaching.breaching.attacks.attack_progress import (
+    AttackProgress as BreachingAttackProgress,
+)
 import breaching.breaching as breachinglib
 from torchvision import models as vision_models
 import breaching.breaching.cases.models.language_models
 from breaching.breaching.cases.models.model_preparation import construct_model
 import logging, sys
-from threading import Thread
 import base64
 import zipfile
 import os, shutil
-import asyncio
 from construct_config import ConfigBuilder
+import random
+import tempfile
+import time
+from functools import partial
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class BreachingCache:
+    true_b64_image = ""
+    true_user_data = None
+    reconstructed_user_data = None
+    stats = None
+    attack_start_time_s: float = 0
+
+    server_payload = None
+    server = None
+    user = None
+    cfg = None
+    setup = None
+
 
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
 
-    def setup_attack(self, attack_params:AttackParameters=None, cfg=None):
+    def setup_attack(
+        self, attack_params: Optional[AttackParameters] = None, cfg=None, torch_model=None
+    ):
+        print(f"~~~[Attack Params]~~~ {attack_params}")
+        self.attack_cache = BreachingCache()
 
-        print(f'~~~[Attack Params]~~~ {attack_params}')
+        device = (
+            torch.device(f"cuda:0")
+            if torch.cuda.is_available()
+            else torch.device("cpu")
+        )
 
-        device = torch.device(f'cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-        
         # Limit the GPU memory usage based on user budget
         if torch.cuda.is_available():
-            print(f'limiting cuda process memory')
+            print(f"limiting cuda process memory")
             torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
 
-        if cfg == None:
-            cfg = ConfigBuilder(attack_params).build()
+        extract_dir = "./dataset"
 
         
         # unzipped_directory = attack_params.zipFilePath.split('.')[0]
@@ -41,15 +68,30 @@ class BreachingAdapter:
                 zip_ref.extractall('./dataset')
             print(os.listdir('dataset'))
 
+        num_files = 0
+        _, dirs, _ = next(os.walk("./dataset"))
+        num_dirs = len(dirs)
+        for _, dirs, files in os.walk(extract_dir):
+            num_files += len(files)
+
+        if cfg == None:
+            cfg = ConfigBuilder(attack_params).build(num_files, num_dirs)
+
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
 
-        logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stdout)], format='%(message)s')
+        logging.basicConfig(
+            level=logging.INFO,
+            handlers=[logging.StreamHandler(sys.stdout)],
+            format="%(message)s",
+        )
         logger = logging.getLogger()
 
         print(cfg)
-
-        user, server, model, loss_fn = breachinglib.cases.construct_case(cfg.case, setup)
+        
+        user, server, model, loss_fn = breachinglib.cases.construct_case(
+            cfg.case, setup, prebuilt_model=torch_model
+        )
         
         if attack_params.ptFilePath is not None:
             pre_trained_model = self._buildModel(attack_params.modality, attack_params.model, cfg.case.data, attack_params.ptFilePath)
@@ -63,50 +105,105 @@ class BreachingAdapter:
 
         return cfg, setup, user, server, attacker, model, loss_fn
 
-    def perform_attack(self, cfg, setup, user, server, attacker, model, loss_fn, request_token):
+    def perform_attack(
+        self,
+        cfg,
+        setup,
+        user,
+        server,
+        attacker,
+        model,
+        loss_fn,
+        request_token,
+        reconstruction_frequency,
+    ):
         server_payload = server.distribute_payload()
         shared_data, true_user_data = user.compute_local_updates(server_payload)
 
+        self.attack_cache.attack_start_time_s = time.time()
+        self.attack_cache.server = server
+        self.attack_cache.user = user
+        self.attack_cache.cfg = cfg
+        self.attack_cache.server_payload = server_payload
+        self.attack_cache.setup = setup
         response = request_token, self._worker_response_queue
         
-        print("reconstructing attack")
-        reconstructed_user_data, stats = attacker.reconstruct([server_payload], [shared_data], {},
-                                                              dryrun=cfg.dryrun, token=request_token,
-                                                              add_response_to_channel=self._add_progress_to_channel)
         if cfg.case.data.modality == "vision":
             user.plot(true_user_data, saveFile="true_data")
+
+            with open("./true_data.png", "rb") as image_file:
+                image_data_true = image_file.read()
+            self.attack_cache.true_b64_image = base64.b64encode(image_data_true).decode(
+                "utf-8"
+            )
+            self.attack_cache.true_user_data = true_user_data
+        
+        print("reconstructing attack")
+        reconstructed_user_data, stats = attacker.reconstruct(
+            [server_payload],
+            [shared_data],
+            {},
+            dryrun=cfg.dryrun,
+            token=request_token,
+            add_response_to_channel=partial(self._add_progress_to_channel, user),
+            reconstruction_frequency=reconstruction_frequency,
+        )
+        
+        if cfg.case.data.modality == "vision":
             user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         elif cfg.case.data.modality == "text":
             user.print(true_user_data)
             user.print(reconstructed_user_data)
         return reconstructed_user_data, true_user_data, server_payload
 
-    def get_metrics(self, reconstructed_user_data, true_user_data, server_payload, server, cfg, setup, response):
-        metrics = breachinglib.analysis.report(reconstructed_user_data, true_user_data, [server_payload],
-                                        server.model, order_batch=True, compute_full_iip=False,
-                                        cfg_case=cfg.case, setup=setup, compute_lpips=False)
-        print(metrics)
-        # stats = AttackStatistics(MSE=0, SSIM=0, PSNR=0)
-        stats = AttackStatistics(MSE=metrics.get('mse', 0), SSIM=0, PSNR=metrics.get('psnr', 0))
+    def get_metrics(
+        self,
+        reconstructed_user_data,
+        true_user_data,
+        server_payload,
+        server,
+        cfg,
+        setup,
+        response,
+    ):
+        metrics = breachinglib.analysis.report(
+            reconstructed_user_data,
+            true_user_data,
+            [server_payload],
+            server.model,
+            order_batch=True,
+            compute_full_iip=False,
+            cfg_case=cfg.case,
+            setup=setup,
+            compute_lpips=False,
+        )
+
+        stats = AttackStatistics(
+            MSE=metrics.get("mse", 0),
+            SSIM=metrics.get("ssim", 0),
+            PSNR=metrics.get("psnr", 0),
+        )
         token, channel = response
 
-        with open("./reconstructed_data.png", 'rb') as image_file:
+        with open("./reconstructed_data.png", "rb") as image_file:
             image_data_rec = image_file.read()
-        base64_reconstructed = base64.b64encode(image_data_rec).decode('utf-8')
-
-        with open("./true_data.png", 'rb') as image_file:
-            image_data_true = image_file.read()
-        base64_true = base64.b64encode(image_data_true).decode('utf-8')
+        base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
 
         iterations = cfg.attack.optim.max_iterations
         restarts = cfg.attack.restarts.num_trials
-        channel.put(token, AttackProgress(current_iteration=iterations,
-                                        current_restart=restarts,
-                                        max_iterations=iterations,
-                                        max_restarts=restarts,
-                                        statistics=stats,
-                                        true_image=base64_true,
-                                        reconstructed_image=base64_reconstructed))
+        channel.put(
+            token,
+            AttackProgress(
+                current_iteration=iterations,
+                current_restart=restarts,
+                max_iterations=iterations,
+                max_restarts=restarts,
+                statistics=stats,
+                true_image=self.attack_cache.true_b64_image,
+                reconstructed_image=base64_reconstructed,
+                attack_start_time_s=self.attack_cache.attack_start_time_s
+            ),
+        )
         return metrics
 
     def _check_image_size(self, model, shape):
@@ -127,50 +224,72 @@ class BreachingAdapter:
             try:
                 model.load_state_dict(torch.load(state_dict_path))
             except RuntimeError as r:
-                print(f'''Runtime error loading torch model from file:
+                print(
+                    f"""Runtime error loading torch model from file:
         {r}
         Model is loaded from default values.
-        ''')
+        """
+                )
             except FileNotFoundError as f:
-                print(f'''Runtime error loading torch model from file:
+                print(
+                    f"""Runtime error loading torch model from file:
         {f}
         Model is loaded from default values.
-        ''')
-        
+        """
+                )
         model.eval()
         return model
 
-    async def _forward_response_from_breaching(self):
-        print("waiting for response from breaching")
-        while True:
-            request_token, response_data = await asyncio.to_thread(self._breaching_response_queue.get())
-            if request_token is None:
-                break
-
-            print("forwarding response for " + request_token)
-
-            progress = AttackProgress(
-                message_type="AttackProgress",
-                current_iteration=response_data.iteration,
-                max_iterations=response_data.max_iterations,
-                current_restart=response_data.restart,
-                max_restarts=response_data.max_restarts,
-                current_batch=response_data.batch,
-                max_batches=response_data.max_batches
-            )
-
-            self._worker_response_queue.put(request_token, progress)
+    def _convert_candidate_to_base64(self, user, best_candidate):
+        tmp = tempfile.NamedTemporaryFile()
+        tmp_name = tmp.name
+        tmp_img_name = f"{tmp_name}.png"
+        print(tmp_name, tmp_img_name)
+        user.plot(best_candidate, saveFile=tmp_name)
+        with open(tmp_img_name, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
 
     # Callback to be passed into submodule to add progress to the channel
-    def _add_progress_to_channel(self, request_token: str, response_data: BreachingAttackProgress):
+    def _add_progress_to_channel(
+        self, user, request_token: str, response_data: BreachingAttackProgress
+    ):
         progress = AttackProgress(
-                message_type="AttackProgress",
-                current_iteration=response_data.current_iteration,
-                max_iterations=response_data.max_iterations,
-                current_restart=response_data.current_restart,
-                max_restarts=response_data.max_restarts,
-                current_batch=response_data.current_batch,
-                max_batches=response_data.max_batches
+            message_type="AttackProgress",
+            current_iteration=response_data.current_iteration,
+            max_iterations=response_data.max_iterations,
+            current_restart=response_data.current_restart,
+            max_restarts=response_data.max_restarts,
+            current_batch=response_data.current_batch,
+            max_batches=response_data.max_batches,
+            attack_start_time_s=self.attack_cache.attack_start_time_s
         )
+
+        if response_data.reconstructed_image:
+            reconstructed_b64_image = (
+                self._convert_candidate_to_base64(
+                    user, response_data.reconstructed_image
+                )
+            )
+
+            metrics = breachinglib.analysis.report(
+                response_data.reconstructed_image,
+                self.attack_cache.true_user_data,
+                server_payload=[self.attack_cache.server_payload],
+                model_template=self.attack_cache.server.model,
+                order_batch=True,
+                compute_full_iip=False,
+                cfg_case=self.attack_cache.cfg.case,
+                setup=self.attack_cache.setup,
+                compute_lpips=False,
+            )
+            self.attack_cache.stats = AttackStatistics(
+                MSE=metrics.get("mse", 0),
+                SSIM=metrics.get("ssim", 0),
+                PSNR=metrics.get("psnr", 0),
+            )
+            
+            progress.reconstructed_image = reconstructed_b64_image
+            progress.true_image = self.attack_cache.true_b64_image
+            progress.statistics = self.attack_cache.stats
 
         self._worker_response_queue.put(request_token, progress)

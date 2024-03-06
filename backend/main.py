@@ -50,17 +50,16 @@ async def submit_attack(
     ptFile: UploadFile = File(None),
     zipFile: UploadFile = File(None),
     model: str = Form(...),
+    attack: str = Form(...),
+    modality: str = Form(...),
     datasetStructure: str = Form(...),
     csvPath: str = Form(None),
-    datasetSize: int = Form(...),
-    numClasses: int = Form(...),
     batchSize: int = Form(...),
     mean: str = Form(...),
     std: str = Form(...),
     numRestarts: int = Form(...),
     stepSize: float = Form(...),
     maxIterations: int = Form(...),
-    budget: int = Form(...),
 ):
     request_token = str(uuid.uuid4())
 
@@ -74,10 +73,10 @@ async def submit_attack(
 
     attack_params = AttackParameters(
         model=model,
+        attack=attack,
+        modality=modality,
         datasetStructure=datasetStructure,
         csvPath=csvPath,
-        datasetSize=datasetSize,
-        numClasses=numClasses,
         batchSize=batchSize,
         means=[float(i) for i in mean.strip("[]").split(",")],
         stds=[float(i) for i in std.strip("[]").split(",")],
@@ -86,7 +85,6 @@ async def submit_attack(
         maxIterations=maxIterations,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
-        budget=budget,
     )
 
     await background_task_manager.submit_task(request_token, attack_params)

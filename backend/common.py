@@ -2,10 +2,12 @@ from typing import Optional, Tuple, TypeVar, Generic, List
 from multiprocessing import Queue as mpQueue, Event as mpEvent
 from pydantic import BaseModel
 
+
 class PositionInQueue(BaseModel):
     message_type: str = "PositionInQueue"
     position: int
     total: int
+
 
 T = TypeVar("T")
 
@@ -43,8 +45,8 @@ class WorkerCommunication:
 
 class AttackParameters(BaseModel):
     model: str
-    attack: str
-    modality: str
+    attack: str = "invertinggradients"
+    modality: str = "images"
     user_idx: int = 0
     number_of_clients: int = 1
     datasetStructure: str
@@ -59,10 +61,11 @@ class AttackParameters(BaseModel):
     maxIterations: int
     ptFilePath: Optional[str] = None
     zipFilePath: Optional[str] = None
-    budget: int = None
     tokenizer: str = None
     shape: List[int] = None
     callbackInterval: int
+    budget: int = 100
+    reconstruction_frequency: int = 100
 
 
 class AttackStatistics(BaseModel):
@@ -73,6 +76,7 @@ class AttackStatistics(BaseModel):
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"
+    attack_start_time_s: int = 0
     current_iteration: int = 0
     max_iterations: int = 0
     current_restart: int = 0
@@ -81,6 +85,6 @@ class AttackProgress(BaseModel):
     max_batches: int = 0
     time_taken: float = 0
     statistics: AttackStatistics = AttackStatistics()
-    true_image: Optional[str] = None # base64 encoded image
-    reconstructed_image: Optional[str] = None # base64 encoded image
-    error_message: str = None # Optional error message
+    true_image: Optional[str] = None  # base64 encoded image
+    reconstructed_image: Optional[str] = None  # base64 encoded image
+    error_message: str = None  # Optional error message
