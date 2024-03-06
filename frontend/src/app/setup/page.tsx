@@ -213,6 +213,24 @@ export default function SetupPage() {
     }
   }
 
+  const getDatasetParamsInfo = () => {
+    let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
+    switch (attack) {
+      case "invertinggradients":
+        info += "\n\n<strong>Structure of Dataset</strong>: If dataset is organised as a CSV file, enter the path to the CSV file.";
+        info += "\n\n<strong>Image Shape</strong>: The shape of the images in the dataset. Inferred from the dataset if left empty.";
+        info += "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
+        break;
+      case "tag":
+        info += "\n\n<strong>Text Dataset</strong>: The dataset to be used in the attack.";
+        info += "\n\n<strong>No. Data Points</strong>: The number of data points in the dataset. Inferred from the dataset if left empty."
+        info += "\n\n<strong>Sequence Length</strong>: The length of the sequences in the dataset. Inferred from the dataset if left empty."
+        break;
+    }
+    info += "\n\n<strong>Batch Size</strong>: The batch size to be used in the attack.";
+    return info;
+  }
+
   return (
     <main>
       <Navbar />
@@ -274,7 +292,14 @@ export default function SetupPage() {
           </div>
           <HBar />
         </div>}
-        <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">Dataset Parameters</h3>
+
+        <div className="flex items-start">
+          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+            Dataset Parameters
+          </h3>
+          <InfoPopup
+            text={getDatasetParamsInfo()} />
+        </div>
         <DatasetParams
           datasetStructure={datasetStructure}
           handleStructureChange={handleStructureChange}
