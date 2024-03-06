@@ -58,7 +58,7 @@ def attack_worker(queues: WorkerCommunication):
 
             elif data.attack == 'mia':
                 # Perform MIA attack
-                mia.perform_attack(data)
+                mia.perform_attack(data, request_token)
             
             else:
                 raise ValueError(f"Attack type {data.attack} not supported")
