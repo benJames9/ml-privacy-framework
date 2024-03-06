@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
-from backend.datasets import calculate_dataset_statistics
 from abc import ABC, abstractmethod
 import zipfile
 from PIL import Image
@@ -14,6 +13,8 @@ from torch.utils.data import DataLoader, Subset
 import torch.nn.functional as F
 import os
 import math
+
+from backend.datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
@@ -103,6 +104,7 @@ class MembershipInferenceAttack(ABC):
             in_models (list): List of models trained on the target point.
             out_models (list): List of models not trained on the target point.
         """
+                
         print(f'target_point:\n{self._target_point}')
         print(f'normal point:\n {data[0]}')
         # Half of the models are trained on the target point, and half are not
@@ -190,11 +192,7 @@ class MembershipInferenceAttack(ABC):
         print(f'confidence: {confidence}')
         
         # Convert 0s and 1s from rounding errors
-        min_size = 1e-5
-        if confidence < min_size:
-            confidence = min_size
-        elif 1 - confidence < min_size:
-            confidence = 1 - min_size
+        confidence = self._add_epsilon(confidence)
         
         print(f'confidence after conversion: {confidence}')
         
@@ -218,12 +216,29 @@ class MembershipInferenceAttack(ABC):
             result: Result of the likelihood-ratio test.
         """
         
+        # Reshape logit scaled confidence
+        target_conf = np.asarray([target_model_confidence]).reshape(1, -1)
+        
         # Calculate likelihoods of the target model under the two Gaussians
-        in_likelihood = np.exp(in_gaussian.score_samples(np.log(target_model_confidence).reshape(1, -1)))
-        out_likelihood = np.exp(out_gaussian.score_samples(np.log(target_model_confidence).reshape(1, -1)))
+        in_likelihood = np.exp(in_gaussian.score_samples(target_conf)).item()
+        in_likelihood = self._add_epsilon(in_likelihood)
+        print(f'in likelihood: {in_likelihood}')
+        out_likelihood = np.exp(out_gaussian.score_samples(target_conf)).item()
+        out_likelihood = self._add_epsilon(out_likelihood)
+        print(f'out likelihood: {out_likelihood}')
         
         # Return ratio of likelihoods
         return in_likelihood / out_likelihood
+    
+    # For values bounded by [0, 1], prevent values of 1 and 0
+    def _add_epsilon(self, value):
+        epsilon = 1e-6
+        if value < epsilon:
+            return epsilon
+        elif 1 - value < epsilon:
+            return 1 - epsilon
+        
+        return value
     
     # Carry out an attack given an initialised MembershipInferenceAttack object
     def run_inference(self, path_to_data, n, epochs, batch_size, lr):
