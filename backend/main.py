@@ -50,6 +50,8 @@ async def submit_attack(
     ptFile: UploadFile = File(None),
     zipFile: UploadFile = File(None),
     model: str = Form(...),
+    attack: str = Form(...),
+    modality: str = Form(...),
     datasetStructure: str = Form(...),
     csvPath: str = Form(None),
     batchSize: int = Form(...),
@@ -72,6 +74,8 @@ async def submit_attack(
 
     attack_params = AttackParameters(
         model=model,
+        attack=attack,
+        modality=modality,
         datasetStructure=datasetStructure,
         csvPath=csvPath,
         batchSize=batchSize,

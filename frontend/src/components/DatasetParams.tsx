@@ -15,7 +15,7 @@ interface DatasetParamsProps {
 const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleDataParamsChange, handleStructureChange, attack }) => {
   return (
     <div>
-      {attack === "Inverting Gradients\n(Single Step)" && <div>
+      {attack === "invertinggradients" && <div>
         <div className="flex items-center">
           <h3 className="font-semibold text-white mr-4 flex items-start whitespace-pre">Structure of dataset <span className="text-sm text-red-500">*</span></h3>
           <div className="flex items-center space-x-3">
@@ -49,7 +49,7 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleD
           onChange3={(e) => { handleDataParamsChange("std3", e.target.value) }}
         />
       </div>}
-      {attack === "TAG\n(Text Attack)" && <div>
+      {attack === "tag" && <div>
         <SelectInput
           label="Text Dataset"
           options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
