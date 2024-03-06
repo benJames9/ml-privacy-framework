@@ -10,7 +10,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   models,
   onChange,
 }) => {
-  const [internalSelectedModel, setInternalSelectedModel] = useState("");
+  const [internalSelectedModel, setInternalSelectedModel] = useState(models[0]);
   const handleModelSelect = (model: string) => {
     setInternalSelectedModel(model);
     onChange(model);
@@ -19,19 +19,16 @@ const ModelSelect: React.FC<ModelSelectProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-8">
-      {models.map((model) => (
-        <button
-          key={model}
-          type="button"
-          className={
-            `bg-gray-900 text-white hover:bg-gray-600 border border-gray-300 text-gray-700 ${internalSelectedModel === model ? "ring-4 ring-blue-500" : ""} font-medium rounded-lg text-center inline-flex items-center px-5 py-4 text-base w-full justify-center min-w-48 h-32 min-w-32 text-xl`
-          }
-          onClick={() => handleModelSelect(model)}
-        >
-          <span>{model}</span>
-        </button>
-      ))}
+    <div>
+      <select
+        value={internalSelectedModel}
+        onChange={(e) => handleModelSelect(e.target.value)}
+        className="bg-gray-900 text-white hover:bg-gray-600 border border-gray-300 text-gray-700 font-medium rounded-lg text-left inline-flex items-center text-base w-full py-4 px-4 justify-center text-xl"
+      >
+        {models.map((model) => (
+          <option key={model} value={model} className="text-md">{model}</option>
+        ))}
+      </select>
     </div>
   );
 };
