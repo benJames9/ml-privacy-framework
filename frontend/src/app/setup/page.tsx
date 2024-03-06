@@ -231,6 +231,14 @@ export default function SetupPage() {
     return info;
   }
 
+  const getAttackParamsInfo = () => {
+    let info = "Enter the parameters of the attack to be performed.";
+    info += "\n\n<strong>No. Restarts</strong>: The number of times the attack restarts from the beginning.";
+    info += "\n\n<strong>Step Size</strong>: Attack learning rate.";
+    info += "\n\n<strong>Max Iterations</strong>: The number of iterations run per restart.";
+    return info;
+  }
+
   return (
     <main>
       <Navbar />
@@ -293,12 +301,12 @@ export default function SetupPage() {
           <HBar />
         </div>}
 
+        {/* Dataset Parameters */}
         <div className="flex items-start">
           <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
             Dataset Parameters
           </h3>
-          <InfoPopup
-            text={getDatasetParamsInfo()} />
+          <InfoPopup text={getDatasetParamsInfo()} />
         </div>
         <DatasetParams
           datasetStructure={datasetStructure}
@@ -307,8 +315,16 @@ export default function SetupPage() {
           attack={attack}
         />
         <HBar />
-        <h3 className="text-2xl font-bold text-gray-400 mb-8">Attack Parameters</h3>
+
+        {/* Attack Parameters */}
+        <div className="flex items-start">
+          <h3 className="text-2xl font-bold text-gray-400 mb-8">
+            Attack Parameters
+          </h3>
+          <InfoPopup text={getAttackParamsInfo()} />
+        </div>
         <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
+
         <EvaluateButton onClick={() => {
           if (!submitted) {
             setSubmitted(true);

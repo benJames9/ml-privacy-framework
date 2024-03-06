@@ -10,7 +10,7 @@ const AttackParams: React.FC<AttackParamsProps> = ({ handleAttackParamsChange })
   return (
     <div>
       <NumberInput
-        label="Number of restarts"
+        label="No. restarts"
         onChange={(e) => handleAttackParamsChange("restarts", e.target.value)}
         isRequired={true}
       />
