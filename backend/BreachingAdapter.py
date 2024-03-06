@@ -11,6 +11,7 @@ import zipfile
 import os, shutil
 import random
 import tempfile
+import time
 from functools import partial
 from dataclasses import dataclass
 
@@ -21,6 +22,7 @@ class BreachingCache:
     true_user_data = None
     reconstructed_user_data = None
     stats = None
+    attack_start_time_s = 0
 
     server_payload = None
     server = None
@@ -294,6 +296,8 @@ class BreachingAdapter:
         self.attack_cache.setup = setup
 
         breachinglib.utils.overview(server, user, attacker)
+        
+        self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
         user.plot(true_user_data, saveFile="true_data")
@@ -363,6 +367,7 @@ class BreachingAdapter:
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
                 reconstructed_image=base64_reconstructed,
+                attack_start_time_s=self.attack_cache.attack_start_time_s
             ),
         )
         return metrics
@@ -419,6 +424,7 @@ class BreachingAdapter:
             max_restarts=response_data.max_restarts,
             current_batch=response_data.current_batch,
             max_batches=response_data.max_batches,
+            attack_start_time_s=self.attack_cache.attack_start_time_s
         )
 
         if response_data.reconstructed_image:
