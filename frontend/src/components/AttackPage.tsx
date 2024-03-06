@@ -8,6 +8,7 @@ import SuccessAlert from "./SuccessAlert";
 import AttackResults from "./AttackResults";
 
 interface AttackPageProps {
+  modality: string;
   attackProgress: AttackProgress;
   startTime: number | null;
   previousTimes: number[];

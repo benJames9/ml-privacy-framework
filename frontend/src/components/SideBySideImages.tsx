@@ -7,9 +7,9 @@ interface SideBySideImagesProps {
 
 export const SideBySideImages: React.FC<SideBySideImagesProps> = ({ attackProgress }) => {
     return (
-    <div class="text-center">
+    <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
-        <div class="flex">
+        <div className="flex">
           <ReconstructedImage image={attackProgress.reconstructed_image} />
           <ReconstructedImage image={attackProgress.true_image} />
         </div>
