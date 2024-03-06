@@ -41,6 +41,21 @@ class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
         self.response_channel = WorkerQueue[AttackProgress]()
+        
+        
+class MiaParams(BaseModel):
+    N: int
+    data_points: int
+    epochs: int
+    batch_size: int
+    lr: float
+    target_label: str
+    target_image_path: str
+    path_to_label_csv: str
+    
+
+class MiaStatistics(BaseModel):
+    likelihood_ratio: float
 
 
 class AttackParameters(BaseModel):
@@ -59,6 +74,7 @@ class AttackParameters(BaseModel):
     zipFilePath: Optional[str]
     budget: int = 100
     reconstruction_frequency: int = 100
+    mia_params: Optional[MiaParams] = None
 
 
 class AttackStatistics(BaseModel):
@@ -81,3 +97,4 @@ class AttackProgress(BaseModel):
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
     error_message: str = None  # Optional error message
+    mia_stats: Optional[MiaStatistics] = None

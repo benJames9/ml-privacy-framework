@@ -1,4 +1,5 @@
 import base64
+from MiaAdapter import MiaAdapter
 from BreachingAdapter import BreachingAdapter
 from common import WorkerCommunication, AttackProgress
 from multiprocessing import Event as mpEvent
@@ -17,44 +18,62 @@ def attack_worker(queues: WorkerCommunication):
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
+    
+    # Initialise adapters for different attacks
     breaching = BreachingAdapter(queues.response_channel)
+    mia = MiaAdapter(queues.response_channel)
+    
+    # Permenantly loop, fetching data from queues
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
-
+        
         try:
-            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
-                attack_params=data, cfg=None, torch_model=None
-            )
+            # Model inversion attack
+            if data.attack == 'invertinggradients':
+                # Setup attack using params
+                cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
+                    attack_params=data, cfg=None, torch_model=None
+                )
 
-            # Get response channel and request token to pass into breaching
-            response = request_token, queues.response_channel
-            r_user_data, t_user_data, server_payload = breaching.perform_attack(
-                cfg,
-                setup,
-                user,
-                server,
-                attacker,
-                model,
-                loss_fn,
-                request_token=request_token,
-                reconstruction_frequency=data.reconstruction_frequency,
-            )
-            breaching.get_metrics(
-                r_user_data, t_user_data, server_payload, server, cfg, setup, response
-            )
+                # Get response channel and request token to pass into breaching
+                response = request_token, queues.response_channel
+                r_user_data, t_user_data, server_payload = breaching.perform_attack(
+                    cfg,
+                    setup,
+                    user,
+                    server,
+                    attacker,
+                    model,
+                    loss_fn,
+                    request_token=request_token,
+                    reconstruction_frequency=data.reconstruction_frequency,
+                )
+                
+                # Return metrics to user
+                breaching.get_metrics(
+                    r_user_data, t_user_data, server_payload, server, cfg, setup, response
+                )
 
-        # Report any errors to task manager
+            elif data.attack == 'mia':
+                # Perform MIA attack
+                mia.perform_attack(data, request_token)
+            
+            else:
+                raise ValueError(f"Attack type {data.attack} not supported")
+                
+            
+        # Report any errors to task manager 
         except Exception as e:
             progress = AttackProgress(
                 message_type="error",
                 error_message=f"Attack Configuration Error: {str(e)}",
             )
             queues.response_channel.put(request_token, progress)
-            break
-
-
+                
+                    
+    
 # Use this for testing?
 if __name__ == "__main__":
     from common import AttackParameters
