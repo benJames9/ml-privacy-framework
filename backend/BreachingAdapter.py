@@ -18,7 +18,6 @@ from dataclasses import dataclass
 @dataclass
 class BreachingCache:
     true_b64_image = ""
-    reconstructed_b64_image = ""
     true_user_data = None
     reconstructed_user_data = None
     stats = None
@@ -423,7 +422,7 @@ class BreachingAdapter:
         )
 
         if response_data.reconstructed_image:
-            self.attack_cache.reconstructed_b64_image = (
+            reconstructed_b64_image = (
                 self._convert_candidate_to_base64(
                     user, response_data.reconstructed_image
                 )
@@ -445,9 +444,9 @@ class BreachingAdapter:
                 SSIM=metrics.get("ssim", 0),
                 PSNR=metrics.get("psnr", 0),
             )
-
-        progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
-        progress.true_image = self.attack_cache.true_b64_image
-        progress.statistics = self.attack_cache.stats
+            
+            progress.reconstructed_image = reconstructed_b64_image
+            progress.true_image = self.attack_cache.true_b64_image
+            progress.statistics = self.attack_cache.stats
 
         self._worker_response_queue.put(request_token, progress)
