@@ -3,13 +3,13 @@ import torch
 import csv
 
 from mia.member_inference import MembershipInferenceAttack, Resnet18MIA
-from common import AttackParameters, MiaParams
+from common import AttackParameters, MiaParams, MiaStatistics
 
 class MiaAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
 
-    def perform_attack(attack_parameters: AttackParameters): 
+    def perform_attack(attack_parameters: AttackParameters, request_token, reponse_callback): 
         # Get MIA parameters
         mia_params = attack_parameters.mia_params
         if mia_params is None:
@@ -32,7 +32,8 @@ class MiaAdapter:
 
         # Perform the attack
         ratio = attack.run_inference(attack_parameters.zipFilePath, mia_params.data_points, 
-                                    mia_params.epochs, mia_params.batch_size, mia_params.lr)
+                                    mia_params.epochs, mia_params.batch_size, mia_params.lr,
+                                    request_token, self._add_progress_to_channel)
         
         print(f'ratio: {ratio}')
 
@@ -50,32 +51,41 @@ class MiaAdapter:
 
         return model
     
-    def _add_progress_to_channel(self, request_token, response_data: AttackProgress):
+    def _add_progress_to_channel(self, request_token, max_epochs, 
+                                 current_epoch, result: MiaStatistics = None):
+        # Construct progress type to update user
+        progress = AttackProgress(
+            message_type="progress",
+            current_iteration = current_epoch,
+            max_iterations=max_epochs,
+            mia_stats = result
+        )
+        
         self._worker_response_queue.put(request_token, progress)
     
-if __name__ == '__main__':
-    perform_attack(AttackParameters(
-        model='resnet18',
-        attack='mia',
-        modality='images',
-        datasetStructure='foldered',
-        csvPath='path_to_csv',
-        batchSize=32,
-        numRestarts=5,
-        stepSize=0.1,
-        maxIterations=1000,
-        ptFilePath='examples/resnet18_pretrained.pt',
-        zipFilePath='examples/small_foldered_set.zip',
-        budget=100,
-        reconstruction_frequency=100,
-        mia_params=MiaParams(
-            N=4,
-            data_points=3,
-            epochs=3,
-            batch_size=32,
-            lr=0.01,
-            target_label='shark',
-            target_image_path='examples/shark.JPEG',
-            path_to_label_csv='examples/labels.csv'
-        )
-    ))
+# if __name__ == '__main__':
+#     perform_attack(AttackParameters(
+#         model='resnet18',
+#         attack='mia',
+#         modality='images',
+#         datasetStructure='foldered',
+#         csvPath='path_to_csv',
+#         batchSize=32,
+#         numRestarts=5,
+#         stepSize=0.1,
+#         maxIterations=1000,
+#         ptFilePath='examples/resnet18_pretrained.pt',
+#         zipFilePath='examples/small_foldered_set.zip',
+#         budget=100,
+#         reconstruction_frequency=100,
+#         mia_params=MiaParams(
+#             N=4,
+#             data_points=3,
+#             epochs=3,
+#             batch_size=32,
+#             lr=0.01,
+#             target_label='shark',
+#             target_image_path='examples/shark.JPEG',
+#             path_to_label_csv='examples/labels.csv'
+#         )
+#     ))

@@ -18,9 +18,9 @@ from .datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N, class_dict):
-        # Check if N is even
-        if N % 2 != 0:
-            raise ValueError("Number of shadow models must be even")
+        # Check if N is even or >= 4
+        if N % 2 != 0 or N < 4:
+            raise ValueError("Number of shadow models must be even and larger than 4")
         
         # Initialise values
         self._target_model = target_model
@@ -116,7 +116,7 @@ class MembershipInferenceAttack(ABC):
             transforms.Normalize(mean=self._image_stats.mean, std=self._image_stats.std)
         ])
         
-    def _train_shadow_models(self, data, n, epochs, batch_size, lr):
+    def _train_shadow_models(self, data, n, epochs, batch_size, lr, request_token, progress_callback):
         """
         Train N shadow models on random samples from the data distribution D. 
         Saved as class property. 
@@ -127,6 +127,8 @@ class MembershipInferenceAttack(ABC):
             epochs (int): The number of epochs to train each model for.
             batch_size (int): The batch size to use for training.
             lr (float): The learning rate to use for training.
+            request_token: The token to use for progress updates.
+            progress_callback: The callback to use for progress updates.
             
         """
         # Check n is valid input
@@ -141,10 +143,12 @@ class MembershipInferenceAttack(ABC):
 
             if i % 2 == 0:
                 sampled_data = torch.utils.data.ConcatDataset([sampled_data, [self._target_point]])
-                model = self._train_model(sampled_data, epochs, batch_size, lr)
+                model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
+                                          request_token=request_token, progress_callback=progress_callback)
                 self._in_models.append(model)
             else:
-                model = self._train_model(sampled_data, epochs, batch_size, lr)
+                model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
+                                          request_token=request_token, progress_callback=progress_callback)
                 self._out_models.append(model)
             print(f'model {i} trained\n')
 
@@ -267,13 +271,14 @@ class MembershipInferenceAttack(ABC):
         return value
     
     # Carry out an attack given an initialised MembershipInferenceAttack object
-    def run_inference(self, path_to_data, n, epochs, batch_size, lr):
+    def run_inference(self, path_to_data, n, epochs, batch_size, lr, request_token, progress_callback):
+        self._max_epochs = n * self._N
         self._infer_image_data(path_to_data)
         
         # Load data to pytorch image folder
         extract_folder = 'temp_folder'
         data = self._load_data(path_to_data, extract_folder)
-        self._train_shadow_models(data, n, epochs, batch_size, lr)
+        self._train_shadow_models(data, n, epochs, batch_size, lr, request_token, progress_callback)
         os.system(f'rm -rf {extract_folder}')
         
         # Fit Gaussians for shadow and target models
@@ -284,7 +289,7 @@ class MembershipInferenceAttack(ABC):
         return self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
     
 class Resnet18MIA(MembershipInferenceAttack):
-    def _train_model(self, data, epochs, batch_size, lr):
+    def _train_model(self, data, epochs, batch_size, lr, current_model, request_token, progress_callback):
         # Define the model
         model = models.resnet18(pretrained=False)
         model.fc = nn.Linear(model.fc.in_features, self._image_stats.num_classes)
@@ -314,6 +319,8 @@ class Resnet18MIA(MembershipInferenceAttack):
                 # Backward pass and optimization
                 loss.backward()
                 optimizer.step()
+                
+                progress_callback(request_token, self._max_epochs, current_model * epochs + epoch)
 
         print('model trained')
         return model
