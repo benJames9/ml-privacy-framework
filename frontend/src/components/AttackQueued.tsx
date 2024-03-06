@@ -3,6 +3,7 @@ import CancelButton from "./CancelButton";
 import HorizontalBar from "./ProgressBar";
 import SaveTokenButton from "./SaveTokenButton";
 import SuccessAlert from "./SuccessAlert";
+import { copyToClipboard } from "@/utils/copyToClipboard";
 
 interface AttackQueuedProps {
   queuedCurrent: number;
@@ -17,9 +18,8 @@ const AttackQueued: React.FC<AttackQueuedProps> = ({ queuedCurrent, queuedMax, o
   const [copied, setCopied] = useState<boolean>(false);
 
   const copyToken = () => {
-    navigator.clipboard.writeText(params.request_token.toString());
+    copyToClipboard(params.request_token.toString());
     setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
   }
 
   return (

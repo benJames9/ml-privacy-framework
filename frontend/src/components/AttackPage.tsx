@@ -6,6 +6,7 @@ import TimeEstimate from "./TimeEstimate";
 import SaveTokenButton from "./SaveTokenButton";
 import SuccessAlert from "./SuccessAlert";
 import AttackResults from "./AttackResults";
+import { copyToClipboard } from "@/utils/copyToClipboard";
 
 interface AttackPageProps {
   modality: string;
@@ -22,9 +23,8 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
   const [copied, setCopied] = useState<boolean>(false);
 
   const copyToken = () => {
-    navigator.clipboard.writeText(params.request_token.toString());
+    copyToClipboard(params.request_token.toString());
     setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
   }
 
   return (
