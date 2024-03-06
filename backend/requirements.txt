@@ -11,3 +11,5 @@ pytorch-wavelets
 PyWavelets
 torchvision
 torchtext
+transformers
+datasets

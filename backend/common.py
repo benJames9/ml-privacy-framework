@@ -45,8 +45,8 @@ class WorkerCommunication:
 
 class AttackParameters(BaseModel):
     model: str
-    attack: str = "invertinggradients"
-    modality: str = "images"
+    attack: str = "tag"
+    modality: str = "text"
     datasetStructure: str
     csvPath: Optional[str]
     means: List[float] = [0.46, 0.56, 0.57]

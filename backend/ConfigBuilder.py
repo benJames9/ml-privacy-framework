@@ -11,6 +11,7 @@ class ConfigBuilder:
         return self._construct_cfg(self.attack_params)
     
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
+        print("here")
         match attack_params.modality:
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
@@ -20,6 +21,7 @@ class ConfigBuilder:
                 raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
 
         assert(attack_params is not None)
+        print("done")
 
         #setup all customisable parameters
         cfg.case.model = attack_params.model
@@ -40,7 +42,6 @@ class ConfigBuilder:
             case "Foldered":
                 cfg.case.data.name = "CustomFolders"
             case _:
-                print("Could not match dataset structure")
                 match attack_params.modality:
                     case "images":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=CIFAR10"]).case.data
@@ -49,10 +50,12 @@ class ConfigBuilder:
                     case "text":
                         cfg.case.data = breachinglib.get_config(overrides=["case/data=wikitext"]).case.data
                         print("defaulted to wikitext")
+                        cfg = self._construct_text_model_cfg(attack_params.model, cfg)
+                        cfg = self._construct_text_tokenizer_cfg(attack_params.tokenizer, cfg)
                     case _:
+                        print("Could not match dataset structure")
                         raise TypeError(f"Data type of attack: {attack_params.modality} does not match anything.")
 
-        
 
         if any(attack_params.means) and any(attack_params.stds):
             cfg.case.data.mean = attack_params.means
@@ -71,44 +74,54 @@ class ConfigBuilder:
     def _construct_text_cfg(self, attack_params: AttackParameters):
         match attack_params.attack.lower():
             case 'tag':
-                cfg = breachinglib.get_config(overrides=["attack=tag"])
+                cfg = breachinglib.get_config(overrides=["case=10_causal_lang_training", "attack=tag"])
             case _:
                 raise TypeError(f'No text attack match; {attack_params.attack}')
+            
+        cfg = self._construct_text_model_cfg(attack_params.model, cfg)
+        print("model")
+        cfg = self._construct_text_tokenizer_cfg(attack_params.tokenizer, cfg)
+        print("tokenizer")
+        cfg.case.data.shape = attack_params.shape
+        print("done")
+        return cfg
 
-        match attack_params.model.lower():
+    def _construct_text_model_cfg(self, model, cfg):
+        match model.lower():
             case "bert":
-                cfg.case.model="bert-base-uncased"
+                cfg.case.model="BertModel"
             case "gpt2":
-                cfg.case.model="gpt2"
+                cfg.case.model="GPT2Model"
             case "transformer3":
                 cfg.case.model="transformer3"
             case _:
                 try:
-                    assert(attack_params.model in {
+                    assert(model in {
                         # ... list of all supported models
                     })
-                    cfg.case.model=attack_params.model
+                    cfg.case.model=model
                 except AssertionError as a:
-                    raise TypeError(f"no model match for text: {attack_params.model}")
-
-        match attack_params.tokenizer:
+                    raise TypeError(f"no model match for text: {model}")
+        return cfg
+    
+    def _construct_text_tokenizer_cfg(self, tokenizer, cfg):
+        match tokenizer.lower():
             case "bert":
                 cfg.case.data.tokenizer="bert-base-uncased"
                 cfg.case.data.task= "masked-lm"
                 cfg.case.data.vocab_size= 30522
                 cfg.case.data.mlm_probability= 0.15
             case "gpt2":
-                cfg.case.model="gpt2"
+                cfg.case.data.tokenizer="gpt2"
                 cfg.case.data.task= "causal-lm"
                 cfg.case.data.vocab_size= 50257
             case "transformer3":
-                cfg.case.model="transformer3"
+                cfg.case.data.tokenizer="transformer3"
             case _:
-                raise TypeError(f"no model match for tokenizer: {attack_params.model}")
-
-        cfg.case.data.shape = attack_params.shape
+                print("cant find", tokenizer)
+                raise TypeError(f"no model match for tokenizer: {tokenizer}")
+            
         return cfg
-
 
 
     def _construct_images_cfg(self, attack_params: AttackParameters):

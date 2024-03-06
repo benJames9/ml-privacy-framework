@@ -5,7 +5,7 @@ from breaching.breaching.attacks.attack_progress import (
 )
 import breaching.breaching as breachinglib
 from torchvision import models as visionModels
-from torchtext import models as textModels
+import transformers as textModels
 import logging, sys
 import base64
 import zipfile
@@ -34,10 +34,15 @@ class BreachingCache:
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
+        self.attack_cache = BreachingCache()
 
     def setup_attack(
         self, attack_params: AttackParameters = None, cfg=None, torch_model=None
     ):
+        
+        # TODO: REMOVE THIS
+        attack_params.model = "gpt2"
+        
         print(f"~~~[Attack Params]~~~ {attack_params}")
 
         device = (
@@ -80,8 +85,7 @@ class BreachingAdapter:
         print(cfg)
         
         if torch_model is None:
-            modelset = textModels if attack_params.modality == "text" else visionModels
-            torch_model = self._getTorchModelFromSet(attack_params.model, modelset)
+            torch_model = self._getTorchModelFromSet(cfg.case.model, cfg.case.data.modality)
             torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
         print(torch_model)
             
@@ -201,12 +205,22 @@ class BreachingAdapter:
     def _check_image_size(self, model, shape):
         return True
     
-    def _getTorchModelFromSet(self, model_name, modelSet):
-        model_name = model_name.replace('-', '').lower()
-        if not hasattr(modelSet, model_name):
-            print("no torch model found")
-            raise TypeError("given model type did not match any of the options")
-        model = getattr(modelSet, model_name)()
+    def _getTorchModelFromSet(self, model_name, modality):
+        match modality:
+            case "vision":
+                model_name = model_name.replace('-', '').lower()
+                if not hasattr(visionModels, model_name):
+                    print("no torch model found")
+                    raise TypeError("given model type did not match any of the options")
+                model = getattr(visionModels, model_name)()
+            case "text":
+                config_name = model_name.replace("Model", "Config")
+                if not (hasattr(textModels, model_name) and hasattr(textModels, config_name)):
+                    print("hugging face model or config not found")
+                    raise TypeError("given model type did not match any of the options")
+                config = getattr(textModels, config_name)()
+                model = getattr(textModels, model_name)(config)
+                
         return model
         
 
