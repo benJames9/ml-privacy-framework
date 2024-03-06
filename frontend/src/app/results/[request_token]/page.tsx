@@ -8,7 +8,7 @@ import { AttackProgress } from "@/components/AttackProgress";
 import AttackLoading from "@/components/AttackLoading";
 import AttackQueued from "@/components/AttackQueued";
 import AttackPage from "@/components/AttackPage";
-import AttackResults from "@/components/AttackResults";
+import AttackResultsPage from "@/components/AttackResultsPage";
 
 interface SearchParam {
   params: {
@@ -80,7 +80,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [previousTimes, setPreviousTimes] = useState<number[]>([]);
 
   const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
-  const [attackModality, setAttackModality] = useState<"image" | "text">("image");
+  const [attackModality, setAttackModality] = useState<"images" | "text">("images");
 
   useEffect(() => {
     const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
@@ -165,6 +165,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       break;
     case PageState.ATTACKING:
       content = <AttackPage attackProgress={attackProgress}
+        modality={attackModality}
         startTime={startTime}
         previousTimes={previousTimes}
         onCancel={onCancel}
@@ -172,7 +173,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       />
       break;
     case PageState.FINAL_SCREEN:
-      content = <AttackResults attackProgress={attackProgress} modality={attackModality} />
+      content = <AttackResultsPage attackProgress={attackProgress} modality={attackModality} />
   }
 
   return (

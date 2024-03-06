@@ -9,6 +9,7 @@ import uuid
 import os
 # from unittest.mock import Mock
 
+
 # Attack worker function to run on separate process and complete attacks
 def attack_worker(queues: WorkerCommunication):
     """
@@ -23,39 +24,55 @@ def attack_worker(queues: WorkerCommunication):
         print(data)
 
         try:
-            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(attack_params=data,
-                                                                                        cfg=None,
-                                                                                        torch_model=None)
+            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
+                attack_params=data, cfg=None, torch_model=None
+            )
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
-            r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker,
-                                                                                model, loss_fn, request_token=request_token)
-            breaching.get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
+            r_user_data, t_user_data, server_payload = breaching.perform_attack(
+                cfg,
+                setup,
+                user,
+                server,
+                attacker,
+                model,
+                loss_fn,
+                request_token=request_token,
+                reconstruction_frequency=data.reconstruction_frequency,
+            )
+            breaching.get_metrics(
+                r_user_data, t_user_data, server_payload, server, cfg, setup, response
+            )
 
         # Report any errors to task manager
         except Exception as e:
-            progress = AttackProgress(message_type="error", error_message=f'Attack Configuration Error: {str(e)}')
+            progress = AttackProgress(
+                message_type="error",
+                error_message=f"Attack Configuration Error: {str(e)}",
+            )
             queues.response_channel.put(request_token, progress)
             break
+
 
 # Use this for testing?
 if __name__ == "__main__":
     from common import AttackParameters
+
     pars = AttackParameters(
-        model='ResNet-18',
-        datasetStructure='Foldered',
-        csvPath='~/data/images',
+        model="ResNet-18",
+        datasetStructure="Foldered",
+        csvPath="~/data/images",
         batchSize=1,
         numRestarts=1,
         stepSize=0.1,
         maxIterations=1,
         callbackInterval=10,
-        ptFilePath='../resnet18_pretrained.pt',
-        zipFilePath='../small_foldered_set.zip',
+        ptFilePath="../resnet18_pretrained.pt",
+        zipFilePath="../small_foldered_set.zip",
         budget=100,
         means=[0.46, 0.56, 0.57],
-        stds=[0.32, 0.28, 0.27]
+        stds=[0.32, 0.28, 0.27],
     )
 
     req_tok = str(uuid.uuid4())

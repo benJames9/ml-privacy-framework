@@ -1,6 +1,6 @@
 import { AttackProgress } from "./AttackProgress";
+import { SideBySideImages } from "./SideBySideImages"
 import HBar from "./HBar";
-import ReconstructedImage from "./ReconstructedImage";
 import Stats from "./Stats";
 
 interface AttackResultsProps {
@@ -9,18 +9,15 @@ interface AttackResultsProps {
 }
 
 const AttackResults: React.FC<AttackResultsProps> = ({ attackProgress, modality }) => {
-  return (<div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
+  return (
     <div className="flex flex-col items-center">
       <h1 className="text-4xl font-bold text-gray-100">Attack Statistics</h1>
       <Stats stats={attackProgress.statistics} modality={modality} />
-      {modality === "image" && <div>
+      {modality === "images" && <div>
         <HBar />
-        <h1 className="text-4xl font-bold text-gray-100">Reconstructed Image</h1>
-        <ReconstructedImage image={attackProgress.reconstructed_image} />
-        <ReconstructedImage image={attackProgress.true_image} />
+        <SideBySideImages attackProgress={attackProgress} />
       </div>}
-    </div>
-  </div>);
+    </div>);
 };
 
 export default AttackResults;
