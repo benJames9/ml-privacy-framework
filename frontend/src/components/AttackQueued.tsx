@@ -20,7 +20,6 @@ const AttackQueued: React.FC<AttackQueuedProps> = ({ queuedCurrent, queuedMax, o
   const copyToken = () => {
     copyToClipboard(params.request_token.toString());
     setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
   }
 
   return (

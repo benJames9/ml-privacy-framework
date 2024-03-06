@@ -25,7 +25,6 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
   const copyToken = () => {
     copyToClipboard(params.request_token.toString());
     setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
   }
 
   return (
