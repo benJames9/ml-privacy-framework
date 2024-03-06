@@ -11,7 +11,7 @@ const ViewAttackCard: React.FC = () => {
     <div className="bg-gradient-to-r from-blue-950 to-teal-900 border border-gray-700 rounded-lg p-8 md:p-12 scale-90">
       <h1 className="text-3xl text-gray-100 font-bold mb-8 text-center">View Previous Attack</h1>
       <p className="text-lg font-normal text-gray-300 mb-4">Want to view a previous attack? Just enter its token down below!</p>
-      <p className="text-lg font-normal text-gray-300 mb-6">If the attack is still ongoing, you'll be able to watch its progress live, otherwise you'll see the final results.</p>
+      <p className="text-lg font-normal text-gray-300 mb-6">If the attack is still ongoing, you&rsquo;ll be able to watch its progress live, otherwise you&rsquo;ll see the final results.</p>
 
       <div className="relative text-center">
         <input
