@@ -1,7 +1,7 @@
 import unittest
 import os
 import shutil
-from backend.datasets import calculate_dataset_statistics, DatasetStatistics
+from backend.mia.datasets import calculate_dataset_statistics, DatasetStatistics
 import numpy as np
 
 # Test the calculate_dataset_statistics function

@@ -14,7 +14,7 @@ import torch.nn.functional as F
 import os
 import math
 
-from backend.datasets import calculate_dataset_statistics
+from .datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N):
