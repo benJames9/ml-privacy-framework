@@ -81,6 +81,7 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
+<<<<<<< HEAD
 
     switch (attack) {
       case "invertinggradients":
@@ -148,6 +149,29 @@ export default function SetupPage() {
         break;
       default:
         break;
+=======
+    if (datasetStructure === "CSV" && csvPath === "") {
+      errorMsgs.push("Please enter the path to the CSV file");
+    }
+    if (invalidNum(batchSize)) {
+      errorMsgs.push("Please enter a batch size > 0");
+    }
+    if (invalidNum(numRestarts)) {
+      errorMsgs.push("Please enter a number of restarts > 0");
+    }
+    if (invalidNum(stepSize)) {
+      errorMsgs.push("Please enter a step size > 0");
+    }
+    if (invalidNum(maxIterations)) {
+      errorMsgs.push("Please enter a maximum number of iterations > 0");
+    }
+    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+      errorMsgs.push("Please either enter all values for mean and std or none");
+    }
+    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+      errorMsgs.push("Please either enter all values for image shape or none");
+>>>>>>> feature/default-dataset
     }
 
     setErrors(errorMsgs);
@@ -413,8 +437,13 @@ export default function SetupPage() {
         <div>
           {/* Upload zip file */}
           <div className="flex items-start">
+<<<<<<< HEAD
             <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
               {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
+=======
+            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">
+              Upload Custom Dataset
+>>>>>>> feature/default-dataset
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
