@@ -6,51 +6,71 @@ import TextInput from "./TextInput"
 
 interface MiaParamsProps {
   handleMiaParamsChange: (field: string, value: string | (File | null)) => void;
+  labelDict: File | null;
+  targetImage: File | null;
 }
 
-const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
+const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange, labelDict, targetImage }) => {
   return (
     <div>
-      {/* Upload label dictionary */}
-      <div className="flex items-start">
-        <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-label-dict-header">
-          Upload Label Dictionary <span className="text-sm text-red-500">*</span>
-        </h3>
-        <InfoPopup text={"Upload a .json file containing the label dictionary to be used in the attack."} />
-      </div>
-      <div className="mb-4">
-        <FileUpload
-          expectedFileType="csv"
-          label="Select File (.csv)"
-          onFileChange={(file: File | null) => { handleMiaParamsChange("labelDict", file) }}
-          nextElement="upload-target-image-header"
-        />
-      </div>
-      <HBar />
-
-      {/* Upload target image */}
-      <div>
-        <div className="flex items-start">
-          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-target-image-header">
-            Upload Target Image <span className="text-sm text-red-500">*</span>
+      <div className="flex flex-col items-center">
+        {/* Upload label dictionary */}
+        <div className="flex items-start justify-center">
+          <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-label-dict-header">
+            Upload Label Dictionary <span className="text-sm text-red-500">*</span>
           </h3>
-          <InfoPopup text={"Upload a .zip file containing the target point to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
+          <InfoPopup text={"Upload a .json file containing the label dictionary to be used in the attack."} />
         </div>
-        <FileUpload
-          expectedFileType="JPEG"
-          label="Select File (.JPEG)"
-          onFileChange={(file: File | null) => { handleMiaParamsChange("targetImage", file) }}
-        />
-        <TextInput
-          label="Target Label"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("targetLabel", e.target.value) }}
-          isRequired={true}
-        />
+        <div className="mb-2 flex flex-col justify-center">
+          <FileUpload
+            expectedFileType="csv"
+            label="Select File (.csv)"
+            onFileChange={(file: File | null) => { handleMiaParamsChange("labelDict", file) }}
+            nextElement="upload-target-image-header"
+          />
+          <div>
+            {labelDict && (
+              <p className="mt-2 -mb-2 text-sm text-gray-400">{labelDict.name}</p>
+            )}
+          </div>
+        </div>
+        <HBar />
+
+        {/* Upload target image */}
+        <div>
+          <div className="flex items-start justify-center">
+            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-target-image-header">
+              Upload Target Image <span className="text-sm text-red-500">*</span>
+            </h3>
+            <InfoPopup text={"Upload a .zip file containing the target point to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
+          </div>
+          <div className="flex flex-col items-center">
+            <div>
+              <FileUpload
+                expectedFileType="JPEG"
+                label="Select File (.JPEG)"
+                onFileChange={(file: File | null) => { handleMiaParamsChange("targetImage", file) }}
+              />
+              <div>
+                {targetImage && (
+                  <p className="mt-2 -mb-2 text-sm text-gray-400">{targetImage.name}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center">
+              <TextInput
+                label="Target Label"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("targetLabel", e.target.value) }}
+                isRequired={true}
+              />
+            </div>
+          </div>
+        </div>
+        <HBar />
       </div>
-      <HBar />
 
       {/* Shadow Parameters */}
-      <div className="flex items-start">
+      <div className="flex items-start justify-center">
         <h3 className="text-2xl font-bold text-gray-400 mb-4">
           Shadow Parameters
         </h3>

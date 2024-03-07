@@ -27,8 +27,6 @@ export default function SetupPage() {
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
   // Dataset parameters
-  const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
-  const [csvPath, setCsvPath] = useState<string>("");
   const [batchSize, setBatchSize] = useState<number>(0);
   const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
@@ -81,27 +79,70 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (datasetStructure === "CSV" && csvPath === "") {
-      errorMsgs.push("Please enter the path to the CSV file");
-    }
-    if (invalidNum(batchSize)) {
-      errorMsgs.push("Please enter a batch size > 0");
-    }
-    if (invalidNum(numRestarts)) {
-      errorMsgs.push("Please enter a number of restarts > 0");
-    }
-    if (invalidNum(stepSize)) {
-      errorMsgs.push("Please enter a step size > 0");
-    }
-    if (invalidNum(maxIterations)) {
-      errorMsgs.push("Please enter a maximum number of iterations > 0");
-    }
-    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
-      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
-      errorMsgs.push("Please either enter all values for mean and std or none");
-    }
-    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
-      errorMsgs.push("Please either enter all values for image shape or none");
+
+    switch (attack) {
+      case "invertinggradients":
+        if (!zipFile) {
+          errorMsgs.push("Please upload a dataset file");
+        }
+        if (invalidNum(batchSize)) {
+          errorMsgs.push("Please enter a batch size > 0");
+        }
+        if (invalidNum(numRestarts)) {
+          errorMsgs.push("Please enter a number of restarts > 0");
+        }
+        if (invalidNum(stepSize)) {
+          errorMsgs.push("Please enter a step size > 0");
+        }
+        if (invalidNum(maxIterations)) {
+          errorMsgs.push("Please enter a maximum number of iterations > 0");
+        }
+        if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+          && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+          errorMsgs.push("Please either enter all values for mean and std or none");
+        }
+        if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+          errorMsgs.push("Please either enter all values for image shape or none");
+        }
+        break;
+      case "tag":
+        break;
+      case "fishing":
+        break;
+      case "mia":
+        if (!ptFile) {
+          errorMsgs.push("Please upload a model parameters file");
+        }
+        if (!zipFile) {
+          errorMsgs.push("Please upload a data distribution file");
+        }
+        if (!labelDict) {
+          errorMsgs.push("Please upload a label dictionary file");
+        }
+        if (!targetImage) {
+          errorMsgs.push("Please upload a target image file");
+        }
+        if (targetLabel === "") {
+          errorMsgs.push("Please enter a target label");
+        }
+        if (invalidNum(numShadowModels) || numShadowModels < 4 || numShadowModels % 2 !== 0) {
+          errorMsgs.push("Please enter an even number of shadow models >= 4");
+        }
+        if (invalidNum(numDataPoints)) {
+          errorMsgs.push("Please enter a number of data points > 0");
+        }
+        if (invalidNum(numEpochs)) {
+          errorMsgs.push("Please enter a number of epochs > 0");
+        }
+        if (invalidNum(shadowBatchSize)) {
+          errorMsgs.push("Please enter a shadow batch size > 0");
+        }
+        if (invalidNum(learningRate)) {
+          errorMsgs.push("Please enter a learning rate > 0");
+        }
+        break;
+      default:
+        break;
     }
 
     setErrors(errorMsgs);
@@ -130,8 +171,6 @@ export default function SetupPage() {
 
     switch (attack) {
       case "invertinggradients":
-        formData.append("datasetStructure", datasetStructure);
-        formData.append("csvPath", csvPath);
         formData.append("mean", JSON.stringify(mean));
         formData.append("std", JSON.stringify(std));
         formData.append("batchSize", batchSize.toString());
@@ -174,15 +213,8 @@ export default function SetupPage() {
     setSelectedZipFile(file);
   }
 
-  const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDatasetStructure(e.target.value as "Foldered" | "CSV");
-  }
-
   const handleDataParamsChange = (field: string, value: string) => {
     switch (field) {
-      case "csvPath":
-        setCsvPath(value);
-        break;
       case "batchSize":
         setBatchSize(parseInt(value));
         break;
@@ -292,7 +324,6 @@ export default function SetupPage() {
     let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
     switch (attack) {
       case "invertinggradients":
-        info += "\n\n<strong>Structure of Dataset</strong>: If dataset is organised as a CSV file, enter the path to the CSV file.";
         info += "\n\n<strong>Image Shape</strong>: The shape of the images in the dataset. Inferred from the dataset if left empty.";
         info += "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
         break;
@@ -341,74 +372,83 @@ export default function SetupPage() {
           </h2>
           <InfoPopup text="Select one of our suppported models to perform the attack on." />
         </div>
-        <ModelSelect models={getModels()} onChange={(model: string) => { setSelectedModel(model) }} />
-        <HBar />
+        <ModelSelect
+          models={getModels()}
+          onChange={(model: string) => { setSelectedModel(model)}}
+          nextElement={attack !== "" ? "upload-pt-header" : ""} />
 
         {/* Upload model parameters pt file */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
-            Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
-          </h3>
-          <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
-        </div>
-        <div className="mb-4">
-          <FileUpload
-            expectedFileType="pt"
-            label="Select File (.pt)"
-            onFileChange={handlePtFileChange}
-            nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
-          />
-          {ptFile && (
-            <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
-          )}
-        </div>
-        <HBar />
-
-        <div>
-          {/* Upload zip file */}
+        {attack !== "" && <div className="flex flex-col items-center">
+          <HBar />
           <div className="flex items-start">
-            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8" id="upload-zip-header">
-              Upload Custom Dataset
+            <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
+              Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
+            </h3>
+            <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
+          </div>
+          <div className="mb-2">
+            <FileUpload
+              expectedFileType="pt"
+              label="Select File (.pt)"
+              onFileChange={handlePtFileChange}
+              nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
+            />
+            {ptFile && (
+              <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
+            )}
+          </div>
+          <HBar />
+        </div>}
+
+        {attack !== "" && <div className="flex flex-col items-center">
+          {/* Upload zip file */}
+          <div className="flex items-start justify-center">
+            <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
+              {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-2">
             <FileUpload
               expectedFileType="zip"
               label="Select File (.zip)"
               onFileChange={handleZipFileChange}
               nextElement={attack === "mia" ? "upload-label-dict-header" : "data-params-header"}
             />
-            {zipFile && (
-              <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
-            )}
+            <div>
+              {zipFile && (
+                <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
+              )}
+            </div>
           </div>
           <HBar />
-        </div>
+        </div>}
 
         {attack === "mia" ?
-          <MiaParams handleMiaParamsChange={handleMiaParamsChange} />
+          <MiaParams
+            handleMiaParamsChange={handleMiaParamsChange}
+            labelDict={labelDict}
+            targetImage={targetImage}
+          />
           : attack !== "" &&
           <div>
             {/* Dataset Parameters */}
-            <div className="flex items-start">
-              <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+            <div className="flex items-start justify-center">
+              <h3 className="text-2xl font-bold text-gray-400 mb-4" id="data-params-header">
                 Dataset Parameters
               </h3>
               <InfoPopup text={getDatasetParamsInfo()} />
             </div>
             <DatasetParams
-              datasetStructure={datasetStructure}
-              handleStructureChange={handleStructureChange}
               handleDataParamsChange={handleDataParamsChange}
               attack={attack}
             />
             <HBar />
 
             {/* Attack Parameters */}
-            <div className="flex items-start">
-              <h3 className="text-2xl font-bold text-gray-400 mb-8">
+            <div className="flex items-start justify-center">
+              <h3 className="text-2xl font-bold text-gray-400 mb-4">
                 Attack Parameters
               </h3>
               <InfoPopup text={getAttackParamsInfo()} />

@@ -53,8 +53,6 @@ async def submit_attack(
     attack: str = Form(...),
     modality: str = Form(...),
     # Model Inversion Params
-    datasetStructure: str = Form(None),
-    csvPath: str = Form(None),
     batchSize: int = Form(None),
     mean: str = Form(None),
     std: str = Form(None),
@@ -104,8 +102,6 @@ async def submit_attack(
     else:
         breaching_params = BreachingParams(
             modality=modality,
-            datasetStructure=datasetStructure,
-            csvPath=csvPath,
             batchSize=batchSize,
             means=[float(i) for i in mean.strip("[]").split(",")],
             stds=[float(i) for i in std.strip("[]").split(",")],
