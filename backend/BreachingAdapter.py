@@ -131,7 +131,7 @@ class BreachingAdapter:
                 model,
                 loss_fn,
                 request_token,
-                reconstruction_frequency
+                reconstruction_frequency,
             )
             reconstructed_arr.append(reconstructed_user_data)
             true_arr.append(true_user_data)
@@ -172,17 +172,17 @@ class BreachingAdapter:
         )
         self.attack_cache.true_user_data = true_user_data
 
-        # print("reconstructing attack")
-        # reconstructed_user_data, stats = attacker.reconstruct(
-        #     [server_payload],
-        #     [shared_data],
-        #     {},
-        #     dryrun=cfg.dryrun,
-        #     token=request_token,
-        #     add_response_to_channel=partial(self._add_progress_to_channel, user),
-        #     reconstruction_frequency=reconstruction_frequency,
-        # )
-        # user.plot(reconstructed_user_data, saveFile="reconstructed_data")
+        print("reconstructing attack")
+        reconstructed_user_data, stats = attacker.reconstruct(
+            [server_payload],
+            [shared_data],
+            {},
+            dryrun=cfg.dryrun,
+            token=request_token,
+            add_response_to_channel=partial(self._add_progress_to_channel, user),
+            reconstruction_frequency=reconstruction_frequency,
+        )
+        user.plot(reconstructed_user_data, saveFile=f"reconstructed_data{user.user_idx}")
         return true_user_data, true_user_data, server_payload
 
     def get_metrics(
