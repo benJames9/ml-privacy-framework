@@ -7,3 +7,5 @@ venv/
 backend/test_dataset/
 backend/temp_dataset/
 .DS_Store
+true_data*
+reconstructed_data*

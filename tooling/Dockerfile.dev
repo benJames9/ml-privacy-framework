@@ -2,42 +2,12 @@ FROM continuumio/anaconda3
 
 WORKDIR /root
 
-RUN apt-get clean && apt-get update && apt-get install gcc -y
+# install gcc and git-flow
+RUN apt-get clean && apt-get update && apt-get install gcc git-flow -y
 
-# install various packages to help manage python,
-# testing, linting, coverage, formatting and project management
-RUN pip install pytest && \
-    pip install pytest-cov && \
-    pip install poetry && \
-    pip install ruff
+COPY environment.yml .
 
-# for the backend api stuff
-RUN pip install uvicorn[standard] && \
-    pip install fastapi
-
-# install git additions
-RUN apt-get install git-flow -y && \
-    pip install pre-commit
-
-WORKDIR /root
-
-RUN apt-get clean && apt-get update
-
-# install various packages to help manage python,
-# testing, linting, coverage, formatting and project management
-RUN pip install pytest && \
-    pip install pytest-cov && \
-    pip install poetry && \
-    pip install ruff
-
-# for the backend api stuff
-RUN pip install uvicorn && \
-    pip install fastapi
-
-# install git additions
-RUN apt-get install git-flow -y && \
-    pip install pre-commit && \
-    pip install commitizen
+RUN conda env create -v -f environment.yml
 
 # change shell to zsh and install useful commandline tools
 RUN apt-get install zsh vim htop tree fzf -y && \
@@ -53,3 +23,9 @@ RUN wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | 
     export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")" && \
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
     nvm install 18 && nvm use 18 &&\npm install -g next@latest react@latest react-dom@latest
+
+# Make RUN commands use the new environment:
+SHELL ["conda", "run", "-n", "privacy-ml-container", "/bin/bash", "-c"]
+
+# Set the default command to bash
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "privacy-ml-container", "/bin/bash"]
