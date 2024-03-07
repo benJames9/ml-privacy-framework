@@ -6,13 +6,31 @@ import random
 class ConfigBuilder:
     def __init__(self, attack_params: AttackParameters) -> None:
         self.attack_params=attack_params
+        self.most_recent_build = None
+        self.max_clients = -1
 
-    def build(self):
-        return self._construct_cfg(self.attack_params)
+    def build(self, dataset_size = None):
+        self.most_recent_build = self._construct_cfg(self.attack_params, dataset_size)
+        self.max_clients = self.most_recent_build.case.data.default_clients
+        return self.most_recent_build
+    
+    def update_user_idx(self, user_idx):
+        if self.most_recent_build is None:
+            self.build()
+        if user_idx >= self.most_recent_build.case.data.default_clients:
+            raise RuntimeError(f"User index {user_idx} not within [0 : {self.most_recent_build.case.data.default_clients - 1}]")
+        self.most_recent_build.case.user.user_idx = user_idx
+        return self.most_recent_build
+    
+    def get_max_clients(self):
+        if self.most_recent_build is None:
+            self.build()
+        return self.max_clients
     
     def _construct_cfg(
         self,
         attack_params: AttackParameters,
+        dataset_size=None,
         dataset_path=None,
     ):
         print("constructing")
@@ -71,7 +89,11 @@ class ConfigBuilder:
         cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
-
+        
+        
+        if dataset_size is not None:
+            cfg.case.data.default_clients = dataset_size // attack_params.breaching_params.batchSize
+        
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):

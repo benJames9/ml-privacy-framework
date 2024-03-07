@@ -72,14 +72,15 @@ class BreachingAdapter:
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
 
-        # logging.basicConfig(
-        #     level=logging.INFO,
-        #     handlers=[logging.StreamHandler(sys.stdout)],
-        #     format="%(message)s",
-        # )
-        # logger = logging.getLogger()
+        logging.basicConfig(
+            level=logging.INFO,
+            handlers=[logging.StreamHandler(sys.stdout)],
+            format="%(message)s",
+        )
+        logger = logging.getLogger()
 
-        cfg = ConfigBuilder(attack_params).build()
+        builder = ConfigBuilder(attack_params) 
+        cfg = builder.build(16)
         
         if torch_model is None:
             modelset = textModels if attack_params.breaching_params.modality == "text" else visionModels
@@ -87,25 +88,55 @@ class BreachingAdapter:
             torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
         print(torch_model)
         
-        cfg.case.user.num_data_points = 4
+        permutation_arr = [None] #array[0] acting like a pointer to a permutation which is set in construct_dataloader
         
-        user, server, model, loss_fn = breachinglib.cases.construct_case(
-            cfg.case, setup, prebuilt_model=torch_model
+        # get permutation array
+        _, _ , model, _ = breachinglib.cases.construct_case(
+            cfg.case, setup, prebuilt_model=torch_model, permutation_arr=permutation_arr
         )
-        print(cfg)
-        attacker = breachinglib.attacks.prepare_attack(
-            server.model, server.loss, cfg.attack, setup
+        
+        print(permutation_arr)
+
+        return setup, model, permutation_arr, builder
+    
+    
+    def perform_batches(
+        self, 
+        builder: ConfigBuilder, 
+        setup, 
+        torch_model, 
+        request_token, 
+        reconstruction_frequency, 
+        permutation_arr
+        ):
+        reconstructed_arr, true_arr = [], []
+        for user_idx in range(builder.get_max_clients()):
+            
+            cfg = builder.update_user_idx(user_idx)
+            user, server, model, loss_fn = breachinglib.cases.construct_case(
+                cfg.case, setup, prebuilt_model=torch_model, permutation_arr=permutation_arr
             )
-
-        breachinglib.utils.overview(server, user, attacker)
-
-        # if torch_model is not None:
-        #     model = torch_model
-
-        if not self._check_image_size(model, cfg.case.data.shape):
-            raise ValueError("Mismatched dimensions")
-
-        return cfg, setup, user, server, attacker, model, loss_fn
+            attacker = breachinglib.attacks.prepare_attack(
+                server.model, server.loss, cfg.attack, setup
+            )
+            
+            print(f"CURRENT USER IDX{user.user_idx}")
+            
+            reconstructed_user_data, true_user_data, server_payload = self.perform_attack(
+                cfg,
+                setup,
+                user,
+                server,
+                attacker,
+                model,
+                loss_fn,
+                request_token,
+                reconstruction_frequency
+            )
+            reconstructed_arr.append(reconstructed_user_data)
+            true_arr.append(true_user_data)
+            # user.plot(reconstructed_user_data, saveFile=f"reconstructed_data")
+        return reconstructed_arr, true_arr
     
 
     def perform_attack(
@@ -128,13 +159,11 @@ class BreachingAdapter:
         self.attack_cache.cfg = cfg
         self.attack_cache.server_payload = server_payload
         self.attack_cache.setup = setup
-
-        breachinglib.utils.overview(server, user, attacker)
         
         self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
-        user.plot(true_user_data, saveFile="true_data")
+        user.plot(true_user_data, saveFile=f"true_data_{user.user_idx}")
 
         with open("./true_data.png", "rb") as image_file:
             image_data_true = image_file.read()
@@ -143,18 +172,18 @@ class BreachingAdapter:
         )
         self.attack_cache.true_user_data = true_user_data
 
-        print("reconstructing attack")
-        reconstructed_user_data, stats = attacker.reconstruct(
-            [server_payload],
-            [shared_data],
-            {},
-            dryrun=cfg.dryrun,
-            token=request_token,
-            add_response_to_channel=partial(self._add_progress_to_channel, user),
-            reconstruction_frequency=reconstruction_frequency,
-        )
-        user.plot(reconstructed_user_data, saveFile="reconstructed_data")
-        return reconstructed_user_data, true_user_data, server_payload
+        # print("reconstructing attack")
+        # reconstructed_user_data, stats = attacker.reconstruct(
+        #     [server_payload],
+        #     [shared_data],
+        #     {},
+        #     dryrun=cfg.dryrun,
+        #     token=request_token,
+        #     add_response_to_channel=partial(self._add_progress_to_channel, user),
+        #     reconstruction_frequency=reconstruction_frequency,
+        # )
+        # user.plot(reconstructed_user_data, saveFile="reconstructed_data")
+        return true_user_data, true_user_data, server_payload
 
     def get_metrics(
         self,

@@ -32,28 +32,37 @@ def attack_worker(queues: WorkerCommunication):
             # Model inversion attack
             if data.attack == 'invertinggradients':
                 # Setup attack using params
-                cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
+                setup, model, permutation_arr, builder = breaching.setup_attack(
                     attack_params=data, cfg=None, torch_model=None
                 )
 
                 # Get response channel and request token to pass into breaching
+                
                 response = request_token, queues.response_channel
-                r_user_data, t_user_data, server_payload = breaching.perform_attack(
-                    cfg,
-                    setup,
-                    user,
-                    server,
-                    attacker,
-                    model,
-                    loss_fn,
-                    request_token=request_token,
-                    reconstruction_frequency=data.breaching_params.reconstruction_frequency,
+                r_user_data_arr, t_user_data_arr = breaching.perform_batches(
+                    builder,
+                    setup, 
+                    model, 
+                    request_token, 
+                    data.breaching_params.reconstruction_frequency, 
+                    permutation_arr
                 )
+                # r_user_data, t_user_data, server_payload = breaching.perform_attack(
+                #     cfg,
+                #     setup,
+                #     user,
+                #     server,
+                #     attacker,
+                #     model,
+                #     loss_fn,
+                #     request_token=request_token,
+                #     reconstruction_frequency=data.breaching_params.reconstruction_frequency,
+                # )
                 
                 # Return metrics to user
-                breaching.get_metrics(
-                    r_user_data, t_user_data, server_payload, server, cfg, setup, response
-                )
+                # breaching.get_metrics(
+                #     r_user_data, t_user_data, server_payload, server, cfg, setup, response
+                # )
 
             elif data.attack == 'mia':
                 # Perform MIA attack
