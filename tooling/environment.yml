@@ -1,4 +1,4 @@
-name: breaching
+name: privacy-ml-container
 channels:
   - pytorch
   - huggingface
@@ -26,7 +26,13 @@ dependencies:
       - GPUtil
       - PyWavelets
       - hydra-core
-      - pytorch-wavelets==1.3.0
       - nltk
       - rouge_score
       - sacrebleu
+      - pytorch-wavelets==1.3.0
+      - pytest
+      - pytest-cov
+      - poetry
+      - ruff
+      - pre-commit
+      - commitizen

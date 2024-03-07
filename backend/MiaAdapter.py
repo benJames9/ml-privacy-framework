@@ -40,12 +40,11 @@ class MiaAdapter:
         print(f'ratio: {ratio}')
 
     def _get_model(self, model_type, path_to_pt, num_classes):
-        match model_type:
-            case 'ResNet-18':
-                model = models.resnet18(pretrained=False)
-                model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
-            case other: 
-                raise ValueError("Model type not supported")
+        if model_type == 'ResNet-18':
+            model = models.resnet18(pretrained=False)
+            model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
+        else: 
+            raise ValueError("Model type not supported")
             
         # Load the state dict from path
         pt = torch.load(path_to_pt)
