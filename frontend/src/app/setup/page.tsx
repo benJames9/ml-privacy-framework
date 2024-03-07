@@ -11,11 +11,13 @@ import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
 import ErrorAlert from "@/components/ErrorAlert";
 import InfoPopup from "@/components/InfoPopup";
+import MiaParams from "@/components/MiaParams";
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
-  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
+  const miaModels: string[] = ["ResNet-18"];
+  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Fishing for\nUser Data", "Membership\nInference"];
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
@@ -204,12 +206,25 @@ export default function SetupPage() {
   }
 
   const onAttackSelect = (attack: string) => {
-    if (attack === "Inverting Gradients\n(Single Step)") {
-      setSelectedAttack("invertinggradients");
-      setModality("images");
-    } else {
-      setSelectedAttack("tag");
-      setModality("text");
+    switch (attack) {
+      case "Inverting Gradients\n(Single Step)":
+        setSelectedAttack("invertinggradients");
+        setModality("images");
+        break;
+      case "TAG\n(Text Attack)":
+        setSelectedAttack("tag");
+        setModality("text");
+        break;
+      case "Fishing for\nUser Data":
+        setSelectedAttack("fishing");
+        setModality("images");
+        break;
+      case "Membership\nInference":
+        setSelectedAttack("mia");
+        setModality("images");
+        break;
+      default:
+        break;
     }
   }
 
@@ -239,6 +254,17 @@ export default function SetupPage() {
     return info;
   }
 
+  const getModels = () => {
+    switch (attack) {
+      case "tag":
+        return textModels;
+      case "mia":
+        return miaModels;
+      default:
+        return imageModels;
+    }
+  }
+
   return (
     <main>
       <Navbar />
@@ -255,13 +281,13 @@ export default function SetupPage() {
           </h2>
           <InfoPopup text="Select one of our suppported models to perform the attack on." />
         </div>
-        <ModelSelect models={attack === "tag" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
+        <ModelSelect models={getModels()} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
 
-        {/* Upload pt file */}
+        {/* Upload model parameters pt file */}
         <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">
-            Upload Model Parameters
+          <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
+            Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
           </h3>
           <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
         </div>
@@ -270,7 +296,7 @@ export default function SetupPage() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement={attack === "invertinggradients" ? "upload-zip-header" : "data-params-header"}
+            nextElement={attack === "invertinggradients" ? "upload-zip-header" : attack === "mia" ? "upload-data-dist-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
@@ -301,29 +327,32 @@ export default function SetupPage() {
           <HBar />
         </div>}
 
-        {/* Dataset Parameters */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
-            Dataset Parameters
-          </h3>
-          <InfoPopup text={getDatasetParamsInfo()} />
-        </div>
-        <DatasetParams
-          datasetStructure={datasetStructure}
-          handleStructureChange={handleStructureChange}
-          handleDataParamsChange={handleDataParamsChange}
-          attack={attack}
-        />
-        <HBar />
+        {attack === "mia" ? <MiaParams /> : <div>
+          {/* Dataset Parameters */}
+          <div className="flex items-start">
+            <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+              Dataset Parameters
+            </h3>
+            <InfoPopup text={getDatasetParamsInfo()} />
+          </div>
+          <DatasetParams
+            datasetStructure={datasetStructure}
+            handleStructureChange={handleStructureChange}
+            handleDataParamsChange={handleDataParamsChange}
+            attack={attack}
+          />
+          <HBar />
 
-        {/* Attack Parameters */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8">
-            Attack Parameters
-          </h3>
-          <InfoPopup text={getAttackParamsInfo()} />
+          {/* Attack Parameters */}
+          <div className="flex items-start">
+            <h3 className="text-2xl font-bold text-gray-400 mb-8">
+              Attack Parameters
+            </h3>
+            <InfoPopup text={getAttackParamsInfo()} />
+          </div>
+          <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
         </div>
-        <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
+        }
 
         <EvaluateButton onClick={() => {
           if (!submitted) {
