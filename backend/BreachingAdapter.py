@@ -12,6 +12,7 @@ import zipfile
 import os, shutil
 from ConfigBuilder import ConfigBuilder
 import tempfile
+import time
 from functools import partial
 from dataclasses import dataclass
 
@@ -19,10 +20,10 @@ from dataclasses import dataclass
 @dataclass
 class BreachingCache:
     true_b64_image = ""
-    reconstructed_b64_image = ""
     true_user_data = None
     reconstructed_user_data = None
     stats = None
+    attack_start_time_s = 0
 
     server_payload = None
     server = None
@@ -34,7 +35,7 @@ class BreachingCache:
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
-
+        
     def setup_attack(
         self, attack_params: AttackParameters = None, cfg=None, torch_model=None
     ):
@@ -61,9 +62,11 @@ class BreachingAdapter:
         if os.path.exists(extract_dir):
             shutil.rmtree(extract_dir)
         if attack_params.zipFilePath is not None:
-            with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+            with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
-
+        else:
+            attack_params.datasetStructure = "test"
+        
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
@@ -76,26 +79,25 @@ class BreachingAdapter:
         logger = logging.getLogger()
 
         cfg = ConfigBuilder(attack_params).build()
-
-        print(cfg)
         
         if torch_model is None:
             modelset = textModels if attack_params.modality == "text" else visionModels
             torch_model = self._getTorchModelFromSet(attack_params.model, modelset)
             torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
         print(torch_model)
-            
+        
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=torch_model
-            )
+        )
+        print(cfg)
         attacker = breachinglib.attacks.prepare_attack(
             server.model, server.loss, cfg.attack, setup
             )
 
         breachinglib.utils.overview(server, user, attacker)
 
-        if torch_model is not None:
-            model = torch_model
+        # if torch_model is not None:
+        #     model = torch_model
 
         if not self._check_image_size(model, cfg.case.data.shape):
             raise ValueError("Mismatched dimensions")
@@ -125,6 +127,8 @@ class BreachingAdapter:
         self.attack_cache.setup = setup
 
         breachinglib.utils.overview(server, user, attacker)
+        
+        self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
         user.plot(true_user_data, saveFile="true_data")
@@ -194,6 +198,7 @@ class BreachingAdapter:
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
                 reconstructed_image=base64_reconstructed,
+                attack_start_time_s=self.attack_cache.attack_start_time_s
             ),
         )
         return metrics
@@ -252,10 +257,11 @@ class BreachingAdapter:
             max_restarts=response_data.max_restarts,
             current_batch=response_data.current_batch,
             max_batches=response_data.max_batches,
+            attack_start_time_s=self.attack_cache.attack_start_time_s
         )
 
         if response_data.reconstructed_image:
-            self.attack_cache.reconstructed_b64_image = (
+            reconstructed_b64_image = (
                 self._convert_candidate_to_base64(
                     user, response_data.reconstructed_image
                 )
@@ -277,9 +283,9 @@ class BreachingAdapter:
                 SSIM=metrics.get("ssim", 0),
                 PSNR=metrics.get("psnr", 0),
             )
-
-        progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
-        progress.true_image = self.attack_cache.true_b64_image
-        progress.statistics = self.attack_cache.stats
+            
+            progress.reconstructed_image = reconstructed_b64_image
+            progress.true_image = self.attack_cache.true_b64_image
+            progress.statistics = self.attack_cache.stats
 
         self._worker_response_queue.put(request_token, progress)
