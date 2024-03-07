@@ -7,9 +7,11 @@ import SelectInput from "./SelectInput";
 interface DatasetParamsProps {
   handleDataParamsChange: (field: string, value: string) => void;
   attack: string;
+  textDatasets: string[];
+  tokenizers: string[];
 }
 
-const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, attack }) => {
+const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, attack, textDatasets, tokenizers }) => {
   return (
     <div>
       {attack === "invertinggradients" && <div>
@@ -35,24 +37,33 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, a
       {attack === "tag" && <div>
         <SelectInput
           label="Text Dataset"
-          options={["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]}
+          options={textDatasets}
           onChange={(e) => handleDataParamsChange("textDataset", e.target.value)}
+          isRequired={true}
+        />
+        <SelectInput
+          label="Tokenizer"
+          options={tokenizers}
+          onChange={(e) => handleDataParamsChange("tokenizer", e.target.value)}
           isRequired={true}
         />
         <NumberInput
           label="No. data points"
-          onChange={(e) => handleDataParamsChange("numDataPoints", e.target.value)}
+          onChange={(e) => handleDataParamsChange("textDataPoints", e.target.value)}
+          isRequired={true}
         />
         <NumberInput
           label="Sequence length"
           onChange={(e) => handleDataParamsChange("seqLength", e.target.value)}
+          isRequired={true}
         />
       </div>}
-      <NumberInput
+      {attack !== "tag" && <NumberInput
         label="Batch size"
         onChange={(e) => handleDataParamsChange("batchSize", e.target.value)}
         isRequired={true}
       />
+      }
     </div>
   );
 }

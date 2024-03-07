@@ -18,6 +18,8 @@ export default function SetupPage() {
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const miaModels: string[] = ["ResNet-18"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Fishing for\nUser Data", "Membership\nInference"];
+  const textDatasets: string[] = ["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]
+  const tokenizers: string[] = ["GPT-2", "BERT", "Transformer3"];
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
@@ -26,11 +28,17 @@ export default function SetupPage() {
   const [ptFile, setSelectedPtFile] = useState<File | null>(null);
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
-  // Dataset parameters
+  // Image parameters
   const [batchSize, setBatchSize] = useState<number>(0);
   const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
   const [std, setStd] = useState<[number, number, number]>([0, 0, 0]);
+
+  // Text parameters
+  const [textDataset, setTextDataset] = useState<string>(textDatasets[0]);
+  const [textDataPoints, setTextDataPoints] = useState<number>(0);
+  const [seqLength, setSeqLength] = useState<number>(0);
+  const [tokenizer, setTokenizer] = useState<string>(tokenizers[0]);
 
   // Attack parameters
   const [numRestarts, setNumRestarts] = useState<number>(0);
@@ -106,6 +114,30 @@ export default function SetupPage() {
         }
         break;
       case "tag":
+        if (!ptFile) {
+          errorMsgs.push("Please upload a model parameters file");
+        }
+        if (!textDataset) {
+          errorMsgs.push("Please select a text dataset");
+        }
+        if (!tokenizer) {
+          errorMsgs.push("Please select a tokenizer");
+        }
+        if (invalidNum(textDataPoints)) {
+          errorMsgs.push("Please enter a number of data points > 0");
+        }
+        if (invalidNum(seqLength)) {
+          errorMsgs.push("Please enter a sequence length > 0");
+        }
+        if (invalidNum(numRestarts)) {
+          errorMsgs.push("Please enter a number of restarts > 0");
+        }
+        if (invalidNum(stepSize)) {
+          errorMsgs.push("Please enter a step size > 0");
+        }
+        if (invalidNum(maxIterations)) {
+          errorMsgs.push("Please enter a maximum number of iterations > 0");
+        }
         break;
       case "fishing":
         break;
@@ -245,6 +277,18 @@ export default function SetupPage() {
       case "std3":
         setStd([std[0], std[1], parseFloat(value)]);
         break;
+      case "textDataset":
+        setTextDataset(value);
+        break;
+      case "textDataPoints":
+        setTextDataPoints(parseInt(value));
+        break;
+      case "seqLength":
+        setSeqLength(parseInt(value));
+        break;
+      case "tokenizer":
+        setTokenizer(value);
+        break;
       default:
         break;
     }
@@ -374,7 +418,7 @@ export default function SetupPage() {
         </div>
         <ModelSelect
           models={getModels()}
-          onChange={(model: string) => { setSelectedModel(model)}}
+          onChange={(model: string) => { setSelectedModel(model) }}
           nextElement={attack !== "" ? "upload-pt-header" : ""} />
 
         {/* Upload model parameters pt file */}
@@ -382,7 +426,7 @@ export default function SetupPage() {
           <HBar />
           <div className="flex items-start">
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
-              Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
+              Upload Model Parameters {attack === "mia" || attack === "tag" ? <span className="text-sm text-red-500">*</span> : ""}
             </h3>
             <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
           </div>
@@ -400,7 +444,7 @@ export default function SetupPage() {
           <HBar />
         </div>}
 
-        {attack !== "" && <div className="flex flex-col items-center">
+        {(attack === "invertinggradients" || attack === "mia") && <div className="flex flex-col items-center">
           {/* Upload zip file */}
           <div className="flex items-start justify-center">
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
@@ -443,6 +487,8 @@ export default function SetupPage() {
             <DatasetParams
               handleDataParamsChange={handleDataParamsChange}
               attack={attack}
+              textDatasets={textDatasets}
+              tokenizers={tokenizers}
             />
             <HBar />
 
