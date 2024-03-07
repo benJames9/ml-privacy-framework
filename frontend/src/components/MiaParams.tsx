@@ -4,26 +4,13 @@ import InfoPopup from "./InfoPopup"
 import NumberInput from "./NumberInput"
 import TextInput from "./TextInput"
 
+interface MiaParamsProps {
+  handleMiaParamsChange: (field: string, value: string) => void;
+}
+
 const MiaParams: React.FC = () => {
   return (
     <div>
-      {/* Upload data distribution zip file */}
-      <div className="flex items-start">
-        <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-data-dist-header">
-          Upload Data Distribution <span className="text-sm text-red-500">*</span>
-        </h3>
-        <InfoPopup text={"Upload a .zip file containing the data distribution to be used in the attack."} />
-      </div>
-      <div className="mb-4">
-        <FileUpload
-          expectedFileType="zip"
-          label="Select File (.zip)"
-          onFileChange={(file: File | null) => { console.log("Data distribution file", file) }}
-          nextElement="upload-label-dict-header"
-        />
-      </div>
-      <HBar />
-
       {/* Upload label dictionary */}
       <div className="flex items-start">
         <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-label-dict-header">

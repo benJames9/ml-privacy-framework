@@ -40,7 +40,6 @@ export default function SetupPage() {
   const [maxIterations, setMaxIterations] = useState<number>(0);
 
   // MIA parameters
-  const [dataDist, setDataDist] = useState<File | null>(null);
   const [labelDict, setLabelDict] = useState<File | null>(null);
   const [targetImage, setTargetImage] = useState<File | null>(null);
   const [targetLabel, setTargetLabel] = useState<string>("");
@@ -143,7 +142,6 @@ export default function SetupPage() {
       case "fishing":
         break;
       case "mia":
-        formData.append("dataDist", dataDist!);
         formData.append("labelDict", labelDict!);
         formData.append("targetImage", targetImage!);
         formData.append("targetLabel", targetLabel);
@@ -340,11 +338,11 @@ export default function SetupPage() {
         </div>
         <HBar />
 
-        {attack === "invertinggradients" && <div>
+        <div>
           {/* Upload zip file */}
           <div className="flex items-start">
             <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
-              Upload Custom Dataset <span className="text-sm text-red-500">*</span>
+              {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
@@ -354,14 +352,14 @@ export default function SetupPage() {
               expectedFileType="zip"
               label="Select File (.zip)"
               onFileChange={handleZipFileChange}
-              nextElement="data-params-header"
+              nextElement={attack === "mia" ? "upload-label-dict-header" : "data-params-header"}
             />
             {zipFile && (
               <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
             )}
           </div>
           <HBar />
-        </div>}
+        </div>
 
         {attack === "mia" ?
           <MiaParams />
