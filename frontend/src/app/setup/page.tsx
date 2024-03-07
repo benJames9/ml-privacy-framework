@@ -170,6 +170,10 @@ export default function SetupPage() {
     setIsInvalid(false);
 
     // Append text fields to formData
+    formData.append("model", model);
+    formData.append("attack", attack);
+    formData.append("modality", modality);
+
     switch (attack) {
       case "invertinggradients":
         formData.append("datasetStructure", datasetStructure);
@@ -196,9 +200,6 @@ export default function SetupPage() {
         formData.append("learningRate", learningRate.toString());
         break;
       default:
-        formData.append("model", model);
-        formData.append("attack", attack);
-        formData.append("modality", modality);
         break;
     }
 
