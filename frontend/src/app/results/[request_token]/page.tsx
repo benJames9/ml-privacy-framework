@@ -156,7 +156,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
           break;
         case "error":
           if (pageState !== PageState.FINAL_SCREEN) {
-            window.location.href = `/server-disconnect?error=${encodeURIComponent(data.error)}`;
+            window.location.href = `/server-disconnect?error=${encodeURIComponent(data.error_message)}`;
           }
           break;
         default:

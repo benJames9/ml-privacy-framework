@@ -72,7 +72,7 @@ class PubSubWs:
 
     # Generate JSON error message to send to client
     def _generate_error(self, error: str):
-        return {"message_type": "error", "error": error}
+        return {"message_type": "error", "error_message": error}
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
