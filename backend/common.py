@@ -45,8 +45,8 @@ class WorkerCommunication:
 
 class AttackParameters(BaseModel):
     model: str
-    attack: str = "tag"
-    modality: str = "text"
+    attack: str = "invertinggradients"
+    modality: str = "images"
     datasetStructure: str
     csvPath: Optional[str]
     means: List[float] = [0.46, 0.56, 0.57]
@@ -60,7 +60,7 @@ class AttackParameters(BaseModel):
     budget: int
     reconstruction_frequency: int = 100
     tokenizer: Optional[str] = 'gpt2'
-    shape: Optional[int] = 16
+    shape: Optional[List[int]] = [16]
 
 
 class AttackStatistics(BaseModel):
