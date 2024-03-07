@@ -17,10 +17,10 @@ import math
 from .datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
-    def __init__(self, target_model, target_point, N):
-        # Check if N is even
-        if N % 2 != 0:
-            raise ValueError("Number of shadow models must be even")
+    def __init__(self, target_model, target_point, N, class_dict):
+        # Check if N is even or >= 4
+        if N % 2 != 0 or N < 4:
+            raise ValueError("Number of shadow models must be even and larger than 4")
         
         # Initialise values
         self._target_model = target_model
@@ -29,6 +29,9 @@ class MembershipInferenceAttack(ABC):
         self._N = N
         self._in_models = []
         self._out_models = []
+        
+        # Set the target label value from the class dictionary
+        self._load_classes(class_dict)
     
     @abstractmethod
     def _train_model(self, data):
@@ -42,6 +45,19 @@ class MembershipInferenceAttack(ABC):
             model: Trained shadow model.
         """
         pass
+    
+    def _load_classes(self, class_dict):
+        """
+        Sets the target label value from the class dictionary.
+
+        Parameters:
+            class_dict (dict): Dictionary of class names to class indices.
+
+        """
+        if self._target_label not in class_dict:
+            raise ValueError("Target label not in target model classes")
+        
+        self._target_label_val = class_dict[self._target_label]
    
     def _infer_image_data(self, path_to_data):
         """
@@ -58,10 +74,9 @@ class MembershipInferenceAttack(ABC):
         
         # Normalise the target image
         transformer = self._transform()
-        target_label_idx = statistics.classes.index(self._target_label)
         
         # Define the target point for training
-        self._target_point = (transformer(self._target_image), target_label_idx)
+        self._target_point = (transformer(self._target_image), self._target_label_val)
         print(f'target point: {self._target_point}')
         
     def _load_data(self, path_to_data, extract_folder):
@@ -101,7 +116,7 @@ class MembershipInferenceAttack(ABC):
             transforms.Normalize(mean=self._image_stats.mean, std=self._image_stats.std)
         ])
         
-    def _train_shadow_models(self, data, n, epochs, batch_size, lr):
+    def _train_shadow_models(self, data, n, epochs, batch_size, lr, request_token, progress_callback):
         """
         Train N shadow models on random samples from the data distribution D. 
         Saved as class property. 
@@ -112,6 +127,8 @@ class MembershipInferenceAttack(ABC):
             epochs (int): The number of epochs to train each model for.
             batch_size (int): The batch size to use for training.
             lr (float): The learning rate to use for training.
+            request_token: The token to use for progress updates.
+            progress_callback: The callback to use for progress updates.
             
         """
         # Check n is valid input
@@ -126,10 +143,12 @@ class MembershipInferenceAttack(ABC):
 
             if i % 2 == 0:
                 sampled_data = torch.utils.data.ConcatDataset([sampled_data, [self._target_point]])
-                model = self._train_model(sampled_data, epochs, batch_size, lr)
+                model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
+                                          request_token=request_token, progress_callback=progress_callback)
                 self._in_models.append(model)
             else:
-                model = self._train_model(sampled_data, epochs, batch_size, lr)
+                model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
+                                          request_token=request_token, progress_callback=progress_callback)
                 self._out_models.append(model)
             print(f'model {i} trained\n')
 
@@ -148,7 +167,7 @@ class MembershipInferenceAttack(ABC):
         for i in range(self._N // 2):
             print('calculating in confidence...')
             in_confidence = self._model_confidence(self._in_models[i], self._target_point)
-            print('calculating in confidence...') 
+            print('calculating out confidence...') 
             out_confidence = self._model_confidence(self._out_models[i], self._target_point)
             in_confidences.append(in_confidence)
             out_confidences.append(out_confidence)
@@ -184,7 +203,7 @@ class MembershipInferenceAttack(ABC):
         print(f'logits: {logits}')
             
         # One hot encode the target label
-        target_index = self._image_stats.classes.index(self._target_label)
+        target_index = self._target_point[1]
         target_label = torch.zeros(self._image_stats.num_classes)
         target_label[target_index] = 1
         
@@ -252,13 +271,14 @@ class MembershipInferenceAttack(ABC):
         return value
     
     # Carry out an attack given an initialised MembershipInferenceAttack object
-    def run_inference(self, path_to_data, n, epochs, batch_size, lr):
+    def run_inference(self, path_to_data, n, epochs, batch_size, lr, request_token, progress_callback):
+        self._max_epochs = n * self._N
         self._infer_image_data(path_to_data)
         
         # Load data to pytorch image folder
         extract_folder = 'temp_folder'
         data = self._load_data(path_to_data, extract_folder)
-        self._train_shadow_models(data, n, epochs, batch_size, lr)
+        self._train_shadow_models(data, n, epochs, batch_size, lr, request_token, progress_callback)
         os.system(f'rm -rf {extract_folder}')
         
         # Fit Gaussians for shadow and target models
@@ -266,10 +286,14 @@ class MembershipInferenceAttack(ABC):
         target_model_confidence = self._model_confidence(self._target_model, self._target_point)
         
         # Perform likelihood ratio test
-        return self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
+        ratio = self._likelihood_ratio_test(target_model_confidence, in_gaussian, out_gaussian)
+        
+        # Update final progress
+        progress_callback(request_token, self._max_epochs, self._max_epochs, ratio)
+        return ratio
     
 class Resnet18MIA(MembershipInferenceAttack):
-    def _train_model(self, data, epochs, batch_size, lr):
+    def _train_model(self, data, epochs, batch_size, lr, current_model, request_token, progress_callback):
         # Define the model
         model = models.resnet18(pretrained=False)
         model.fc = nn.Linear(model.fc.in_features, self._image_stats.num_classes)
@@ -299,13 +323,15 @@ class Resnet18MIA(MembershipInferenceAttack):
                 # Backward pass and optimization
                 loss.backward()
                 optimizer.step()
+                
+                progress_callback(request_token, self._max_epochs, current_model * epochs + epoch)
 
         print('model trained')
         return model
         
 if __name__ == '__main__':
+    class_dict = {'n01440764': 0, 'n01443537': 1, 'n01484850': 2, 'n01491361': 3, 'n01494475': 4, 'n01496331': 5, 'n01498041': 6}
     target_model = models.resnet18(pretrained=True)
     target_point = ('shark.JPEG', 'n01440764')
-    attack = Resnet18MIA(target_model, target_point, N=4)
+    attack = Resnet18MIA(target_model, target_point, N=4, class_dict=class_dict)
     print(attack.run_inference('small_foldered_set.zip', n=10, epochs=2, batch_size=10, lr=0.001))
-

@@ -41,11 +41,23 @@ class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
         self.response_channel = WorkerQueue[AttackProgress]()
+        
+        
+class MiaParams(BaseModel):
+    N: int
+    data_points: int
+    epochs: int
+    batch_size: int
+    lr: float
+    target_label: str
+    target_image_path: str
+    path_to_label_csv: str
+    
 
+class MiaStatistics(BaseModel):
+    likelihood_ratio: float
 
-class AttackParameters(BaseModel):
-    model: str
-    attack: str = "invertinggradients"
+class BreachingParams(BaseModel):
     modality: str = "images"
     datasetStructure: str
     csvPath: Optional[str]
@@ -55,10 +67,17 @@ class AttackParameters(BaseModel):
     numRestarts: int
     stepSize: float
     maxIterations: int
-    ptFilePath: Optional[str]
-    zipFilePath: Optional[str]
     budget: int = 100
     reconstruction_frequency: int = 100
+
+
+class AttackParameters(BaseModel):
+    model: str
+    attack: str = "invertinggradients"
+    ptFilePath: Optional[str]
+    zipFilePath: Optional[str]
+    breaching_params: Optional[BreachingParams] = None
+    mia_params: Optional[MiaParams] = None
 
 
 class AttackStatistics(BaseModel):
@@ -81,3 +100,4 @@ class AttackProgress(BaseModel):
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
     error_message: str = None  # Optional error message
+    mia_stats: Optional[MiaStatistics] = None
