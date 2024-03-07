@@ -167,7 +167,7 @@ class MembershipInferenceAttack(ABC):
         for i in range(self._N // 2):
             print('calculating in confidence...')
             in_confidence = self._model_confidence(self._in_models[i], self._target_point)
-            print('calculating in confidence...') 
+            print('calculating out confidence...') 
             out_confidence = self._model_confidence(self._out_models[i], self._target_point)
             in_confidences.append(in_confidence)
             out_confidences.append(out_confidence)
@@ -203,7 +203,7 @@ class MembershipInferenceAttack(ABC):
         print(f'logits: {logits}')
             
         # One hot encode the target label
-        target_index = self._image_stats.classes.index(self._target_label)
+        target_index = self._target_point[1]
         target_label = torch.zeros(self._image_stats.num_classes)
         target_label[target_index] = 1
         

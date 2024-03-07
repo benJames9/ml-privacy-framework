@@ -11,11 +11,13 @@ import AttackSelect from "@/components/AttackSelect";
 import LoadingIcon from "@/components/LoadingIcon";
 import ErrorAlert from "@/components/ErrorAlert";
 import InfoPopup from "@/components/InfoPopup";
+import MiaParams from "@/components/MiaParams";
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
-  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)"]
+  const miaModels: string[] = ["ResNet-18"];
+  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Fishing for\nUser Data", "Membership\nInference"];
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
@@ -36,6 +38,16 @@ export default function SetupPage() {
   const [numRestarts, setNumRestarts] = useState<number>(0);
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
+
+  // MIA parameters
+  const [labelDict, setLabelDict] = useState<File | null>(null);
+  const [targetImage, setTargetImage] = useState<File | null>(null);
+  const [targetLabel, setTargetLabel] = useState<string>("");
+  const [numShadowModels, setNumShadowModels] = useState<number>(0);
+  const [numDataPoints, setNumDataPoints] = useState<number>(0);
+  const [numEpochs, setNumEpochs] = useState<number>(0);
+  const [shadowBatchSize, setShadowBatchSize] = useState<number>(0);
+  const [learningRate, setLearningRate] = useState<number>(0);
 
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
@@ -69,31 +81,75 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (attack === "invertinggradients" && !zipFile) {
-      errorMsgs.push("Please upload a dataset file");
+
+    switch (attack) {
+      case "invertinggradients":
+        if (!zipFile) {
+          errorMsgs.push("Please upload a dataset file");
+        }
+        if (datasetStructure === "CSV" && csvPath === "") {
+          errorMsgs.push("Please enter the path to the CSV file");
+        }
+        if (invalidNum(batchSize)) {
+          errorMsgs.push("Please enter a batch size > 0");
+        }
+        if (invalidNum(numRestarts)) {
+          errorMsgs.push("Please enter a number of restarts > 0");
+        }
+        if (invalidNum(stepSize)) {
+          errorMsgs.push("Please enter a step size > 0");
+        }
+        if (invalidNum(maxIterations)) {
+          errorMsgs.push("Please enter a maximum number of iterations > 0");
+        }
+        if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+          && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+          errorMsgs.push("Please either enter all values for mean and std or none");
+        }
+        if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+          errorMsgs.push("Please either enter all values for image shape or none");
+        }
+        break;
+      case "tag":
+        break;
+      case "fishing":
+        break;
+      case "mia":
+        if (!ptFile) {
+          errorMsgs.push("Please upload a model parameters file");
+        }
+        if (!zipFile) {
+          errorMsgs.push("Please upload a data distribution file");
+        }
+        if (!labelDict) {
+          errorMsgs.push("Please upload a label dictionary file");
+        }
+        if (!targetImage) {
+          errorMsgs.push("Please upload a target image file");
+        }
+        if (targetLabel === "") {
+          errorMsgs.push("Please enter a target label");
+        }
+        if (invalidNum(numShadowModels) || numShadowModels < 4 || numShadowModels % 2 !== 0) {
+          errorMsgs.push("Please enter an even number of shadow models >= 4");
+        }
+        if (invalidNum(numDataPoints)) {
+          errorMsgs.push("Please enter a number of data points > 0");
+        }
+        if (invalidNum(numEpochs)) {
+          errorMsgs.push("Please enter a number of epochs > 0");
+        }
+        if (invalidNum(shadowBatchSize)) {
+          errorMsgs.push("Please enter a shadow batch size > 0");
+        }
+        if (invalidNum(learningRate)) {
+          errorMsgs.push("Please enter a learning rate > 0");
+        }
+        break;
+      default:
+        break;
     }
-    if (datasetStructure === "CSV" && csvPath === "") {
-      errorMsgs.push("Please enter the path to the CSV file");
-    }
-    if (invalidNum(batchSize)) {
-      errorMsgs.push("Please enter a batch size > 0");
-    }
-    if (invalidNum(numRestarts)) {
-      errorMsgs.push("Please enter a number of restarts > 0");
-    }
-    if (invalidNum(stepSize)) {
-      errorMsgs.push("Please enter a step size > 0");
-    }
-    if (invalidNum(maxIterations)) {
-      errorMsgs.push("Please enter a maximum number of iterations > 0");
-    }
-    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
-      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
-      errorMsgs.push("Please either enter all values for mean and std or none");
-    }
-    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
-      errorMsgs.push("Please either enter all values for image shape or none");
-    }
+
     setErrors(errorMsgs);
     return errorMsgs.length === 0;
   }
@@ -117,14 +173,35 @@ export default function SetupPage() {
     formData.append("model", model);
     formData.append("attack", attack);
     formData.append("modality", modality);
-    formData.append("datasetStructure", datasetStructure);
-    formData.append("csvPath", csvPath);
-    formData.append("mean", JSON.stringify(mean));
-    formData.append("std", JSON.stringify(std));
-    formData.append("batchSize", batchSize.toString());
-    formData.append("numRestarts", numRestarts.toString());
-    formData.append("stepSize", stepSize.toString());
-    formData.append("maxIterations", maxIterations.toString());
+
+    switch (attack) {
+      case "invertinggradients":
+        formData.append("datasetStructure", datasetStructure);
+        formData.append("csvPath", csvPath);
+        formData.append("mean", JSON.stringify(mean));
+        formData.append("std", JSON.stringify(std));
+        formData.append("batchSize", batchSize.toString());
+        formData.append("numRestarts", numRestarts.toString());
+        formData.append("stepSize", stepSize.toString());
+        formData.append("maxIterations", maxIterations.toString());
+        break;
+      case "tag":
+        break;
+      case "fishing":
+        break;
+      case "mia":
+        formData.append("labelDict", labelDict!);
+        formData.append("targetImage", targetImage!);
+        formData.append("targetLabel", targetLabel);
+        formData.append("numShadowModels", numShadowModels.toString());
+        formData.append("numDataPoints", numDataPoints.toString());
+        formData.append("numEpochs", numEpochs.toString());
+        formData.append("shadowBatchSize", shadowBatchSize.toString());
+        formData.append("learningRate", learningRate.toString());
+        break;
+      default:
+        break;
+    }
 
     const res = await fetch("/api/submit-attack", {
       method: 'POST',
@@ -203,13 +280,57 @@ export default function SetupPage() {
     }
   }
 
+  const handleMiaParamsChange = (field: string, value: string | (File | null)) => {
+    switch (field) {
+      case "labelDict":
+        setLabelDict(value as File);
+        break;
+      case "targetImage":
+        setTargetImage(value as File);
+        break;
+      case "targetLabel":
+        setTargetLabel(value as string);
+        break;
+      case "numShadowModels":
+        setNumShadowModels(parseInt(value as string));
+        break;
+      case "numDataPoints":
+        setNumDataPoints(parseInt(value as string));
+        break;
+      case "numEpochs":
+        setNumEpochs(parseInt(value as string));
+        break;
+      case "shadowBatchSize":
+        setShadowBatchSize(parseInt(value as string));
+        break;
+      case "learningRate":
+        setLearningRate(parseFloat(value as string));
+        break;
+      default:
+        break;
+    }
+  }
+
   const onAttackSelect = (attack: string) => {
-    if (attack === "Inverting Gradients\n(Single Step)") {
-      setSelectedAttack("invertinggradients");
-      setModality("images");
-    } else {
-      setSelectedAttack("tag");
-      setModality("text");
+    switch (attack) {
+      case "Inverting Gradients\n(Single Step)":
+        setSelectedAttack("invertinggradients");
+        setModality("images");
+        break;
+      case "TAG\n(Text Attack)":
+        setSelectedAttack("tag");
+        setModality("text");
+        break;
+      case "Fishing for\nUser Data":
+        setSelectedAttack("fishing");
+        setModality("images");
+        break;
+      case "Membership\nInference":
+        setSelectedAttack("mia");
+        setModality("images");
+        break;
+      default:
+        break;
     }
   }
 
@@ -239,6 +360,17 @@ export default function SetupPage() {
     return info;
   }
 
+  const getModels = () => {
+    switch (attack) {
+      case "tag":
+        return textModels;
+      case "mia":
+        return miaModels;
+      default:
+        return imageModels;
+    }
+  }
+
   return (
     <main>
       <Navbar />
@@ -255,13 +387,13 @@ export default function SetupPage() {
           </h2>
           <InfoPopup text="Select one of our suppported models to perform the attack on." />
         </div>
-        <ModelSelect models={attack === "tag" ? textModels : imageModels} onChange={(model: string) => { setSelectedModel(model) }} />
+        <ModelSelect models={getModels()} onChange={(model: string) => { setSelectedModel(model) }} />
         <HBar />
 
-        {/* Upload pt file */}
+        {/* Upload model parameters pt file */}
         <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="upload-pt-header">
-            Upload Model Parameters
+          <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
+            Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
           </h3>
           <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
         </div>
@@ -270,7 +402,7 @@ export default function SetupPage() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement={attack === "invertinggradients" ? "upload-zip-header" : "data-params-header"}
+            nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
@@ -278,11 +410,11 @@ export default function SetupPage() {
         </div>
         <HBar />
 
-        {attack === "invertinggradients" && <div>
+        <div>
           {/* Upload zip file */}
           <div className="flex items-start">
             <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
-              Upload Custom Dataset <span className="text-sm text-red-500">*</span>
+              {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
@@ -292,38 +424,44 @@ export default function SetupPage() {
               expectedFileType="zip"
               label="Select File (.zip)"
               onFileChange={handleZipFileChange}
-              nextElement="data-params-header"
+              nextElement={attack === "mia" ? "upload-label-dict-header" : "data-params-header"}
             />
             {zipFile && (
               <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
             )}
           </div>
           <HBar />
-        </div>}
-
-        {/* Dataset Parameters */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
-            Dataset Parameters
-          </h3>
-          <InfoPopup text={getDatasetParamsInfo()} />
         </div>
-        <DatasetParams
-          datasetStructure={datasetStructure}
-          handleStructureChange={handleStructureChange}
-          handleDataParamsChange={handleDataParamsChange}
-          attack={attack}
-        />
-        <HBar />
 
-        {/* Attack Parameters */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8">
-            Attack Parameters
-          </h3>
-          <InfoPopup text={getAttackParamsInfo()} />
-        </div>
-        <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
+        {attack === "mia" ?
+          <MiaParams handleMiaParamsChange={handleMiaParamsChange} />
+          : attack !== "" &&
+          <div>
+            {/* Dataset Parameters */}
+            <div className="flex items-start">
+              <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+                Dataset Parameters
+              </h3>
+              <InfoPopup text={getDatasetParamsInfo()} />
+            </div>
+            <DatasetParams
+              datasetStructure={datasetStructure}
+              handleStructureChange={handleStructureChange}
+              handleDataParamsChange={handleDataParamsChange}
+              attack={attack}
+            />
+            <HBar />
+
+            {/* Attack Parameters */}
+            <div className="flex items-start">
+              <h3 className="text-2xl font-bold text-gray-400 mb-8">
+                Attack Parameters
+              </h3>
+              <InfoPopup text={getAttackParamsInfo()} />
+            </div>
+            <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
+          </div>
+        }
 
         <EvaluateButton onClick={() => {
           if (!submitted) {

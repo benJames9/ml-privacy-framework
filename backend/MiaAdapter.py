@@ -2,7 +2,7 @@ from torchvision import models
 import torch
 import csv
 
-from mia.member_inference import MembershipInferenceAttack, Resnet18MIA
+from mia.member_inference import Resnet18MIA
 from common import AttackParameters, MiaParams, MiaStatistics, WorkerCommunication, AttackProgress
 
 class MiaAdapter:
@@ -41,7 +41,7 @@ class MiaAdapter:
 
     def _get_model(self, model_type, path_to_pt, num_classes):
         match model_type:
-            case 'resnet18':
+            case 'ResNet-18':
                 model = models.resnet18(pretrained=False)
                 model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
             case other: 
@@ -65,7 +65,7 @@ class MiaAdapter:
 
         # Add final result
         if result is not None:
-            mia_stats = AttackStatistics(likelihood_ratio=result)
+            mia_stats = MiaStatistics(likelihood_ratio=result)
             progress.mia_stats = mia_stats
         
         self._worker_response_queue.put(request_token, progress)
