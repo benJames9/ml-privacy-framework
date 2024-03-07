@@ -7,6 +7,7 @@ import random
 import GPUtil
 import uuid
 import os
+import traceback
 # from unittest.mock import Mock
 
 
@@ -47,6 +48,8 @@ def attack_worker(queues: WorkerCommunication):
 
         # Report any errors to task manager
         except Exception as e:
+            print(f"Attack worker exception was:\n{e}")
+            traceback.print_exc()
             progress = AttackProgress(
                 message_type="error",
                 error_message=f"Attack Configuration Error: {str(e)}",
@@ -60,13 +63,15 @@ if __name__ == "__main__":
     from common import AttackParameters
 
     pars = AttackParameters(
-        model='AlexNet',
-        datasetStructure='Foldered',
+        attack = "TAG",
+        model='gpt2',
+        modality='text',
+        datasetStructure='text',
         csvPath=None,
-        batchSize=1,
+        batchSize=2,
         numRestarts=1,
-        stepSize=0.1,
-        maxIterations=1,
+        stepSize=0.5,
+        maxIterations=100,
         callbackInterval=10,
         ptFilePath=None,
         zipFilePath='../small_foldered_set.zip',
