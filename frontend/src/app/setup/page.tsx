@@ -39,6 +39,17 @@ export default function SetupPage() {
   const [stepSize, setStepSize] = useState<number>(0);
   const [maxIterations, setMaxIterations] = useState<number>(0);
 
+  // MIA parameters
+  const [dataDist, setDataDist] = useState<File | null>(null);
+  const [labelDict, setLabelDict] = useState<File | null>(null);
+  const [targetImage, setTargetImage] = useState<File | null>(null);
+  const [targetLabel, setTargetLabel] = useState<string>("");
+  const [numShadowModels, setNumShadowModels] = useState<number>(0);
+  const [numDataPoints, setNumDataPoints] = useState<number>(0);
+  const [numEpochs, setNumEpochs] = useState<number>(0);
+  const [shadowBatchSize, setShadowBatchSize] = useState<number>(0);
+  const [learningRate, setLearningRate] = useState<number>(0);
+
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -116,17 +127,38 @@ export default function SetupPage() {
     setIsInvalid(false);
 
     // Append text fields to formData
-    formData.append("model", model);
-    formData.append("attack", attack);
-    formData.append("modality", modality);
-    formData.append("datasetStructure", datasetStructure);
-    formData.append("csvPath", csvPath);
-    formData.append("mean", JSON.stringify(mean));
-    formData.append("std", JSON.stringify(std));
-    formData.append("batchSize", batchSize.toString());
-    formData.append("numRestarts", numRestarts.toString());
-    formData.append("stepSize", stepSize.toString());
-    formData.append("maxIterations", maxIterations.toString());
+    switch (attack) {
+      case "invertinggradients":
+        formData.append("datasetStructure", datasetStructure);
+        formData.append("csvPath", csvPath);
+        formData.append("mean", JSON.stringify(mean));
+        formData.append("std", JSON.stringify(std));
+        formData.append("batchSize", batchSize.toString());
+        formData.append("numRestarts", numRestarts.toString());
+        formData.append("stepSize", stepSize.toString());
+        formData.append("maxIterations", maxIterations.toString());
+        break;
+      case "tag":
+        break;
+      case "fishing":
+        break;
+      case "mia":
+        formData.append("dataDist", dataDist!);
+        formData.append("labelDict", labelDict!);
+        formData.append("targetImage", targetImage!);
+        formData.append("targetLabel", targetLabel);
+        formData.append("numShadowModels", numShadowModels.toString());
+        formData.append("numDataPoints", numDataPoints.toString());
+        formData.append("numEpochs", numEpochs.toString());
+        formData.append("shadowBatchSize", shadowBatchSize.toString());
+        formData.append("learningRate", learningRate.toString());
+        break;
+      default:
+        formData.append("model", model);
+        formData.append("attack", attack);
+        formData.append("modality", modality);
+        break;
+    }
 
     const res = await fetch("/api/submit-attack", {
       method: 'POST',
@@ -203,6 +235,10 @@ export default function SetupPage() {
       default:
         break;
     }
+  }
+
+  const handleMiaParamsChange = (field: string, value: string) => {
+
   }
 
   const onAttackSelect = (attack: string) => {
@@ -327,31 +363,34 @@ export default function SetupPage() {
           <HBar />
         </div>}
 
-        {attack === "mia" ? <MiaParams /> : <div>
-          {/* Dataset Parameters */}
-          <div className="flex items-start">
-            <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
-              Dataset Parameters
-            </h3>
-            <InfoPopup text={getDatasetParamsInfo()} />
-          </div>
-          <DatasetParams
-            datasetStructure={datasetStructure}
-            handleStructureChange={handleStructureChange}
-            handleDataParamsChange={handleDataParamsChange}
-            attack={attack}
-          />
-          <HBar />
+        {attack === "mia" ?
+          <MiaParams />
+          : attack !== "" &&
+          <div>
+            {/* Dataset Parameters */}
+            <div className="flex items-start">
+              <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+                Dataset Parameters
+              </h3>
+              <InfoPopup text={getDatasetParamsInfo()} />
+            </div>
+            <DatasetParams
+              datasetStructure={datasetStructure}
+              handleStructureChange={handleStructureChange}
+              handleDataParamsChange={handleDataParamsChange}
+              attack={attack}
+            />
+            <HBar />
 
-          {/* Attack Parameters */}
-          <div className="flex items-start">
-            <h3 className="text-2xl font-bold text-gray-400 mb-8">
-              Attack Parameters
-            </h3>
-            <InfoPopup text={getAttackParamsInfo()} />
+            {/* Attack Parameters */}
+            <div className="flex items-start">
+              <h3 className="text-2xl font-bold text-gray-400 mb-8">
+                Attack Parameters
+              </h3>
+              <InfoPopup text={getAttackParamsInfo()} />
+            </div>
+            <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
           </div>
-          <AttackParams handleAttackParamsChange={handleAttackParamsChange} />
-        </div>
         }
 
         <EvaluateButton onClick={() => {
