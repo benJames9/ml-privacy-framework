@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from fastapi import FastAPI, File, Form, UploadFile
 
-from common import AttackParameters
+from common import AttackParameters, BreachingParams
 from attack_worker import attack_worker
 
 from BackgroundTasks import BackgroundTasks
@@ -71,9 +71,7 @@ async def submit_attack(
     if zipFile is not None:
         zipTempFilePath = await save_upload_file_to_temp(zipFile)
 
-    attack_params = AttackParameters(
-        model=model,
-        attack=attack,
+    breaching_params = BreachingParams(
         modality=modality,
         datasetStructure=datasetStructure,
         csvPath=csvPath,
@@ -83,6 +81,12 @@ async def submit_attack(
         numRestarts=numRestarts,
         stepSize=stepSize,
         maxIterations=maxIterations,
+    )
+
+    attack_params = AttackParameters(
+        model=model,
+        attack=attack,
+        breaching_params=breaching_params,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
     )

@@ -42,27 +42,27 @@ class BreachingAdapter:
         attack_params: AttackParameters,
         dataset_path=None,
     ):
-        match attack_params.modality:
+        match attack_params.breaching_params.modality:
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
             case "text":
                 cfg = self._construct_text_cfg(attack_params)
             case _:
                 raise TypeError(
-                    f"Data type of attack: {attack_params.modality} does not match anything."
+                    f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                 )
         assert attack_params is not None
         
         # setup all customisable parameters
         cfg.case.model = attack_params.model
-        match attack_params.datasetStructure:
+        match attack_params.breaching_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
             case "Foldered":
                 cfg.case.data.name = "CustomFolders"
             case _:
                 print("Could not match dataset structure")
-                match attack_params.modality:
+                match attack_params.breaching_params.modality:
                     case "images":
                         cfg.case.data = breachinglib.get_config(
                             overrides=["case/data=CIFAR10"]
@@ -75,7 +75,7 @@ class BreachingAdapter:
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(
-                            f"Data type of attack: {attack_params.modality} does not match anything."
+                            f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                         )
 
         match dataset_path:
@@ -84,17 +84,17 @@ class BreachingAdapter:
             case _:
                 cfg.case.data.path = dataset_path
 
-        if any(attack_params.means) and any(attack_params.stds):
-            cfg.case.data.mean = attack_params.means
-            cfg.case.data.std = attack_params.stds
+        if any(attack_params.breaching_params.means) and any(attack_params.breaching_params.stds):
+            cfg.case.data.mean = attack_params.breaching_params.means
+            cfg.case.data.std = attack_params.breaching_params.stds
             cfg.case.data.normalize = False
 
-        cfg.case.user.num_data_points = attack_params.batchSize
-        cfg.attack.optim.step_size = attack_params.stepSize
-        cfg.attack.optim.max_iterations = attack_params.maxIterations
+        cfg.case.user.num_data_points = attack_params.breaching_params.batchSize
+        cfg.attack.optim.step_size = attack_params.breaching_params.stepSize
+        cfg.attack.optim.max_iterations = attack_params.breaching_params.maxIterations
         cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
-        cfg.attack.restarts.num_trials = attack_params.numRestarts
+        cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
 
         return cfg
 
@@ -212,7 +212,7 @@ class BreachingAdapter:
         # Limit the GPU memory usage based on user budget
         if torch.cuda.is_available():
             print(f"limiting cuda process memory")
-            torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
+            torch.cuda.set_per_process_memory_fraction(attack_params.breaching_params.budget / 100)
 
         if cfg == None:
             cfg = breachinglib.get_config()
@@ -232,7 +232,7 @@ class BreachingAdapter:
             with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
         else:
-            attack_params.datasetStructure = "test"
+            attack_params.breaching_params.datasetStructure = "test"
         
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
