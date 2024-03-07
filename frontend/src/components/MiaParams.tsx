@@ -12,7 +12,7 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
   return (
     <div>
       {/* Upload label dictionary */}
-      <div className="flex items-start">
+      <div className="flex items-start justify-center">
         <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-label-dict-header">
           Upload Label Dictionary <span className="text-sm text-red-500">*</span>
         </h3>
@@ -30,7 +30,7 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
 
       {/* Upload target image */}
       <div>
-        <div className="flex items-start">
+        <div className="flex items-start justify-center">
           <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-target-image-header">
             Upload Target Image <span className="text-sm text-red-500">*</span>
           </h3>
@@ -50,7 +50,7 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
       <HBar />
 
       {/* Shadow Parameters */}
-      <div className="flex items-start">
+      <div className="flex items-start justify-center">
         <h3 className="text-2xl font-bold text-gray-400 mb-4">
           Shadow Parameters
         </h3>
