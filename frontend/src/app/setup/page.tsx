@@ -27,8 +27,6 @@ export default function SetupPage() {
   const [zipFile, setSelectedZipFile] = useState<File | null>(null);
 
   // Dataset parameters
-  const [datasetStructure, setDatasetStructure] = useState<"Foldered" | "CSV">("Foldered");
-  const [csvPath, setCsvPath] = useState<string>("");
   const [batchSize, setBatchSize] = useState<number>(0);
   const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
@@ -86,9 +84,6 @@ export default function SetupPage() {
       case "invertinggradients":
         if (!zipFile) {
           errorMsgs.push("Please upload a dataset file");
-        }
-        if (datasetStructure === "CSV" && csvPath === "") {
-          errorMsgs.push("Please enter the path to the CSV file");
         }
         if (invalidNum(batchSize)) {
           errorMsgs.push("Please enter a batch size > 0");
@@ -176,8 +171,6 @@ export default function SetupPage() {
 
     switch (attack) {
       case "invertinggradients":
-        formData.append("datasetStructure", datasetStructure);
-        formData.append("csvPath", csvPath);
         formData.append("mean", JSON.stringify(mean));
         formData.append("std", JSON.stringify(std));
         formData.append("batchSize", batchSize.toString());
@@ -220,15 +213,8 @@ export default function SetupPage() {
     setSelectedZipFile(file);
   }
 
-  const handleStructureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDatasetStructure(e.target.value as "Foldered" | "CSV");
-  }
-
   const handleDataParamsChange = (field: string, value: string) => {
     switch (field) {
-      case "csvPath":
-        setCsvPath(value);
-        break;
       case "batchSize":
         setBatchSize(parseInt(value));
         break;
@@ -338,7 +324,6 @@ export default function SetupPage() {
     let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
     switch (attack) {
       case "invertinggradients":
-        info += "\n\n<strong>Structure of Dataset</strong>: If dataset is organised as a CSV file, enter the path to the CSV file.";
         info += "\n\n<strong>Image Shape</strong>: The shape of the images in the dataset. Inferred from the dataset if left empty.";
         info += "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
         break;
@@ -445,8 +430,6 @@ export default function SetupPage() {
               <InfoPopup text={getDatasetParamsInfo()} />
             </div>
             <DatasetParams
-              datasetStructure={datasetStructure}
-              handleStructureChange={handleStructureChange}
               handleDataParamsChange={handleDataParamsChange}
               attack={attack}
             />

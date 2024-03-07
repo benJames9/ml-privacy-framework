@@ -59,8 +59,8 @@ class MiaStatistics(BaseModel):
 
 class BreachingParams(BaseModel):
     modality: str = "images"
-    datasetStructure: str
-    csvPath: Optional[str]
+    datasetStructure: str = "Foldered"
+    csvPath: Optional[str] = None
     means: List[float] = [0.46, 0.56, 0.57]
     stds: List[float] = [0.32, 0.28, 0.27]
     batchSize: int

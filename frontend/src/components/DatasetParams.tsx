@@ -1,35 +1,18 @@
 "use client";
-import Radio from "./Radio";
 import TextInput from "./TextInput";
 import NumberInput from "./NumberInput";
 import ThreeNumberInput from "./ThreeNumberInput";
 import SelectInput from "./SelectInput";
 
 interface DatasetParamsProps {
-  datasetStructure: "Foldered" | "CSV";
   handleDataParamsChange: (field: string, value: string) => void;
-  handleStructureChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   attack: string;
 }
 
-const DatasetParams: React.FC<DatasetParamsProps> = ({ datasetStructure, handleDataParamsChange, handleStructureChange, attack }) => {
+const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, attack }) => {
   return (
     <div>
       {attack === "invertinggradients" && <div>
-        <div className="flex items-center">
-          <h3 className="font-semibold text-white mr-4 flex items-start whitespace-pre">Structure of dataset <span className="text-sm text-red-500">*</span></h3>
-          <div className="flex items-center space-x-3">
-            <Radio value="Foldered" checked={datasetStructure === "Foldered"} onChange={handleStructureChange} />
-            <Radio value="CSV" checked={datasetStructure === "CSV"} onChange={handleStructureChange} />
-          </div>
-        </div>
-        {datasetStructure === "CSV" && (
-          <TextInput
-            label="Path to CSV file"
-            onChange={(e) => handleDataParamsChange("csvPath", e.target.value)}
-            isRequired={true}
-          />
-        )}
         <ThreeNumberInput
           label="Image shape"
           onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
