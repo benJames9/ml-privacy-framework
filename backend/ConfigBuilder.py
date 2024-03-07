@@ -15,37 +15,30 @@ class ConfigBuilder:
         attack_params: AttackParameters,
         dataset_path=None,
     ):
-        match attack_params.modality:
+        print("constructing")
+        match attack_params.breaching_params.modality:
+            
             case "images":
                 cfg = self._construct_images_cfg(attack_params)
             case "text":
                 cfg = self._construct_text_cfg(attack_params)
             case _:
                 raise TypeError(
-                    f"Data type of attack: {attack_params.modality} does not match anything."
+                    f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                 )
         assert attack_params is not None
+        print("done")
         
-        if attack_params.zipFilePath is None:
-            attack_params.datasetStructure = "default"
-            print("defaulting")
-            
-        match dataset_path:
-            case None:
-                cfg.case.data.path = 'dataset'
-            case _:
-                cfg.case.data.path = dataset_path     
-                     
         # setup all customisable parameters
         cfg.case.model = attack_params.model
-        match attack_params.datasetStructure:
+        match attack_params.breaching_params.datasetStructure:
             case "CSV":
                 cfg.case.data.name = "CustomCsv"
             case "Foldered":
                 cfg.case.data.name = "CustomFolders"
             case _:
                 print("Could not match dataset structure")
-                match attack_params.modality:
+                match attack_params.breaching_params.modality:
                     case "images":
                         cfg.case.data = breachinglib.get_config(
                             overrides=["case/data=CIFAR10"]
@@ -58,20 +51,26 @@ class ConfigBuilder:
                         print("defaulted to wikitext")
                     case _:
                         raise TypeError(
-                            f"Data type of attack: {attack_params.modality} does not match anything."
+                            f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                         )
+        print("data")
+        match dataset_path:
+            case None:
+                cfg.case.data.path = "dataset"
+            case _:
+                cfg.case.data.path = dataset_path
 
-        if any(attack_params.means) and any(attack_params.stds):
-            cfg.case.data.mean = attack_params.means
-            cfg.case.data.std = attack_params.stds
+        if any(attack_params.breaching_params.means) and any(attack_params.breaching_params.stds):
+            cfg.case.data.mean = attack_params.breaching_params.means
+            cfg.case.data.std = attack_params.breaching_params.stds
             cfg.case.data.normalize = False
-        
-        cfg.case.data.batch_size = attack_params.batchSize
-        cfg.attack.optim.step_size = attack_params.stepSize
-        cfg.attack.optim.max_iterations = attack_params.maxIterations
+
+        cfg.case.user.num_data_points = attack_params.breaching_params.batchSize
+        cfg.attack.optim.step_size = attack_params.breaching_params.stepSize
+        cfg.attack.optim.max_iterations = attack_params.breaching_params.maxIterations
         cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
-        cfg.attack.restarts.num_trials = attack_params.numRestarts
+        cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
 
         return cfg
 
@@ -81,7 +80,7 @@ class ConfigBuilder:
                 cfg = breachinglib.get_config(overrides=["attack=tag"])
             case _:
                 raise TypeError(f"No text attack match; {attack_params.attack}")
-            
+
         match attack_params.model:
             case "bert":
                 cfg.case.model = "bert-base-uncased"
@@ -117,8 +116,7 @@ class ConfigBuilder:
                 raise TypeError(f"no model match for tokenizer: {attack_params.model}")
 
         cfg.case.data.shape = attack_params.shape
-
-
+        return cfg
 
     def _construct_images_cfg(self, attack_params: AttackParameters):
         match attack_params.attack:
@@ -176,3 +174,4 @@ class ConfigBuilder:
                 cfg.case.data.partition = "unique-class"
                 cfg.case.user.provide_labels = False
         return cfg
+    

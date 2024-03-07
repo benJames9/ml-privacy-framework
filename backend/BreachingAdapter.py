@@ -35,6 +35,7 @@ class BreachingCache:
 class BreachingAdapter:
     def __init__(self, worker_response_queue):
         self._worker_response_queue = worker_response_queue
+        self.attack_cache = BreachingCache()
         
     def setup_attack(
         self, attack_params: AttackParameters = None, cfg=None, torch_model=None
@@ -71,20 +72,22 @@ class BreachingAdapter:
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
         print(setup)
 
-        logging.basicConfig(
-            level=logging.INFO,
-            handlers=[logging.StreamHandler(sys.stdout)],
-            format="%(message)s",
-        )
-        logger = logging.getLogger()
+        # logging.basicConfig(
+        #     level=logging.INFO,
+        #     handlers=[logging.StreamHandler(sys.stdout)],
+        #     format="%(message)s",
+        # )
+        # logger = logging.getLogger()
 
         cfg = ConfigBuilder(attack_params).build()
         
         if torch_model is None:
-            modelset = textModels if attack_params.modality == "text" else visionModels
+            modelset = textModels if attack_params.breaching_params.modality == "text" else visionModels
             torch_model = self._getTorchModelFromSet(attack_params.model, modelset)
             torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
         print(torch_model)
+        
+        cfg.case.user.num_data_points = 4
         
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=torch_model
