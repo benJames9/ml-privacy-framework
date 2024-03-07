@@ -27,3 +27,6 @@ dependencies:
       - PyWavelets
       - hydra-core
       - pytorch-wavelets==1.3.0
+      - nltk
+      - rouge_score
+      - sacrebleu

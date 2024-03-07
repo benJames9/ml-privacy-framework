@@ -26,6 +26,9 @@ dependencies:
       - GPUtil
       - PyWavelets
       - hydra-core
+      - nltk
+      - rouge_score
+      - sacrebleu
       - pytorch-wavelets==1.3.0
       - pytest
       - pytest-cov

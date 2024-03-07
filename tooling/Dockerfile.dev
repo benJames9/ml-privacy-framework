@@ -2,8 +2,8 @@ FROM continuumio/anaconda3
 
 WORKDIR /root
 
-# install gcc and git-flow
-RUN apt-get clean && apt-get update && apt-get install gcc git-flow -y
+# install gcc, git-flow and man
+RUN apt-get clean && apt-get update && apt-get install gcc git-flow man -y
 
 COPY environment.yml .
 
