@@ -50,7 +50,7 @@ class BreachingAdapter:
         # Limit the GPU memory usage based on user budget
         if torch.cuda.is_available():
             print(f"limiting cuda process memory")
-            torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
+            torch.cuda.set_per_process_memory_fraction(attack_params.breaching_params.budget / 100)
 
         if cfg == None:
             cfg = breachinglib.get_config()
@@ -65,7 +65,7 @@ class BreachingAdapter:
             with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
         else:
-            attack_params.datasetStructure = "test"
+            attack_params.breaching_params.datasetStructure = "test"
         
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))

@@ -57,10 +57,7 @@ class MiaParams(BaseModel):
 class MiaStatistics(BaseModel):
     likelihood_ratio: float
 
-
-class AttackParameters(BaseModel):
-    model: str
-    attack: str = "invertinggradients"
+class BreachingParams(BaseModel):
     modality: str = "images"
     datasetStructure: str
     csvPath: Optional[str]
@@ -70,12 +67,18 @@ class AttackParameters(BaseModel):
     numRestarts: int
     stepSize: float
     maxIterations: int
-    ptFilePath: Optional[str]
-    zipFilePath: Optional[str]
     budget: int = 100
     reconstruction_frequency: int = 100
     tokenizer: Optional[str] = 'gpt2'
     shape: Optional[int] = 16
+
+
+class AttackParameters(BaseModel):
+    model: str
+    attack: str = "invertinggradients"
+    ptFilePath: Optional[str]
+    zipFilePath: Optional[str]
+    breaching_params: Optional[BreachingParams] = None
     mia_params: Optional[MiaParams] = None
 
 

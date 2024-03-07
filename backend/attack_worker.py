@@ -47,7 +47,7 @@ def attack_worker(queues: WorkerCommunication):
                     model,
                     loss_fn,
                     request_token=request_token,
-                    reconstruction_frequency=data.reconstruction_frequency,
+                    reconstruction_frequency=data.breaching_params.reconstruction_frequency,
                 )
                 
                 # Return metrics to user
