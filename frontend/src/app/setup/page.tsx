@@ -81,31 +81,75 @@ export default function SetupPage() {
     if (model === "") {
       errorMsgs.push("Please select a model");
     }
-    if (attack === "invertinggradients" && !zipFile) {
-      errorMsgs.push("Please upload a dataset file");
+
+    switch (attack) {
+      case "invertinggradients":
+        if (!zipFile) {
+          errorMsgs.push("Please upload a dataset file");
+        }
+        if (datasetStructure === "CSV" && csvPath === "") {
+          errorMsgs.push("Please enter the path to the CSV file");
+        }
+        if (invalidNum(batchSize)) {
+          errorMsgs.push("Please enter a batch size > 0");
+        }
+        if (invalidNum(numRestarts)) {
+          errorMsgs.push("Please enter a number of restarts > 0");
+        }
+        if (invalidNum(stepSize)) {
+          errorMsgs.push("Please enter a step size > 0");
+        }
+        if (invalidNum(maxIterations)) {
+          errorMsgs.push("Please enter a maximum number of iterations > 0");
+        }
+        if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
+          && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
+          errorMsgs.push("Please either enter all values for mean and std or none");
+        }
+        if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
+          errorMsgs.push("Please either enter all values for image shape or none");
+        }
+        break;
+      case "tag":
+        break;
+      case "fishing":
+        break;
+      case "mia":
+        if (!ptFile) {
+          errorMsgs.push("Please upload a model parameters file");
+        }
+        if (!zipFile) {
+          errorMsgs.push("Please upload a data distribution file");
+        }
+        if (!labelDict) {
+          errorMsgs.push("Please upload a label dictionary file");
+        }
+        if (!targetImage) {
+          errorMsgs.push("Please upload a target image file");
+        }
+        if (targetLabel === "") {
+          errorMsgs.push("Please enter a target label");
+        }
+        if (invalidNum(numShadowModels) || numShadowModels < 4 || numShadowModels % 2 !== 0) {
+          errorMsgs.push("Please enter an even number of shadow models >= 4");
+        }
+        if (invalidNum(numDataPoints)) {
+          errorMsgs.push("Please enter a number of data points > 0");
+        }
+        if (invalidNum(numEpochs)) {
+          errorMsgs.push("Please enter a number of epochs > 0");
+        }
+        if (invalidNum(shadowBatchSize)) {
+          errorMsgs.push("Please enter a shadow batch size > 0");
+        }
+        if (invalidNum(learningRate)) {
+          errorMsgs.push("Please enter a learning rate > 0");
+        }
+        break;
+      default:
+        break;
     }
-    if (datasetStructure === "CSV" && csvPath === "") {
-      errorMsgs.push("Please enter the path to the CSV file");
-    }
-    if (invalidNum(batchSize)) {
-      errorMsgs.push("Please enter a batch size > 0");
-    }
-    if (invalidNum(numRestarts)) {
-      errorMsgs.push("Please enter a number of restarts > 0");
-    }
-    if (invalidNum(stepSize)) {
-      errorMsgs.push("Please enter a step size > 0");
-    }
-    if (invalidNum(maxIterations)) {
-      errorMsgs.push("Please enter a maximum number of iterations > 0");
-    }
-    if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
-      && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
-      errorMsgs.push("Please either enter all values for mean and std or none");
-    }
-    if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
-      errorMsgs.push("Please either enter all values for image shape or none");
-    }
+
     setErrors(errorMsgs);
     return errorMsgs.length === 0;
   }
