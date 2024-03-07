@@ -235,8 +235,35 @@ export default function SetupPage() {
     }
   }
 
-  const handleMiaParamsChange = (field: string, value: string) => {
-
+  const handleMiaParamsChange = (field: string, value: string | (File | null)) => {
+    switch (field) {
+      case "labelDict":
+        setLabelDict(value as File);
+        break;
+      case "targetImage":
+        setTargetImage(value as File);
+        break;
+      case "targetLabel":
+        setTargetLabel(value as string);
+        break;
+      case "numShadowModels":
+        setNumShadowModels(parseInt(value as string));
+        break;
+      case "numDataPoints":
+        setNumDataPoints(parseInt(value as string));
+        break;
+      case "numEpochs":
+        setNumEpochs(parseInt(value as string));
+        break;
+      case "shadowBatchSize":
+        setShadowBatchSize(parseInt(value as string));
+        break;
+      case "learningRate":
+        setLearningRate(parseFloat(value as string));
+        break;
+      default:
+        break;
+    }
   }
 
   const onAttackSelect = (attack: string) => {
@@ -330,7 +357,7 @@ export default function SetupPage() {
             expectedFileType="pt"
             label="Select File (.pt)"
             onFileChange={handlePtFileChange}
-            nextElement={attack === "invertinggradients" ? "upload-zip-header" : attack === "mia" ? "upload-data-dist-header" : "data-params-header"}
+            nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
           />
           {ptFile && (
             <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
@@ -362,7 +389,7 @@ export default function SetupPage() {
         </div>
 
         {attack === "mia" ?
-          <MiaParams />
+          <MiaParams handleMiaParamsChange={handleMiaParamsChange} />
           : attack !== "" &&
           <div>
             {/* Dataset Parameters */}

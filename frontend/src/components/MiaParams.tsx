@@ -5,10 +5,10 @@ import NumberInput from "./NumberInput"
 import TextInput from "./TextInput"
 
 interface MiaParamsProps {
-  handleMiaParamsChange: (field: string, value: string) => void;
+  handleMiaParamsChange: (field: string, value: string | (File | null)) => void;
 }
 
-const MiaParams: React.FC = () => {
+const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
   return (
     <div>
       {/* Upload label dictionary */}
@@ -22,7 +22,7 @@ const MiaParams: React.FC = () => {
         <FileUpload
           expectedFileType="csv"
           label="Select File (.csv)"
-          onFileChange={(file: File | null) => { console.log("Label dictionary file", file) }}
+          onFileChange={(file: File | null) => { handleMiaParamsChange("labelDict", file) }}
           nextElement="upload-target-image-header"
         />
       </div>
@@ -39,11 +39,11 @@ const MiaParams: React.FC = () => {
         <FileUpload
           expectedFileType="JPEG"
           label="Select File (.JPEG)"
-          onFileChange={(file: File | null) => { console.log("Target point file", file) }}
+          onFileChange={(file: File | null) => { handleMiaParamsChange("targetImage", file) }}
         />
         <TextInput
           label="Target Label"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("Target label", e.target.value) }}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("targetLabel", e.target.value) }}
           isRequired={true}
         />
       </div>
@@ -58,27 +58,27 @@ const MiaParams: React.FC = () => {
       </div>
       <NumberInput
         label="No. Shadow Models"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("No. shadow models", e.target.value) }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("numShadowModels", e.target.value) }}
         isRequired={true}
       />
       <NumberInput
         label="No. Data Points"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("No. data points", e.target.value) }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("numDataPoints", e.target.value) }}
         isRequired={true}
       />
       <NumberInput
         label="No. Epochs"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("No. epochs", e.target.value) }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("numEpochs", e.target.value) }}
         isRequired={true}
       />
       <NumberInput
         label="Batch Size"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("Batch size", e.target.value) }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("shadowBatchSize", e.target.value) }}
         isRequired={true}
       />
       <NumberInput
         label="Learning Rate"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { console.log("Learning rate", e.target.value) }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("learningRate", e.target.value) }}
         isRequired={true}
       />
 
