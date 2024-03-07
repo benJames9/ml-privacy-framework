@@ -404,7 +404,7 @@ export default function SetupPage() {
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4 flex justify-center">
             <FileUpload
               expectedFileType="zip"
               label="Select File (.zip)"

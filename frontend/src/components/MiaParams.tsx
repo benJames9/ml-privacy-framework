@@ -18,7 +18,7 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
         </h3>
         <InfoPopup text={"Upload a .json file containing the label dictionary to be used in the attack."} />
       </div>
-      <div className="mb-4">
+      <div className="mb-4 flex justify-center">
         <FileUpload
           expectedFileType="csv"
           label="Select File (.csv)"
@@ -36,16 +36,22 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange }) => {
           </h3>
           <InfoPopup text={"Upload a .zip file containing the target point to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
         </div>
-        <FileUpload
-          expectedFileType="JPEG"
-          label="Select File (.JPEG)"
-          onFileChange={(file: File | null) => { handleMiaParamsChange("targetImage", file) }}
-        />
-        <TextInput
-          label="Target Label"
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("targetLabel", e.target.value) }}
-          isRequired={true}
-        />
+        <div className="flex flex-col items-center">
+          <div className="mb-8">
+            <FileUpload
+              expectedFileType="JPEG"
+              label="Select File (.JPEG)"
+              onFileChange={(file: File | null) => { handleMiaParamsChange("targetImage", file) }}
+            />
+          </div>
+          <div className="flex items-center min-w-100">
+            <TextInput
+              label="Target Label"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => { handleMiaParamsChange("targetLabel", e.target.value) }}
+              isRequired={true}
+            />
+          </div>
+        </div>
       </div>
       <HBar />
 
