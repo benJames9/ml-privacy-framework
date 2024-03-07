@@ -372,30 +372,35 @@ export default function SetupPage() {
           </h2>
           <InfoPopup text="Select one of our suppported models to perform the attack on." />
         </div>
-        <ModelSelect models={getModels()} onChange={(model: string) => { setSelectedModel(model) }} />
-        <HBar />
+        <ModelSelect
+          models={getModels()}
+          onChange={(model: string) => { setSelectedModel(model)}}
+          nextElement={attack !== "" ? "upload-pt-header" : ""} />
 
         {/* Upload model parameters pt file */}
-        <div className="flex items-start">
-          <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
-            Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
-          </h3>
-          <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
-        </div>
-        <div className="mb-2">
-          <FileUpload
-            expectedFileType="pt"
-            label="Select File (.pt)"
-            onFileChange={handlePtFileChange}
-            nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
-          />
-          {ptFile && (
-            <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
-          )}
-        </div>
-        <HBar />
+        {attack !== "" && <div className="flex flex-col items-center">
+          <HBar />
+          <div className="flex items-start">
+            <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
+              Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
+            </h3>
+            <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
+          </div>
+          <div className="mb-2">
+            <FileUpload
+              expectedFileType="pt"
+              label="Select File (.pt)"
+              onFileChange={handlePtFileChange}
+              nextElement={attack === "invertinggradients" || attack === "mia" ? "upload-zip-header" : "data-params-header"}
+            />
+            {ptFile && (
+              <p className="mt-2 text-sm text-gray-400">{ptFile.name}</p>
+            )}
+          </div>
+          <HBar />
+        </div>}
 
-        <div className="flex flex-col items-center">
+        {attack !== "" && <div className="flex flex-col items-center">
           {/* Upload zip file */}
           <div className="flex items-start justify-center">
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
@@ -418,7 +423,7 @@ export default function SetupPage() {
             </div>
           </div>
           <HBar />
-        </div>
+        </div>}
 
         {attack === "mia" ?
           <MiaParams
