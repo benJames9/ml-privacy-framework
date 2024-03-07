@@ -35,7 +35,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300">
+      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300 text-left">
         {label}
       </label>
       <input

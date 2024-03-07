@@ -397,8 +397,8 @@ export default function SetupPage() {
 
         <div>
           {/* Upload zip file */}
-          <div className="flex items-start">
-            <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
+          <div className="flex items-start justify-center">
+            <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
               {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
             </h3>
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
@@ -423,8 +423,8 @@ export default function SetupPage() {
           : attack !== "" &&
           <div>
             {/* Dataset Parameters */}
-            <div className="flex items-start">
-              <h3 className="text-2xl font-bold text-gray-400 mb-8" id="data-params-header">
+            <div className="flex items-start justify-center">
+              <h3 className="text-2xl font-bold text-gray-400 mb-4" id="data-params-header">
                 Dataset Parameters
               </h3>
               <InfoPopup text={getDatasetParamsInfo()} />
@@ -436,8 +436,8 @@ export default function SetupPage() {
             <HBar />
 
             {/* Attack Parameters */}
-            <div className="flex items-start">
-              <h3 className="text-2xl font-bold text-gray-400 mb-8">
+            <div className="flex items-start justify-center">
+              <h3 className="text-2xl font-bold text-gray-400 mb-4">
                 Attack Parameters
               </h3>
               <InfoPopup text={getAttackParamsInfo()} />
