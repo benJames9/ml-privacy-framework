@@ -382,7 +382,7 @@ export default function SetupPage() {
           </h3>
           <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
         </div>
-        <div className="mb-4">
+        <div className="mb-2">
           <FileUpload
             expectedFileType="pt"
             label="Select File (.pt)"
@@ -395,7 +395,7 @@ export default function SetupPage() {
         </div>
         <HBar />
 
-        <div>
+        <div className="flex flex-col items-center">
           {/* Upload zip file */}
           <div className="flex items-start justify-center">
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
@@ -404,22 +404,28 @@ export default function SetupPage() {
             <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
           </div>
 
-          <div className="mb-4 flex justify-center">
+          <div className="mb-2">
             <FileUpload
               expectedFileType="zip"
               label="Select File (.zip)"
               onFileChange={handleZipFileChange}
               nextElement={attack === "mia" ? "upload-label-dict-header" : "data-params-header"}
             />
-            {zipFile && (
-              <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
-            )}
+            <div>
+              {zipFile && (
+                <p className="mt-2 text-sm text-gray-400">{zipFile.name}</p>
+              )}
+            </div>
           </div>
           <HBar />
         </div>
 
         {attack === "mia" ?
-          <MiaParams handleMiaParamsChange={handleMiaParamsChange} />
+          <MiaParams
+            handleMiaParamsChange={handleMiaParamsChange}
+            labelDict={labelDict}
+            targetImage={targetImage}
+          />
           : attack !== "" &&
           <div>
             {/* Dataset Parameters */}
