@@ -52,7 +52,7 @@ def attack_worker(queues: WorkerCommunication):
 
                 # Get response channel and request token to pass into breaching
                 response = request_token, queues.response_channel
-                r_user_data_arr, t_user_data_arr = breaching.perform_batches(
+                num_batches, metrics_arr, cfg = breaching.perform_batches(
                     builder,
                     setup, 
                     model, 
@@ -73,9 +73,9 @@ def attack_worker(queues: WorkerCommunication):
                 # )
                 
                 # Return metrics to user
-                # breaching.get_metrics(
-                #     r_user_data, t_user_data, server_payload, server, cfg, setup, response
-                # )
+                breaching.get_metrics(
+                    num_batches, metrics_arr, cfg, response
+                )
 
             elif data.attack == 'mia':
                 # Perform MIA attack

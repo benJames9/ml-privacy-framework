@@ -99,7 +99,7 @@ class BreachingAdapter:
 
         return setup, model, permutation_arr, builder
     
-    
+
     def perform_batches(
         self, 
         builder: ConfigBuilder, 
@@ -109,7 +109,7 @@ class BreachingAdapter:
         reconstruction_frequency, 
         permutation_arr
         ):
-        reconstructed_arr, true_arr = [], []
+        reconstructed_arr, true_arr, metrics_arr = [], [], []
         for user_idx in range(builder.get_max_clients()):
             
             cfg = builder.update_user_idx(user_idx)
@@ -135,8 +135,10 @@ class BreachingAdapter:
             )
             reconstructed_arr.append(reconstructed_user_data)
             true_arr.append(true_user_data)
+            metrics_arr.append(self.attack_cache.stats)
+
             # user.plot(reconstructed_user_data, saveFile=f"reconstructed_data")
-        return reconstructed_arr, true_arr
+        return len(reconstructed_arr), metrics_arr, cfg
     
 
     def perform_attack(
@@ -188,53 +190,40 @@ class BreachingAdapter:
 
     def get_metrics(
         self,
-        reconstructed_user_data,
-        true_user_data,
-        server_payload,
-        server,
+        num_batches,
+        metrics_arr,
         cfg,
-        setup,
         response,
     ):
-        metrics = breachinglib.analysis.report(
-            reconstructed_user_data,
-            true_user_data,
-            [server_payload],
-            server.model,
-            order_batch=True,
-            compute_full_iip=False,
-            cfg_case=cfg.case,
-            setup=setup,
-            compute_lpips=False,
-        )
-
-        stats = AttackStatistics(
-            MSE=metrics.get("mse", 0),
-            SSIM=metrics.get("ssim", 0),
-            PSNR=metrics.get("psnr", 0),
-        )
-        token, channel = response
-
-        with open("./attack_images/reconstructed_data.png", "rb") as image_file:
-            image_data_rec = image_file.read()
-        base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
-
+        
         iterations = cfg.attack.optim.max_iterations
         restarts = cfg.attack.restarts.num_trials
-        channel.put(
-            token,
-            AttackProgress(
-                current_iteration=iterations,
-                current_restart=restarts,
-                max_iterations=iterations,
-                max_restarts=restarts,
-                statistics=stats,
-                true_image=self.attack_cache.true_b64_image,
-                reconstructed_image=base64_reconstructed,
-                attack_start_time_s=self.attack_cache.attack_start_time_s
-            ),
-        )
-        return metrics
+        token, channel = response
+        
+        for i in range(num_batches):       
+            with open(f'./attack_images/reconstructed_data{i}.png', "rb") as image_file:
+                image_data_rec = image_file.read()
+            base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+
+            with open(f'./attack_images/true_data_{i}.png', "rb") as image_file:
+                image_data_rec = image_file.read()
+            true_base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+
+            metrics = metrics_arr[i]
+
+            channel.put(
+                token,
+                AttackProgress(
+                    current_iteration=iterations,
+                    current_restart=restarts,
+                    max_iterations=iterations,
+                    max_restarts=restarts,
+                    statistics=metrics,
+                    true_image=true_base64_reconstructed,
+                    reconstructed_image=base64_reconstructed,
+                    attack_start_time_s=self.attack_cache.attack_start_time_s
+                ),
+            )
 
     def _check_image_size(self, model, shape):
         return True
