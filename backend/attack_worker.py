@@ -10,6 +10,13 @@ import uuid
 import os
 # from unittest.mock import Mock
 
+def clear_attack_images():
+    # Clear attack_images folder
+    attack_images_folder = './attack_images/'
+    for filename in os.listdir(attack_images_folder):
+        file_path = os.path.join(attack_images_folder, filename)
+        os.remove(file_path)
+
 
 # Attack worker function to run on separate process and complete attacks
 def attack_worker(queues: WorkerCommunication):
@@ -22,12 +29,19 @@ def attack_worker(queues: WorkerCommunication):
     # Initialise adapters for different attacks
     breaching = BreachingAdapter(queues.response_channel)
     mia = MiaAdapter(queues.response_channel)
+
+    # Clear attack_images folder
+    clear_attack_images()
     
     # Permenantly loop, fetching data from queues
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
+
+        # Clear attack_images folder
+        clear_attack_images()
+
         try:
             # Model inversion attack
             if data.attack == 'invertinggradients':
@@ -37,7 +51,6 @@ def attack_worker(queues: WorkerCommunication):
                 )
 
                 # Get response channel and request token to pass into breaching
-                
                 response = request_token, queues.response_channel
                 r_user_data_arr, t_user_data_arr = breaching.perform_batches(
                     builder,

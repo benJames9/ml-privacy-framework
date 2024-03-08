@@ -163,9 +163,10 @@ class BreachingAdapter:
         self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
+
         user.plot(true_user_data, saveFile=f"true_data_{user.user_idx}")
 
-        with open("./true_data.png", "rb") as image_file:
+        with open(f'./attack_images/true_data_{user.user_idx}.png', "rb") as image_file:
             image_data_true = image_file.read()
         self.attack_cache.true_b64_image = base64.b64encode(image_data_true).decode(
             "utf-8"
@@ -214,7 +215,7 @@ class BreachingAdapter:
         )
         token, channel = response
 
-        with open("./reconstructed_data.png", "rb") as image_file:
+        with open("./attack_images/reconstructed_data.png", "rb") as image_file:
             image_data_rec = image_file.read()
         base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
 
