@@ -62,7 +62,7 @@ class ConfigBuilder:
         else:
             cfg.case.data.path = dataset_path
 
-        print(attack_params.breaching_params.modality)
+        print(cfg.case.data.shape)
         if attack_params.breaching_params.datasetStructure == "CSV":
             cfg.case.data.name = "CustomCsv"
         elif attack_params.breaching_params.datasetStructure == "Foldered" and attack_params.breaching_params.modality == "images":
@@ -84,7 +84,7 @@ class ConfigBuilder:
                 cfg = self._construct_text_tokenizer_cfg(
                     attack_params.breaching_params.tokenizer, cfg
                 )
-                cfg.case.data.shape = attack_params.breaching_params.shape
+                cfg.case.data.shape = [attack_params.breaching_params.seqLength]
             else:
                 print("Could not match dataset structure")
                 raise TypeError(
@@ -123,7 +123,7 @@ class ConfigBuilder:
             raise TypeError(f"No text attack match; {attack_params.attack}")
         cfg = self._construct_text_model_cfg(attack_params.model, cfg)
         cfg = self._construct_text_tokenizer_cfg(attack_params.breaching_params.tokenizer, cfg)
-        cfg.case.data.shape = attack_params.breaching_params.shape
+        cfg.case.data.shape = [attack_params.breaching_params.seqLength]
         return cfg
 
     def _construct_text_model_cfg(self, model, cfg):
