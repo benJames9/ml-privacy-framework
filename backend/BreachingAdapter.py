@@ -320,7 +320,7 @@ class BreachingAdapter:
                 PSNR=metrics.get("psnr", 0),
             )
 
-            progress.reconstructed_image = reconstructed_b64_image
+            progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
             progress.true_image = self.attack_cache.true_b64_image
             progress.statistics = self.attack_cache.stats
 

@@ -76,11 +76,16 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     statistics: {
       MSE: 0,
       PSNR: 0,
-      SSIM: 0
+      SSIM: 0,
+      ACC: 0,
+      GBLEU: 0,
+      FMSE: 0
     },
     true_image: "",
     reconstructed_image: "",
-    attack_start_time_s: 0
+    attack_start_time_s: 0,
+    true_text: "",
+    reconstructed_text: ""
   });
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
