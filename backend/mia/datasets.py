@@ -54,7 +54,7 @@ def calculate_dataset_statistics(zip_file_path):
     # Calculate mean and std
     if num_images != 0:
         mean = sum_mean / num_images / 255.0
-        std = sum_std / num_images / 255.0 
+        std = sum_std / num_images / 255.0
 
     # Clean up temporary directory
     os.system('rm -rf temp_dataset')

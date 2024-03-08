@@ -1,5 +1,6 @@
 import { AttackProgress } from "./AttackProgress";
 import { SideBySideImages } from "./SideBySideImages"
+import SideBySideText from "./SideBySideText";
 import Stats from "./Stats";
 
 interface AttackResultsProps {
@@ -49,6 +50,10 @@ const AttackResults: React.FC<AttackResultsProps> = ({ attackProgress }) => {
       {attack === "invertinggradients" && <div>
         <SideBySideImages attackProgress={attackProgress} />
       </div>}
+      {attack === "tag" &&
+        <div>
+          <SideBySideText attackProgress={attackProgress} />
+        </div>}
     </div>);
 };
 

@@ -41,8 +41,8 @@ class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
         self.response_channel = WorkerQueue[AttackProgress]()
-        
-        
+
+
 class MiaParams(BaseModel):
     N: int
     data_points: int
@@ -52,10 +52,11 @@ class MiaParams(BaseModel):
     target_label: str
     target_image_path: str
     path_to_label_csv: str
-    
+
 
 class MiaStatistics(BaseModel):
     likelihood_ratio: float
+
 
 class BreachingParams(BaseModel):
     modality: str = "images"
@@ -76,8 +77,8 @@ class BreachingParams(BaseModel):
     maxIterations: int
     budget: int = 100
     reconstruction_frequency: int = 100
-    tokenizer: Optional[str] = 'gpt2'
-    shape: Optional[int] = 16
+    tokenizer: Optional[str] = "gpt2"
+    shape: Optional[List[int]] = [16]
 
 
 class AttackParameters(BaseModel):
@@ -93,11 +94,14 @@ class AttackStatistics(BaseModel):
     MSE: float = 0
     PSNR: float = 0
     SSIM: float = 0
+    FMSE: float = 0
+    GBLEU: float = 0
+    ACC: float = 0
 
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"
-    attack_type: str
+    attack_type: str = ""
     attack_start_time_s: int = 0
     current_iteration: int = 0
     max_iterations: int = 0
@@ -109,5 +113,7 @@ class AttackProgress(BaseModel):
     statistics: AttackStatistics = AttackStatistics()
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
+    true_text: Optional[str] = None
+    reconstructed_text: Optional[str] = None
     error_message: str = None  # Optional error message
     mia_stats: Optional[MiaStatistics] = None

@@ -47,7 +47,7 @@ const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, onCa
         />
       </div>
       {copied && <SuccessAlert text="Token successfully copied to clipboard!" onClose={() => { setCopied(false) }} />}
-      {attackProgress.attack_type !== "mia" && <div className="flex flex-col items-center pt-[5vh]">
+      {attackProgress.attack_type === "invertinggradients" && <div className="flex flex-col items-center pt-[5vh]">
         <AttackResults attackProgress={attackProgress} />
       </div>}
     </div>

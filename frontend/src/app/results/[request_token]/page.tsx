@@ -77,11 +77,16 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     statistics: {
       MSE: 0,
       PSNR: 0,
-      SSIM: 0
+      SSIM: 0,
+      ACC: 0,
+      GBLEU: 0,
+      FMSE: 0
     },
     true_image: "",
     reconstructed_image: "",
     attack_start_time_s: 0,
+    true_text: "",
+    reconstructed_text: "",
     mia_stats: {
       likelihood_ratio: 0
     }
@@ -141,12 +146,12 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
 
           setAttackProgress(augmented_update);
 
+          if (data.reconstructed_text !== "") {
+            setAttackModality("text");
+          }
+
           if (data.current_iteration === data.max_iterations
             && data.current_restart === data.max_restarts) {
-            if (data.true_image === "" && data.reconstructed_image === "") {
-              setAttackModality("text");
-            }
-
             // let them see the full attack progress bar for a bit
             await wait_ms(500);
             setPageState(PageState.FINAL_SCREEN);

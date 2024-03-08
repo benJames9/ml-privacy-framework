@@ -19,9 +19,11 @@ class PubSubWs:
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             await ws.accept()
-            
+
             if request_token not in self._route_dict:
-                return await self._close_websocket(ws, request_token, "Non-existent route")
+                return await self._close_websocket(
+                    ws, request_token, "Non-existent route"
+                )
 
             # Set timeout for webscket connection
             create_task(self._close_websocket_after_timeout(ws, request_token))
