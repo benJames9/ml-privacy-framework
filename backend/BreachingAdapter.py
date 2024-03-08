@@ -22,6 +22,7 @@ class BreachingCache:
     true_b64_image = ""
     true_user_data = None
     reconstructed_user_data = None
+    reconstructed_user_text = ""
     stats = None
     attack_start_time_s = 0
 
@@ -159,6 +160,8 @@ class BreachingAdapter:
         if cfg.case.data.modality == "vision":
             user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         else:
+            self.attack_cache.reconstructed_user_text = user.decode_text(reconstructed_user_data)
+            print(self.attack_cache.reconstructed_user_text, " ->>>>>>>>>>>>>>>>> is the reconstructed_user_text")
             user.print(reconstructed_user_data, saveFile="reconstructed_data")
 
         return reconstructed_user_data, true_user_data, server_payload
@@ -189,12 +192,21 @@ class BreachingAdapter:
             MSE=metrics.get("mse", 0),
             SSIM=metrics.get("ssim", 0),
             PSNR=metrics.get("psnr", 0),
+            GBLEU=metrics.get("google_bleu", 0),
+            FMSE=metrics.get("fmse", 0),
+            ACC=metrics.get("accuracy", 0),
         )
         token, channel = response
 
-        with open("./reconstructed_data.png", "rb") as image_file:
-            image_data_rec = image_file.read()
-        base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+        base64_reconstructed = None
+        text_reconstructed = None
+        if cfg.case.data.modality == "vision":
+            with open("./reconstructed_data.png", "rb") as image_file:
+                image_data_rec = image_file.read()
+            base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+        else:
+            text_reconstructed = self.attack_cache.reconstructed_user_text
+        print(text_reconstructed, cfg.case.data.modality)
 
         iterations = cfg.attack.optim.max_iterations
         restarts = cfg.attack.restarts.num_trials
@@ -208,6 +220,7 @@ class BreachingAdapter:
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
                 reconstructed_image=base64_reconstructed,
+                reconstructed_text=text_reconstructed,
                 attack_start_time_s=self.attack_cache.attack_start_time_s,
             ),
         )

@@ -12,13 +12,13 @@ class ConfigBuilder:
 
     def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
         print("here")
-        if attack_params.modality == "images":
+        if attack_params.breaching_params.modality == "images":
             cfg = self._construct_images_cfg(attack_params)
-        elif attack_params.modality == "text":
+        elif attack_params.breaching_params.modality == "text":
             cfg = self._construct_text_cfg(attack_params)
         else:
             raise TypeError(
-                f"Data type of attack: {attack_params.modality} does not match anything."
+                f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
             )
 
         assert attack_params is not None
@@ -27,8 +27,8 @@ class ConfigBuilder:
         # setup all customisable parameters
         cfg.case.model = attack_params.model
 
-        if attack_params.zipFilePath is None and attack_params.modality == "images":
-            attack_params.datasetStructure = "default"
+        if attack_params.zipFilePath is None and attack_params.breaching_params.modality == "images":
+            attack_params.breaching_params.datasetStructure = "default"
             print("defaulting")
 
         if dataset_path == None:
@@ -36,43 +36,44 @@ class ConfigBuilder:
         else:
             cfg.case.data.path = dataset_path
 
-        print(attack_params.modality)
-        if attack_params.datasetStructure == "CSV":
+        print(attack_params.breaching_params.modality)
+        if attack_params.breaching_params.datasetStructure == "CSV":
             cfg.case.data.name = "CustomCsv"
-        elif attack_params.datasetStructure == "Foldered":
+        elif attack_params.breaching_params.datasetStructure == "Foldered":
             cfg.case.data.name = "CustomFolders"
         else:
-            if attack_params.modality == "images":
+            if attack_params.breaching_params.modality == "images":
                 cfg.case.data = breachinglib.get_config(
                     overrides=["case/data=CIFAR10"]
                 ).case.data
                 print("defaulted to CIFAR10")
                 # cfg.case.data.
-            elif attack_params.modality == "text":
+            elif attack_params.breaching_params.modality == "text":
+                # TODO: INSERT THE WIKITEXT ETC STUFF
                 cfg.case.data = breachinglib.get_config(
                     overrides=["case/data=wikitext"]
                 ).case.data
                 print("defaulted to wikitext")
                 cfg = self._construct_text_model_cfg(attack_params.model, cfg)
-                cfg = self._construct_text_tokenizer_cfg(attack_params.tokenizer, cfg)
+                cfg = self._construct_text_tokenizer_cfg(attack_params.breaching_params.tokenizer, cfg)
                 cfg.case.data.shape = attack_params.shape
             else:
                 print("Could not match dataset structure")
                 raise TypeError(
-                    f"Data type of attack: {attack_params.modality} does not match anything."
+                    f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                 )
 
-        if any(attack_params.means) and any(attack_params.stds):
-            cfg.case.data.mean = attack_params.means
-            cfg.case.data.std = attack_params.stds
+        if attack_params.breaching_params.modality == "images" and any(attack_params.breaching_params.means) and any(attack_params.breaching_params.stds):
+            cfg.case.data.mean = attack_params.breaching_params.means
+            cfg.case.data.std = attack_params.breaching_params.stds
             cfg.case.data.normalize = False
 
-        cfg.case.user.num_data_points = attack_params.batchSize
-        cfg.attack.optim.step_size = attack_params.stepSize
-        cfg.attack.optim.max_iterations = attack_params.maxIterations
+        cfg.case.user.num_data_points = attack_params.breaching_params.textDataPoints
+        cfg.attack.optim.step_size = attack_params.breaching_params.stepSize
+        cfg.attack.optim.max_iterations = attack_params.breaching_params.maxIterations
         cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
-        cfg.attack.restarts.num_trials = attack_params.numRestarts
+        cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):

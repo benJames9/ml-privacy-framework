@@ -63,7 +63,37 @@ def attack_worker(queues: WorkerCommunication):
                     setup,
                     response,
                 )
+                
+            elif data.attack == "tag":
+                # Setup attack using params
+                cfg, setup, user, server, attacker, model, loss_fn = (
+                    breaching.setup_attack(attack_params=data, cfg=None)
+                )
 
+                # Get response channel and request token to pass into breaching
+                response = request_token, queues.response_channel
+                r_user_data, t_user_data, server_payload = breaching.perform_attack(
+                    cfg,
+                    setup,
+                    user,
+                    server,
+                    attacker,
+                    model,
+                    loss_fn,
+                    request_token=request_token,
+                    reconstruction_frequency=data.breaching_params.reconstruction_frequency,
+                )
+
+                # Return metrics to user
+                breaching.get_metrics(
+                    r_user_data,
+                    t_user_data,
+                    server_payload,
+                    server,
+                    cfg,
+                    setup,
+                    response,
+                )
             elif data.attack == "mia":
                 # Perform MIA attack
                 mia.perform_attack(data, request_token)
@@ -85,10 +115,10 @@ def attack_worker(queues: WorkerCommunication):
 
 # Use this for testing?
 if __name__ == "__main__":
-    from common import AttackParameters
+    from common import AttackParameters, BreachingParams
 
     pars = AttackParameters(
-        attack="TAG",
+        attack="tag",
         model="gpt2",
         modality="text",
         datasetStructure="text",
@@ -98,11 +128,19 @@ if __name__ == "__main__":
         stepSize=0.5,
         maxIterations=100,
         callbackInterval=10,
-        ptFilePath=None,
-        zipFilePath="../small_foldered_set.zip",
+        ptFilePath="./transformer3.pt",
+        zipFilePath=None,
         budget=100,
         means=[],
         stds=[],
+        breaching_params = BreachingParams(
+            modality="text",
+            textDataPoints=2,
+            stepSize=0.1,
+            numRestarts=1,
+            maxIterations=5,
+            tokenizer="gpt2",
+        )
     )
 
     req_tok = str(uuid.uuid4())
