@@ -107,7 +107,7 @@ if __name__ == "__main__":
             ptFilePath="examples/resnet18_model_mia.pt",
             zipFilePath="examples/small_foldered_set.zip",
             budget=100,
-            reconstruction_frequency=100,
+            reconstruction_frequency=10,
             mia_params=MiaParams(
                 N=4,
                 data_points=6,

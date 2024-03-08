@@ -76,7 +76,7 @@ class BreachingParams(BaseModel):
     stepSize: float
     maxIterations: int
     budget: int = 100
-    reconstruction_frequency: int = 100
+    reconstruction_frequency: int = 10
     tokenizer: Optional[str] = "gpt2"
     shape: Optional[List[int]] = [16]
 

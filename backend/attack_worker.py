@@ -46,6 +46,8 @@ def attack_worker(queues: WorkerCommunication):
 
         # Clear attack_images folder
         clear_attack_images()
+        
+        relative_reconstruction_interval = data.breaching_params.maxIterations // data.breaching_params.reconstruction_frequency
 
         try:
             # Model inversion attack
@@ -62,7 +64,7 @@ def attack_worker(queues: WorkerCommunication):
                     setup,
                     model,
                     request_token,
-                    data.breaching_params.reconstruction_frequency,
+                    relative_reconstruction_interval,
                     permutation_arr,
                 )
 
