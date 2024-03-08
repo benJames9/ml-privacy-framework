@@ -23,6 +23,11 @@ def shutdown_event():
     background_task_manager.shutdown()
 
 
+@app.get("/health")
+def health_check():
+    return 1
+
+
 @app.get("/api")
 def read_root():
     return {"message": "Hello from the backend!"}
