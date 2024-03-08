@@ -193,7 +193,7 @@ class BreachingAdapter:
             SSIM=metrics.get("ssim", 0),
             PSNR=metrics.get("psnr", 0),
             GBLEU=metrics.get("google_bleu", 0),
-            FMSE=metrics.get("fmse", 0),
+            FMSE=metrics.get("feat_mse", 0),
             ACC=metrics.get("accuracy", 0),
         )
         token, channel = response
