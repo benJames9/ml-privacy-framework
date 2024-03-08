@@ -26,7 +26,7 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ text }) => {
           className="absolute z-10 ml-14 bg-gray-800 rounded-md shadow-lg max-w-xs overflow-hidden"
           id="upload-pt-info"
         >
-          <div className="w-full px-4 py-3 text-sm text-gray-400 whitespace-pre-wrap">
+          <div className="w-full px-4 py-3 text-sm text-gray-400 text-left whitespace-pre-wrap">
             {parse(text)}
           </div>
         </div>

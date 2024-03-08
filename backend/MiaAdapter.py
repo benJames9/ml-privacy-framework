@@ -40,12 +40,11 @@ class MiaAdapter:
         print(f'ratio: {ratio}')
 
     def _get_model(self, model_type, path_to_pt, num_classes):
-        match model_type:
-            case 'ResNet-18':
-                model = models.resnet18(pretrained=False)
-                model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
-            case other: 
-                raise ValueError("Model type not supported")
+        if model_type == 'ResNet-18':
+            model = models.resnet18(pretrained=False)
+            model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
+        else: 
+            raise ValueError("Model type not supported")
             
         # Load the state dict from path
         pt = torch.load(path_to_pt)
@@ -55,12 +54,14 @@ class MiaAdapter:
         return model
     
     def _add_progress_to_channel(self, request_token, max_epochs, 
-                                 current_epoch, result=None):
+                                 current_epoch, start_time, result=None):
         # Construct progress type to update user
         progress = AttackProgress(
-            message_type="progress",
+            message_type="AttackProgress",
+            attack_type="mia",
             current_iteration=current_epoch,
-            max_iterations=max_epochs
+            max_iterations=max_epochs,
+            attack_start_time_s=start_time
         )
 
         # Add final result

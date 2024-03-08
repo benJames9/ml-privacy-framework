@@ -214,6 +214,7 @@ class BreachingAdapter:
             channel.put(
                 token,
                 AttackProgress(
+                    attack_type="invertinggradients",
                     current_iteration=iterations,
                     current_restart=restarts,
                     max_iterations=iterations,
@@ -273,6 +274,7 @@ class BreachingAdapter:
     ):
         progress = AttackProgress(
             message_type="AttackProgress",
+            attack_type="invertinggradients",
             current_iteration=response_data.current_iteration,
             max_iterations=response_data.max_iterations,
             current_restart=response_data.current_restart,

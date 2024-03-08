@@ -1,18 +1,14 @@
-# python base image
-# FROM python:3.9
-FROM pytorch/pytorch:latest
+FROM continuumio/miniconda3
 
-# Workdir for output
 WORKDIR /app
 
-# Copy requirements.txt to workdir
-COPY requirements.txt .
+# Copy just the conda environment file first
+COPY environment.yml ./
 
-# Install requirements
-RUN pip install -r requirements.txt
+# Create the conda environment
+RUN conda env create -v -f environment.yml
 
-# Copy files to workdir
+# Copy remaining files to workdir
 COPY . .
 
-# Run API on container port 8000
-CMD uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+CMD conda run --no-capture-output -vvv -n breaching uvicorn main:app --host 0.0.0.0 --port 8000 --reload

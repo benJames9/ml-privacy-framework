@@ -35,14 +35,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div>
-      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300">
+      <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300 text-left">
         {label}
       </label>
       <input
         type="file"
         id="file-upload"
         accept={`.${expectedFileType}`}
-        className="block w-full p-3 text-sm border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+        className="block w-80 p-3 text-sm border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
         onChange={handleFileChange}
       />
     </div>

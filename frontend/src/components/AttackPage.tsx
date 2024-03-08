@@ -9,7 +9,6 @@ import AttackResults from "./AttackResults";
 import { copyToClipboard } from "@/utils/copyToClipboard";
 
 interface AttackPageProps {
-  modality: string;
   attackProgress: AttackProgress;
   startTime: number | null;
   onCancel: (requestToken: number) => void;
@@ -18,7 +17,7 @@ interface AttackPageProps {
   }
 }
 
-const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, startTime, onCancel, params }) => {
+const AttackPage: React.FC<AttackPageProps> = ({ attackProgress, startTime, onCancel, params }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const copyToken = () => {
@@ -29,9 +28,9 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
   return (
     <div className="flex min-h-screen flex-col items-center py-[5vh] bg-gradient-to-r from-black to-blue-950">
       <HorizontalBar
-        current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
+        current={attackProgress.current_iteration + ((attackProgress.current_restart || 0) * (attackProgress.max_iterations || 0))}
         min={0}
-        max={attackProgress.max_restarts * attackProgress.max_iterations}
+        max={(attackProgress.max_restarts || 1) * attackProgress.max_iterations}
         text="Attacking..."
         color="bg-green-600"
       />
@@ -48,9 +47,9 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
         />
       </div>
       {copied && <SuccessAlert text="Token successfully copied to clipboard!" onClose={() => { setCopied(false) }} />}
-      <div className="flex flex-col items-center pt-[5vh]">
-        <AttackResults modality={modality} attackProgress={attackProgress} />
-      </div>
+      {attackProgress.attack_type !== "mia" && <div className="flex flex-col items-center pt-[5vh]">
+        <AttackResults attackProgress={attackProgress} />
+      </div>}
     </div>
   )
 }

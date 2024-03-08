@@ -47,20 +47,23 @@ async def save_upload_file_to_temp(upload_file: UploadFile):
 #   - the endpoint will publish updates on the how the attack is going
 @app.post("/api/submit-attack")
 async def submit_attack(
-    ptFile: UploadFile = File(...),
-    zipFile: UploadFile = File(...),
+    ptFile: UploadFile = File(None),
+    zipFile: UploadFile = File(None),
     model: str = Form(...),
     attack: str = Form(...),
     modality: str = Form(...),
     # Model Inversion Params
-    datasetStructure: str = Form(None),
-    csvPath: str = Form(None),
     batchSize: int = Form(None),
     mean: str = Form(None),
     std: str = Form(None),
     numRestarts: int = Form(None),
     stepSize: float = Form(None),
     maxIterations: int = Form(None),
+    # Text attack parameters
+    textDataset: str = Form(None),
+    textDataPoints: int = Form(None),
+    seqLength: int = Form(None),
+    tokenizer: str = Form(None),
     # MIA attack parameters
     labelDict: UploadFile = File(None),
     targetImage: UploadFile = File(None),
@@ -102,17 +105,28 @@ async def submit_attack(
         )
 
     else:
-        breaching_params = BreachingParams(
-            modality=modality,
-            datasetStructure=datasetStructure,
-            csvPath=csvPath,
-            batchSize=batchSize,
-            means=[float(i) for i in mean.strip("[]").split(",")],
-            stds=[float(i) for i in std.strip("[]").split(",")],
-            numRestarts=numRestarts,
-            stepSize=stepSize,
-            maxIterations=maxIterations,
-        )
+        if modality == "images":
+            breaching_params = BreachingParams(
+                modality=modality,
+                batchSize=batchSize,
+                means=[float(i) for i in mean.strip("[]").split(",")],
+                stds=[float(i) for i in std.strip("[]").split(",")],
+                numRestarts=numRestarts,
+                stepSize=stepSize,
+                maxIterations=maxIterations,
+            )
+        elif modality == "text":
+            print(f"modality: {modality}, textDataset: {textDataset}, textDataPoints: {textDataPoints}, seqLength: {seqLength}, tokenizer: {tokenizer}, numRestarts: {numRestarts}, stepSize: {stepSize}, maxIterations: {maxIterations}")
+            breaching_params = BreachingParams(
+                modality=modality,
+                textDataset=textDataset,
+                textDataPoints=textDataPoints,
+                seqLength=seqLength,
+                tokenizer=tokenizer,
+                numRestarts=numRestarts,
+                stepSize=stepSize,
+                maxIterations=maxIterations,
+            )
 
     attack_params = AttackParameters(
         model=model,

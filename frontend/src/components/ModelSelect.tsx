@@ -4,19 +4,18 @@ import React, { useEffect } from 'react';
 interface ModelSelectProps {
   models: string[];
   onChange: (model: string) => void;
+  nextElement: string;
 }
 
-const ModelSelect: React.FC<ModelSelectProps> = ({
-  models,
-  onChange,
-}) => {
+const ModelSelect: React.FC<ModelSelectProps> = ({models, onChange, nextElement }) => {
   useEffect(() => {
     onChange(models[0]);
   }, []);
 
   const handleModelSelect = (model: string) => {
     onChange(model);
-    const fileUpload = document.getElementById('upload-pt-header');
+    if (nextElement === "") return;
+    const fileUpload = document.getElementById(nextElement);
     fileUpload!.scrollIntoView({ behavior: 'smooth' });
   };
 

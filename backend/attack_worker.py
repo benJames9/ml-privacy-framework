@@ -1,4 +1,5 @@
 import base64
+import traceback
 from MiaAdapter import MiaAdapter
 from BreachingAdapter import BreachingAdapter
 from common import WorkerCommunication, AttackProgress
@@ -91,6 +92,7 @@ def attack_worker(queues: WorkerCommunication):
                 message_type="error",
                 error_message=f"Attack Configuration Error: {str(e)}",
             )
+            traceback.print_exc()
             queues.response_channel.put(request_token, progress)
                 
                     

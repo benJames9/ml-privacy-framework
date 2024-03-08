@@ -72,7 +72,7 @@ class PubSubWs:
 
     # Generate JSON error message to send to client
     def _generate_error(self, error: str):
-        return {"message_type": "error", "error": error}
+        return {"message_type": "error", "error_message": error}
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
@@ -90,13 +90,15 @@ class PubSubWs:
             pass
 
         if str_data == "":
-            raise Exception("Data is not serialisable")
+            print("Data is not serialisable")
+            return
         await self.publish(request_token, str_data)
 
     # Publish serialised attack responses to clients
     async def publish(self, request_token: str, data_str: str):
         if not request_token in self._route_dict:
-            raise Exception("Cannot publish to non existent route")
+            print("Cannot publish to non existent route")
+            return
 
         # Cache the last published data
         async with self._dict_lock:
@@ -113,7 +115,8 @@ class PubSubWs:
     # Register new routes
     async def register_route(self, request_token: str):
         if request_token in self._route_dict:
-            raise Exception("Route already registered")
+            print("Route already registered")
+            return
 
         async with self._dict_lock:
             self._route_dict[request_token] = []
@@ -122,7 +125,8 @@ class PubSubWs:
     # Deregister routes
     async def deregister_route(self, request_token: str):
         if not request_token in self._route_dict:
-            raise Exception("Route doesn't exist")
+            print("Route doesn't exist")
+            return
 
         async with self._dict_lock:
             self._route_dict.pop(request_token)
