@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from fastapi import FastAPI, File, Form, UploadFile
 
-from common import AttackParameters
+from common import AttackParameters, BreachingParams, MiaParams
 from attack_worker import attack_worker
 
 from BackgroundTasks import BackgroundTasks
@@ -52,15 +52,27 @@ async def submit_attack(
     model: str = Form(...),
     attack: str = Form(...),
     modality: str = Form(...),
-    datasetStructure: str = Form(...),
-    csvPath: str = Form(None),
-    batchSize: int = Form(...),
-    mean: str = Form(...),
-    std: str = Form(...),
-    numRestarts: int = Form(...),
-    stepSize: float = Form(...),
-    maxIterations: int = Form(...),
-    budget: int = Form(...),
+    # Model Inversion Params
+    batchSize: int = Form(None),
+    mean: str = Form(None),
+    std: str = Form(None),
+    numRestarts: int = Form(None),
+    stepSize: float = Form(None),
+    maxIterations: int = Form(None),
+    # Text attack parameters
+    textDataset: str = Form(None),
+    textDataPoints: int = Form(None),
+    seqLength: int = Form(None),
+    tokenizer: str = Form(None),
+    # MIA attack parameters
+    labelDict: UploadFile = File(None),
+    targetImage: UploadFile = File(None),
+    targetLabel: str = Form(None),
+    numShadowModels: int = Form(None),
+    numDataPoints: int = Form(None),
+    numEpochs: int = Form(None),
+    shadowBatchSize: int = Form(None),
+    learningRate: float = Form(None),
 ):
     request_token = str(uuid.uuid4())
 
@@ -72,21 +84,59 @@ async def submit_attack(
     if zipFile is not None:
         zipTempFilePath = await save_upload_file_to_temp(zipFile)
 
+    breaching_params = None
+    mia_params = None
+
+    if attack == "mia":
+        if labelDict is not None:
+            labelDictPath = await save_upload_file_to_temp(labelDict)
+        if targetImage is not None:
+            targetImagePath = await save_upload_file_to_temp(targetImage)
+
+        mia_params = MiaParams(
+            N=numShadowModels,
+            data_points=numDataPoints,
+            epochs=numEpochs,
+            batch_size=shadowBatchSize,
+            lr=learningRate,
+            target_label=targetLabel,
+            target_image_path=targetImagePath,
+            path_to_label_csv=labelDictPath,
+        )
+
+    else:
+        if modality == "images":
+            breaching_params = BreachingParams(
+                modality=modality,
+                batchSize=batchSize,
+                means=[float(i) for i in mean.strip("[]").split(",")],
+                stds=[float(i) for i in std.strip("[]").split(",")],
+                numRestarts=numRestarts,
+                stepSize=stepSize,
+                maxIterations=maxIterations,
+            )
+        elif modality == "text":
+            print(
+                f"modality: {modality}, textDataset: {textDataset}, textDataPoints: {textDataPoints}, seqLength: {seqLength}, tokenizer: {tokenizer}, numRestarts: {numRestarts}, stepSize: {stepSize}, maxIterations: {maxIterations}"
+            )
+            breaching_params = BreachingParams(
+                modality=modality,
+                textDataset=textDataset,
+                textDataPoints=textDataPoints,
+                seqLength=seqLength,
+                tokenizer=tokenizer,
+                numRestarts=numRestarts,
+                stepSize=stepSize,
+                maxIterations=maxIterations,
+            )
+
     attack_params = AttackParameters(
         model=model,
         attack=attack,
-        modality=modality,
-        datasetStructure=datasetStructure,
-        csvPath=csvPath,
-        batchSize=batchSize,
-        means=[float(i) for i in mean.strip("[]").split(",")],
-        stds=[float(i) for i in std.strip("[]").split(",")],
-        numRestarts=numRestarts,
-        stepSize=stepSize,
-        maxIterations=maxIterations,
+        breaching_params=breaching_params,
+        mia_params=mia_params,
         ptFilePath=ptTempFilePath,
         zipFilePath=zipTempFilePath,
-        budget=budget,
     )
 
     await background_task_manager.submit_task(request_token, attack_params)

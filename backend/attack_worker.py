@@ -1,4 +1,6 @@
 import base64
+import traceback
+from MiaAdapter import MiaAdapter
 from BreachingAdapter import BreachingAdapter
 from common import WorkerCommunication, AttackProgress
 from multiprocessing import Event as mpEvent
@@ -10,6 +12,16 @@ import os
 # from unittest.mock import Mock
 
 
+def clear_attack_images():
+    # Clear attack_images folder
+    attack_images_folder = "./attack_images/"
+    if not os.path.exists(attack_images_folder):
+        os.makedirs(attack_images_folder)
+    for filename in os.listdir(attack_images_folder):
+        file_path = os.path.join(attack_images_folder, filename)
+        os.remove(file_path)
+
+
 # Attack worker function to run on separate process and complete attacks
 def attack_worker(queues: WorkerCommunication):
     """
@@ -17,62 +29,97 @@ def attack_worker(queues: WorkerCommunication):
     The actual worker should receive the data from the input_queue,
       and run the attack with the given parameters.
     """
+    
+    # Initialise adapters for different attacks
     breaching = BreachingAdapter(queues.response_channel)
+    mia = MiaAdapter(queues.response_channel)
+
+    # Clear attack_images folder
+    clear_attack_images()
+    
+    # Permenantly loop, fetching data from queues
     while True:
         print("waiting for data...")
         request_token, data = queues.task_channel.get()
         print(data)
 
+        # Clear attack_images folder
+        clear_attack_images()
+
         try:
-            cfg, setup, user, server, attacker, model, loss_fn = breaching.setup_attack(
-                attack_params=data, cfg=None, torch_model=None
-            )
+            # Model inversion attack
+            if data.attack == "invertinggradients":
+                # Setup attack using params
+                setup, model, permutation_arr, builder = breaching.setup_image_attack(
+                    attack_params=data, cfg=None
+                )
+
+                # Get response channel and request token to pass into breaching
+                response = request_token, queues.response_channel
+                num_batches, metrics_arr, cfg = breaching.perform_batches(
+                    builder,
+                    setup,
+                    model,
+                    request_token,
+                    data.breaching_params.reconstruction_frequency,
+                    permutation_arr,
+                )
+
+                # Return metrics to user
+                breaching.get_metrics(num_batches, metrics_arr, cfg, response)
+
+            elif data.attack == "tag":
+                # Setup attack using params
+                cfg, setup, user, server, attacker, model, loss_fn = (
+                    breaching.setup_text_attack(attack_params=data, cfg=None)
+                )
 
             # Get response channel and request token to pass into breaching
             response = request_token, queues.response_channel
-            r_user_data, t_user_data, server_payload = breaching.perform_attack(
-                cfg,
-                setup,
-                user,
-                server,
-                attacker,
-                model,
-                loss_fn,
-                request_token=request_token,
-                reconstruction_frequency=data.reconstruction_frequency,
-            )
-            breaching.get_metrics(
-                r_user_data, t_user_data, server_payload, server, cfg, setup, response
-            )
+            r_user_data, t_user_data, server_payload = breaching.perform_attack(cfg, setup, user, server, attacker,
+                                                                                model, loss_fn, request_token=request_token)
+            breaching.get_metrics(r_user_data, t_user_data, server_payload, server, cfg, setup, response)
 
         # Report any errors to task manager
         except Exception as e:
+            print(f"Attack worker exception was:\n{e}")
+            traceback.print_exc()
             progress = AttackProgress(
                 message_type="error",
                 error_message=f"Attack Configuration Error: {str(e)}",
             )
+            traceback.print_exc()
             queues.response_channel.put(request_token, progress)
             break
 
-
 # Use this for testing?
 if __name__ == "__main__":
-    from common import AttackParameters
+    from common import AttackParameters, BreachingParams
 
     pars = AttackParameters(
-        model="ResNet-18",
-        datasetStructure="Foldered",
-        csvPath="~/data/images",
-        batchSize=1,
+        attack="tag",
+        model="gpt2",
+        modality="text",
+        datasetStructure="text",
+        csvPath=None,
+        batchSize=2,
         numRestarts=1,
         stepSize=0.1,
         maxIterations=1,
         callbackInterval=10,
-        ptFilePath="../resnet18_pretrained.pt",
-        zipFilePath="../small_foldered_set.zip",
+        ptFilePath="./transformer3.pt",
+        zipFilePath=None,
         budget=100,
-        means=[0.46, 0.56, 0.57],
-        stds=[0.32, 0.28, 0.27],
+        means=[],
+        stds=[],
+        breaching_params=BreachingParams(
+            modality="text",
+            textDataPoints=2,
+            stepSize=0.1,
+            numRestarts=1,
+            maxIterations=5,
+            tokenizer="gpt2",
+        ),
     )
 
     req_tok = str(uuid.uuid4())

@@ -15,21 +15,21 @@ const ThreeNumberInput: React.FC<ThreeNumberInputProps> = ({ label, onChange1, o
           min="0"
           onChange={onChange1}
           onWheel={e => { e.currentTarget.blur() }}
-          className="text-black w-[65px] bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="text-black w-[62px] bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm hide-arrows"
         />
         <input
           type="number"
           min="0"
           onChange={onChange2}
           onWheel={e => { e.currentTarget.blur() }}
-          className="text-black w-[65px] ml-2 bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="text-black w-[62px] ml-2 bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm hide-arrows"
         />
         <input
           type="number"
           min="0"
           onChange={onChange3}
           onWheel={e => { e.currentTarget.blur() }}
-          className="text-black w-[65px] ml-2 bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          className="text-black w-[62px] ml-2 bg-gray-300 border border-gray-500 rounded-md py-2 px-3 focus:ring-blue-500 focus:border-blue-500 sm:text-sm hide-arrows"
         />
       </div>
     </div>

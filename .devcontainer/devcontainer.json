@@ -4,7 +4,14 @@
   "initializeCommand": "docker pull warmtea137/privacy-ml-segp:latest",
   "customizations": {
     "vscode": {
-      "settings": {},
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/zsh",
+        "terminal.integrated.env.linux": {
+          "CONDA_DEFAULT_ENV": "privacy-ml-container",
+          "PATH": "/opt/conda/envs/privacy-ml-container/bin:/opt/conda/bin:${env:PATH}"
+        },
+        "python.pythonPath": "/opt/conda/envs/privacy-ml-container/bin/python"
+      },
       "extensions": [
         "ms-python.vscode-pylance",
         "ms-python.python",
@@ -20,5 +27,5 @@
       ]
     }
   },
-  "postStartCommand": "cd backend && pip install -r requirements.txt"
+  "postCreateCommand": "echo 'source /opt/conda/etc/profile.d/conda.sh && conda activate privacy-ml-container' >> ~/.zshrc"
 }

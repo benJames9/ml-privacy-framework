@@ -2,6 +2,8 @@ import { AttackStatistics } from "./AttackStatistics";
 
 // TypeScript interface for AttackProgress
 export interface AttackProgress {
+  attack_start_time_s: number;
+  attack_type: string;
   current_iteration: number;
   max_iterations: number;
   current_restart: number;
@@ -10,7 +12,11 @@ export interface AttackProgress {
   max_batches: number;
   time_taken: number;
   statistics: AttackStatistics;
-  reconstructed_image: string;
   true_image: string;
-  attack_start_time_s: number;
+  reconstructed_image: string;
+  true_text: string;
+  reconstructed_text: string;
+  mia_stats: {
+    likelihood_ratio: number;
+  }
 }
