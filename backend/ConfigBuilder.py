@@ -138,17 +138,17 @@ class ConfigBuilder:
     def _construct_text_model_cfg(self, model, cfg):
         model = model.lower()
         if model == "bert":
-            cfg.case.model = "BertModel"
-        elif model == "gpt2":
-            cfg.case.model = "gpt2"
-        elif model == "transformer3":
-            cfg.case.model = "transformer3"
+            cfg.case.model = "bert-base-uncased"
+        elif model == "transformers":
+            cfg.case.model = "transformerS"
+        elif model == "gpt2s":
+            cfg.case.model = "gpt2S"
         else:
             try:
                 assert (
                     model
                     in {
-                        # ... list of all supported models
+                        "gpt2", "transformer3", "lstm", "transformer3t", "transformer1", "linear"
                     }
                 )
                 cfg.case.model = model
@@ -168,7 +168,7 @@ class ConfigBuilder:
             cfg.case.data.task = "causal-lm"
             cfg.case.data.vocab_size = 50257
         elif tokenizer == "transformer3":
-            cfg.case.model = "transformer3"
+            cfg.case.data.tokenizer = "transformer3"
         else:
             cfg.case.data.tokenizer = tokenizer
             print(f"Attempting to use unknown tokenizer {tokenizer}")

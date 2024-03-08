@@ -40,7 +40,6 @@ class BreachingAdapter:
         self.attack_cache = BreachingCache()
 
     def setup_text_attack(self, attack_params: AttackParameters = None, cfg=None):
-        attack_params.model = "gpt2"
 
         print(f"~~~[Attack Params]~~~ {attack_params}")
 

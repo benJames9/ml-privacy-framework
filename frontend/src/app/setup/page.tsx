@@ -15,12 +15,12 @@ import MiaParams from "@/components/MiaParams";
 import { getAttacksInfo, getDatasetParamsInfo, getAttackParamsInfo, getPtFileInfo, getZipFileInfo } from "@/utils/getInfo";
 
 export default function SetupPage() {
-  const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
-  const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
+  const imageModels: string[] = ["ResNet-18", "DenseNet-121", "AlexNet"];
+  const textModels: string[] = ["GPT2", "Transformer3", "Transformer3t", "Transformer1", "TranformerS", "GPT2S"];
   const miaModels: string[] = ["ResNet-18"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Membership\nInference"];
   const textDatasets: string[] = ["WikiText", "Shakespeare", "StackOverflow"]
-  const tokenizers: string[] = ["GPT2", "Transformer3"];
+  const tokenizers: string[] = ["GPT2"];
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
