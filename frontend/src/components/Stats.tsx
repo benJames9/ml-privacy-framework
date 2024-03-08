@@ -6,13 +6,8 @@ interface StatsProps {
   modality: string;
 }
 
-function stats_contains_non_zero_val(stats: AttackStatistics) {
-  return Object.values(stats).reduce((acc, curr) => acc ||= (curr != 0), false)
-}
-
 const Stats: React.FC<StatsProps> = ({ stats, decimalPlaces = 4, modality }) => {
   return (
-    stats_contains_non_zero_val(stats) &&
     <div className="text-center">
       <h1 className="text-4xl font-bold text-gray-100">Attack Statistics</h1>
       {modality === "images" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
