@@ -29,9 +29,9 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
   return (
     <div className="flex min-h-screen flex-col items-center py-[5vh] bg-gradient-to-r from-black to-blue-950">
       <HorizontalBar
-        current={attackProgress.current_iteration + ((attackProgress.current_restart) * attackProgress.max_iterations)}
+        current={attackProgress.current_iteration + ((attackProgress.current_restart || 0) * attackProgress.max_iterations || 0)}
         min={0}
-        max={attackProgress.max_restarts * attackProgress.max_iterations}
+        max={attackProgress.max_restarts || 1 * attackProgress.max_iterations}
         text="Attacking..."
         color="bg-green-600"
       />

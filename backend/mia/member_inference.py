@@ -272,7 +272,7 @@ class MembershipInferenceAttack(ABC):
     
     # Carry out an attack given an initialised MembershipInferenceAttack object
     def run_inference(self, path_to_data, n, epochs, batch_size, lr, request_token, progress_callback):
-        self._max_epochs = n * self._N
+        self._max_epochs = self._N * epochs
         self._infer_image_data(path_to_data)
         
         # Load data to pytorch image folder
@@ -324,7 +324,7 @@ class Resnet18MIA(MembershipInferenceAttack):
                 loss.backward()
                 optimizer.step()
                 
-                progress_callback(request_token, self._max_epochs, current_model * epochs + epoch)
+            progress_callback(request_token, self._max_epochs, current_model * epochs + epoch)
 
         print('model trained')
         return model

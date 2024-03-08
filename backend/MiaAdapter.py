@@ -57,7 +57,7 @@ class MiaAdapter:
                                  current_epoch, result=None):
         # Construct progress type to update user
         progress = AttackProgress(
-            message_type="progress",
+            message_type="AttackProgress",
             current_iteration=current_epoch,
             max_iterations=max_epochs
         )

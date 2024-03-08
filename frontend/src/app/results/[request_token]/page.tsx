@@ -122,7 +122,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
 
           delete data.message_type;
 
-          if(does_progress_update_stats_and_images(data)) {
+          if (does_progress_update_stats_and_images(data)) {
             cached_true_image = data.true_image
             reconstructed_image = data.reconstructed_image
             statistics = data.statistics
@@ -142,7 +142,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
             if (data.true_image === "" && data.reconstructed_image === "") {
               setAttackModality("text");
             }
-            
+
             // let them see the full attack progress bar for a bit
             await wait_ms(500);
             setPageState(PageState.FINAL_SCREEN);
