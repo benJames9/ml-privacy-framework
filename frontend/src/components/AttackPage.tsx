@@ -12,14 +12,13 @@ interface AttackPageProps {
   modality: string;
   attackProgress: AttackProgress;
   startTime: number | null;
-  previousTimes: number[];
   onCancel: (requestToken: number) => void;
   params: {
     request_token: number
   }
 }
 
-const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, startTime, previousTimes, onCancel, params }) => {
+const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, startTime, onCancel, params }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const copyToken = () => {
@@ -39,7 +38,6 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
       <TimeEstimate
         attackProgress={attackProgress}
         startTime={startTime}
-        previousTimes={previousTimes}
       />
       <div className="flex mt-8 mb-8">
         <CancelButton

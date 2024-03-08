@@ -41,26 +41,54 @@ class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
         self.response_channel = WorkerQueue[AttackProgress]()
+        
+        
+class MiaParams(BaseModel):
+    N: int
+    data_points: int
+    epochs: int
+    batch_size: int
+    lr: float
+    target_label: str
+    target_image_path: str
+    path_to_label_csv: str
+    
+
+class MiaStatistics(BaseModel):
+    likelihood_ratio: float
+
+class BreachingParams(BaseModel):
+    modality: str = "images"
+    # Image params
+    datasetStructure: Optional[str] = "Foldered"
+    csvPath: Optional[str] = None
+    means: Optional[List[float]] = [0.46, 0.56, 0.57]
+    stds: Optional[List[float]] = [0.32, 0.28, 0.27]
+    # Text params
+    textDataset: Optional[str] = None
+    textDataPoints: Optional[int] = None
+    seqLength: Optional[int] = None
+    tokenizer: Optional[str] = None
+    # Attack params
+    batchSize: Optional[int]
+    numRestarts: int
+    stepSize: float
+    maxIterations: int
+    budget: int = 100
+    reconstruction_frequency: int = 100
 
 
 class AttackParameters(BaseModel):
     model: str
     attack: str = "invertinggradients"
-    modality: str = "images"
-    datasetStructure: str
-    csvPath: Optional[str]
-    means: List[float] = [0.46, 0.56, 0.57]
-    stds: List[float] = [0.32, 0.28, 0.27]
-    batchSize: int
-    numRestarts: int
-    stepSize: float
-    maxIterations: int
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
     budget: int
     reconstruction_frequency: int = 10
     tokenizer: Optional[str] = 'gpt2'
     shape: Optional[List[int]] = [16]
+    breaching_params: Optional[BreachingParams] = None
+    mia_params: Optional[MiaParams] = None
 
 
 class AttackStatistics(BaseModel):
@@ -71,6 +99,7 @@ class AttackStatistics(BaseModel):
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"
+    attack_start_time_s: int = 0
     current_iteration: int = 0
     max_iterations: int = 0
     current_restart: int = 0
@@ -82,3 +111,4 @@ class AttackProgress(BaseModel):
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
     error_message: str = None  # Optional error message
+    mia_stats: Optional[MiaStatistics] = None

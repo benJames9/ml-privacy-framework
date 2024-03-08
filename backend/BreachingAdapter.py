@@ -12,6 +12,7 @@ import zipfile
 import os, shutil
 from ConfigBuilder import ConfigBuilder
 import tempfile
+import time
 from functools import partial
 from dataclasses import dataclass
 
@@ -19,10 +20,10 @@ from dataclasses import dataclass
 @dataclass
 class BreachingCache:
     true_b64_image = ""
-    reconstructed_b64_image = ""
     true_user_data = None
     reconstructed_user_data = None
     stats = None
+    attack_start_time_s = 0
 
     server_payload = None
     server = None
@@ -54,7 +55,7 @@ class BreachingAdapter:
         # Limit the GPU memory usage based on user budget
         if torch.cuda.is_available():
             print(f"limiting cuda process memory")
-            torch.cuda.set_per_process_memory_fraction(attack_params.budget / 100)
+            torch.cuda.set_per_process_memory_fraction(attack_params.breaching_params.budget / 100)
 
         if cfg == None:
             cfg = breachinglib.get_config()
@@ -66,8 +67,10 @@ class BreachingAdapter:
         if os.path.exists(extract_dir):
             shutil.rmtree(extract_dir)
         if attack_params.zipFilePath is not None:
-            with zipfile.ZipFile(attack_params.zipFilePath, 'r') as zip_ref:
+            with zipfile.ZipFile(attack_params.zipFilePath, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
+        elif attack_params.breaching_params.modality != "text":
+            attack_params.breaching_params.datasetStructure = "test"
 
         torch.backends.cudnn.benchmark = cfg.case.impl.benchmark
         setup = dict(device=device, dtype=getattr(torch, cfg.case.impl.dtype))
@@ -128,6 +131,8 @@ class BreachingAdapter:
         self.attack_cache.true_user_data = true_user_data
 
         breachinglib.utils.overview(server, user, attacker)
+        
+        self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
         
@@ -205,6 +210,7 @@ class BreachingAdapter:
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
                 reconstructed_image=base64_reconstructed,
+                attack_start_time_s=self.attack_cache.attack_start_time_s
             ),
         )
         return metrics
@@ -272,6 +278,7 @@ class BreachingAdapter:
             max_restarts=response_data.max_restarts,
             current_batch=response_data.current_batch,
             max_batches=response_data.max_batches,
+            attack_start_time_s=self.attack_cache.attack_start_time_s
         )
 
         if self.attack_cache.cfg.case.data.modality == "vision" and response_data.reconstructed_image:
@@ -297,9 +304,9 @@ class BreachingAdapter:
                 SSIM=metrics.get("ssim", 0),
                 PSNR=metrics.get("psnr", 0),
             )
-
-        progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
-        progress.true_image = self.attack_cache.true_b64_image
-        progress.statistics = self.attack_cache.stats
+            
+            progress.reconstructed_image = reconstructed_b64_image
+            progress.true_image = self.attack_cache.true_b64_image
+            progress.statistics = self.attack_cache.stats
 
         self._worker_response_queue.put(request_token, progress)

@@ -13,3 +13,6 @@ torchvision
 torchtext
 transformers
 datasets
+scikit-learn
+# torch>=2.1.0,<2.2.0
+# torchvision>=0.16.0,<0.17.0
