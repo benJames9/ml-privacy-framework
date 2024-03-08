@@ -19,13 +19,13 @@ const AttackSelect: React.FC<AttackSelectProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-8">
+    <div className="grid grid-cols-3 gap-8">
       {attacks.map((attack) => (
         <button
           key={attack}
           type="button"
           className={
-            `bg-gray-900 whitespace-pre text-white hover:bg-gray-600 border border-gray-300 text-gray-700 ${internalSelectedAttack === attack ? "ring-4 ring-blue-500" : ""} font-medium rounded-lg text-center inline-flex items-center px-5 py-4 text-base w-full justify-center w-48 h-32 min-w-32 text-xl`
+            `bg-gray-900 whitespace-pre text-white hover:bg-gray-600 border border-gray-300 ${internalSelectedAttack === attack ? "ring-4 ring-blue-500" : ""} font-medium rounded-lg center px-5 py-4 w-full w-48 h-32 text-xl`
           }
           onClick={() => handleAttackSelect(attack)}
         >
