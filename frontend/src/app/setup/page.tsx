@@ -12,6 +12,7 @@ import LoadingIcon from "@/components/LoadingIcon";
 import ErrorAlert from "@/components/ErrorAlert";
 import InfoPopup from "@/components/InfoPopup";
 import MiaParams from "@/components/MiaParams";
+import { getAttacksInfo, getDatasetParamsInfo, getAttackParamsInfo, getPtFileInfo, getZipFileInfo } from "@/utils/getInfo";
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
@@ -110,9 +111,6 @@ export default function SetupPage() {
         }
         break;
       case "tag":
-        if (!ptFile) {
-          errorMsgs.push("Please upload a model parameters file");
-        }
         if (!textDataset) {
           errorMsgs.push("Please select a text dataset");
         }
@@ -358,38 +356,6 @@ export default function SetupPage() {
     }
   }
 
-  const getAttacksInfo = () => {
-    let info = "Select the attack to be performed.";
-    info += "\n\n<strong>Inverting Gradients</strong>: An attack that uses the gradients of the model to invert an image to a target class.";
-    info += "\n\n<strong>TAG</strong>: An attack that uses the model to generate a target sequence of tokens.";
-    info += "\n\n<strong>Membership Inference</strong>: An attack that determines if a given data point was used to train the model.";
-    return info;
-  }
-
-  const getDatasetParamsInfo = () => {
-    let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
-    switch (attack) {
-      case "invertinggradients":
-        info += "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
-        break;
-      case "tag":
-        info += "\n\n<strong>Text Dataset</strong>: The dataset to be used in the attack.";
-        info += "\n\n<strong>No. Data Points</strong>: The number of data points in the dataset. Inferred from the dataset if left empty."
-        info += "\n\n<strong>Sequence Length</strong>: The length of the sequences in the dataset. Inferred from the dataset if left empty."
-        break;
-    }
-    info += "\n\n<strong>Batch Size</strong>: The batch size to be used in the attack.";
-    return info;
-  }
-
-  const getAttackParamsInfo = () => {
-    let info = "Enter the parameters of the attack to be performed.";
-    info += "\n\n<strong>No. Restarts</strong>: The number of times the attack restarts from the beginning.";
-    info += "\n\n<strong>Step Size</strong>: Attack learning rate.";
-    info += "\n\n<strong>Max Iterations</strong>: The number of iterations run per restart.";
-    return info;
-  }
-
   const getModels = () => {
     switch (attack) {
       case "tag":
@@ -432,9 +398,9 @@ export default function SetupPage() {
           <HBar />
           <div className="flex items-start">
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-pt-header">
-              Upload Model Parameters {attack === "mia" || attack === "tag" ? <span className="text-sm text-red-500">*</span> : ""}
+              Upload Model Parameters {attack === "mia" ? <span className="text-sm text-red-500">*</span> : ""}
             </h3>
-            <InfoPopup text={"Upload a .pt file (PyTorch State Dictionary). This must match the selected model."} />
+            <InfoPopup text={getPtFileInfo(attack)} />
           </div>
           <div className="mb-2">
             <FileUpload
@@ -456,7 +422,7 @@ export default function SetupPage() {
             <h3 className="text-2xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-zip-header">
               {attack === "mia" ? "Upload Data Distribution" : "Upload Custom Dataset"} <span className="text-sm text-red-500">*</span>
             </h3>
-            <InfoPopup text={"Upload a .zip file containing the custom dataset to be used in the attack.\n\nIt should be organised as follows:\n\n dataset\n ├── class1\n │   ├── img1.jpg\n │   ├── img2.jpg\n │   └── ...\n └── class2\n     ├── img1.jpg\n     ├── img2.jpg\n     └── ..."} />
+            <InfoPopup text={getZipFileInfo(attack)} />
           </div>
 
           <div className="mb-2">
@@ -488,7 +454,7 @@ export default function SetupPage() {
               <h3 className="text-2xl font-bold text-gray-400 mb-4" id="data-params-header">
                 Dataset Parameters
               </h3>
-              <InfoPopup text={getDatasetParamsInfo()} />
+              <InfoPopup text={getDatasetParamsInfo(attack)} />
             </div>
             <DatasetParams
               handleDataParamsChange={handleDataParamsChange}

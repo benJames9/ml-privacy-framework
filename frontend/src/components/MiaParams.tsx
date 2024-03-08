@@ -19,7 +19,7 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange, labelDict,
           <h3 className="text-2xl text-center font-bold text-gray-400 mb-8 flex items-start whitespace-pre" id="upload-label-dict-header">
             Upload Label Dictionary <span className="text-sm text-red-500">*</span>
           </h3>
-          <InfoPopup text={"Upload a .json file containing the label dictionary to be used in the attack."} />
+          <InfoPopup text={"Upload a .csv file containing the label dictionary to be used in the attack."} />
         </div>
         <div className="mb-2 flex flex-col justify-center">
           <FileUpload
@@ -74,7 +74,14 @@ const MiaParams: React.FC<MiaParamsProps> = ({ handleMiaParamsChange, labelDict,
         <h3 className="text-2xl font-bold text-gray-400 mb-4">
           Shadow Parameters
         </h3>
-        <InfoPopup text={"Enter the parameters of the shadow model to be used in the attack."} />
+        <InfoPopup text={
+          "Enter the parameters of the shadow model to be used in the attack." +
+          "\n\n<strong>No. Shadow Models</strong>: The number of shadow models to be trained." +
+          "\n\n<strong>No. Data Points</strong>: The number of data points to be used in the attack." +
+          "\n\n<strong>No. Epochs</strong>: The number of epochs to train the shadow models." +
+          "\n\n<strong>Batch Size</strong>: The number of data points per batch." +
+          "\n\n<strong>Learning Rate</strong>: The learning rate of the shadow models."
+        } />
       </div>
       <NumberInput
         label="No. Shadow Models"
