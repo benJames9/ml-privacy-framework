@@ -113,6 +113,7 @@ class AttackProgress(BaseModel):
     statistics: AttackStatistics = AttackStatistics()
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
+    true_text: Optional[str] = None
     reconstructed_text: Optional[str] = None
     error_message: str = None  # Optional error message
     mia_stats: Optional[MiaStatistics] = None
