@@ -192,7 +192,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       />
       break;
     case PageState.FINAL_SCREEN:
-      content = <AttackResultsPage attackProgress={attackProgress} modality={attackModality} />
+      content = <AttackResultsPage attackProgress={attackProgress} />
   }
 
   return (
