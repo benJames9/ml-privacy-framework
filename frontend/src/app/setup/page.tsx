@@ -19,8 +19,8 @@ export default function SetupPage() {
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const miaModels: string[] = ["ResNet-18"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Membership\nInference"];
-  const textDatasets: string[] = ["StackOverflow", "WikiText", "Shakespeare"]
-  const tokenizers: string[] = ["GPT2", "BERT", "Transformer3"];
+  const textDatasets: string[] = ["WikiText", "Shakespeare", "StackOverflow"]
+  const tokenizers: string[] = ["GPT2", "Transformer3"];
 
   const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
