@@ -1,8 +1,12 @@
-const LoadingIcon: React.FC = () => {
+interface LoadingIconProps {
+  size: number;
+  borderSize: number;
+}
+const LoadingIcon: React.FC<LoadingIconProps> = ({ size, borderSize}) => {
   return (
     <div className="relative" id="loading-icon">
-      <div className="h-12 w-12 rounded-full border-t-4 border-b-4 border-gray-200"></div>
-      <div className="absolute top-0 left-0 h-12 w-12 rounded-full border-t-4 border-b-4 border-blue-500 animate-spin">
+      <div className={`h-${size} w-${size} rounded-full border-t-${borderSize} border-b-${borderSize} border-gray-200`}></div>
+      <div className={`absolute top-0 left-0 h-${size} w-${size} rounded-full border-t-${borderSize} border-b-${borderSize} border-blue-500 animate-spin`}>
       </div>
     </div>
   );

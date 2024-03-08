@@ -10,12 +10,12 @@ const TimeEstimate: React.FC<TimeEstimateProps> = ({ attackProgress, startTime }
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [currentIteration, setCurrentIteration] = useState<number>(0);
 
-  const totalIterations = attackProgress.max_iterations * attackProgress.max_restarts;
+  const totalIterations = attackProgress.max_iterations * (attackProgress.max_restarts || 1);
 
   useEffect(() => {
     if (!attackProgress || !startTime) return;
 
-    const newIteration = attackProgress.current_iteration + attackProgress.current_restart * attackProgress.max_iterations;
+    const newIteration = attackProgress.current_iteration + (attackProgress.current_restart || 0) * (attackProgress.max_iterations || 0);
 
     if (newIteration !== currentIteration) {
       const averageTimePerIteration = ((new Date().getTime() / 1000) - attackProgress.attack_start_time_s) / newIteration;
