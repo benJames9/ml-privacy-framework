@@ -25,7 +25,7 @@ def shutdown_event():
 
 @app.get("/health")
 def health_check():
-    return 1
+    return 0 # indicating good health
 
 
 @app.get("/api")
