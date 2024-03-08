@@ -211,6 +211,13 @@ export default function SetupPage() {
         formData.append("maxIterations", maxIterations.toString());
         break;
       case "tag":
+        formData.append("textDataset", textDataset);
+        formData.append("textDataPoints", textDataPoints.toString());
+        formData.append("seqLength", seqLength.toString());
+        formData.append("tokenizer", tokenizer);
+        formData.append("numRestarts", numRestarts.toString());
+        formData.append("stepSize", stepSize.toString());
+        formData.append("maxIterations", maxIterations.toString());
         break;
       case "fishing":
         break;
