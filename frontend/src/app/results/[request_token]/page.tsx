@@ -81,12 +81,15 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     },
     true_image: "",
     reconstructed_image: "",
-    attack_start_time_s: 0
+    attack_start_time_s: 0,
+    mia_stats: {
+      likelihood_ratio: 0
+    }
   });
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
+  const [pageState, setPageState] = useState<PageState>(PageState.FINAL_SCREEN);
   const [attackModality, setAttackModality] = useState<"images" | "text">("images");
 
   useEffect(() => {
