@@ -48,9 +48,9 @@ const AttackPage: React.FC<AttackPageProps> = ({ modality, attackProgress, start
         />
       </div>
       {copied && <SuccessAlert text="Token successfully copied to clipboard!" onClose={() => { setCopied(false) }} />}
-      <div className="flex flex-col items-center pt-[5vh]">
+      {modality === "images" && <div className="flex flex-col items-center pt-[5vh]">
         <AttackResults modality={modality} attackProgress={attackProgress} />
-      </div>
+      </div>}
     </div>
   )
 }

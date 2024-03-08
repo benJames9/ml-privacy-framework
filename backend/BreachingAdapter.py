@@ -21,6 +21,7 @@ from dataclasses import dataclass
 class BreachingCache:
     true_b64_image = ""
     true_user_data = None
+    true_user_text = ""
     reconstructed_user_data = None
     reconstructed_user_text = ""
     stats = None
@@ -144,6 +145,7 @@ class BreachingAdapter:
                 "utf-8"
             )
         else:
+            self.attack_cache.true_user_text = user.decode_text(true_user_data)
             user.print(true_user_data)
 
         print("reconstructing attack")
@@ -219,6 +221,7 @@ class BreachingAdapter:
                 max_restarts=restarts,
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
+                true_text=self.attack_cache.true_user_text,
                 reconstructed_image=base64_reconstructed,
                 reconstructed_text=text_reconstructed,
                 attack_start_time_s=self.attack_cache.attack_start_time_s,
@@ -323,5 +326,7 @@ class BreachingAdapter:
             progress.reconstructed_image = self.attack_cache.reconstructed_b64_image
             progress.true_image = self.attack_cache.true_b64_image
             progress.statistics = self.attack_cache.stats
+        elif self.attack_cache.cfg.case.data.modality == "text":
+            progress.true_text = self.attack_cache.true_user_text
 
         self._worker_response_queue.put(request_token, progress)
