@@ -17,7 +17,7 @@ export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "VGG-16", "AlexNet"];
   const textModels: string[] = ["LSTM", "Transformer3", "Transformer31", "Linear"];
   const miaModels: string[] = ["ResNet-18"];
-  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Fishing for\nUser Data", "Membership\nInference"];
+  const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Membership\nInference"];
   const textDatasets: string[] = ["CoLA", "Random Tokens", "Stack Overflow", "WikiText"]
   const tokenizers: string[] = ["GPT-2", "BERT", "Transformer3"];
 
@@ -358,6 +358,14 @@ export default function SetupPage() {
     }
   }
 
+  const getAttacksInfo = () => {
+    let info = "Select the attack to be performed.";
+    info += "\n\n<strong>Inverting Gradients</strong>: An attack that uses the gradients of the model to invert an image to a target class.";
+    info += "\n\n<strong>TAG</strong>: An attack that uses the model to generate a target sequence of tokens.";
+    info += "\n\n<strong>Membership Inference</strong>: An attack that determines if a given data point was used to train the model.";
+    return info;
+  }
+
   const getDatasetParamsInfo = () => {
     let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
     switch (attack) {
@@ -398,7 +406,12 @@ export default function SetupPage() {
       <Navbar />
       <div className="flex min-h-screen flex-col items-center justify-between px-24 py-8 bg-gradient-to-r from-black to-blue-950">
         {/* Attack Select */}
-        <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">Select Attack <span className="text-sm text-red-500">*</span></h2>
+        <div className="flex items-start">
+          <h2 className="text-3xl font-bold text-gray-400 mb-8 flex items-start whitespace-pre">
+            Select Attack <span className="text-sm text-red-500">*</span>
+          </h2>
+          <InfoPopup text={getAttacksInfo()} />
+        </div>
         <AttackSelect attacks={attacks} onChange={onAttackSelect} />
         <HBar />
 
