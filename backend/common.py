@@ -41,8 +41,8 @@ class WorkerCommunication:
     def __init__(self):
         self.task_channel = WorkerQueue[AttackParameters]()
         self.response_channel = WorkerQueue[AttackProgress]()
-        
-        
+
+
 class MiaParams(BaseModel):
     N: int
     data_points: int
@@ -52,10 +52,11 @@ class MiaParams(BaseModel):
     target_label: str
     target_image_path: str
     path_to_label_csv: str
-    
+
 
 class MiaStatistics(BaseModel):
     likelihood_ratio: float
+
 
 class BreachingParams(BaseModel):
     modality: str = "images"
@@ -85,7 +86,7 @@ class AttackParameters(BaseModel):
     zipFilePath: Optional[str]
     budget: int
     reconstruction_frequency: int = 10
-    tokenizer: Optional[str] = 'gpt2'
+    tokenizer: Optional[str] = "gpt2"
     shape: Optional[List[int]] = [16]
     breaching_params: Optional[BreachingParams] = None
     mia_params: Optional[MiaParams] = None

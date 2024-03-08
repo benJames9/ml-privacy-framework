@@ -37,13 +37,10 @@ class BreachingAdapter:
         self._worker_response_queue = worker_response_queue
         self.attack_cache = BreachingCache()
 
-    def setup_attack(
-        self, attack_params: AttackParameters = None, cfg=None
-    ):
-        
+    def setup_attack(self, attack_params: AttackParameters = None, cfg=None):
         # TODO: REMOVE THIS
         attack_params.model = "gpt2"
-        
+
         print(f"~~~[Attack Params]~~~ {attack_params}")
 
         device = (
@@ -55,7 +52,9 @@ class BreachingAdapter:
         # Limit the GPU memory usage based on user budget
         if torch.cuda.is_available():
             print(f"limiting cuda process memory")
-            torch.cuda.set_per_process_memory_fraction(attack_params.breaching_params.budget / 100)
+            torch.cuda.set_per_process_memory_fraction(
+                attack_params.breaching_params.budget / 100
+            )
 
         if cfg == None:
             cfg = breachinglib.get_config()
@@ -86,27 +85,26 @@ class BreachingAdapter:
         cfg = ConfigBuilder(attack_params).build()
 
         print(cfg)
-        
+
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=None
-            )
-        
+        )
+
         if cfg.case.data.modality == "vision":
             model = self._getTorchModelFromSet(cfg.case.model, cfg.case.data.modality)
-            
+
         if attack_params.ptFilePath is not None:
             model = self._buildUserModel(model, attack_params.ptFilePath)
-            
+
         attacker = breachinglib.attacks.prepare_attack(
             server.model, server.loss, cfg.attack, setup
-            )
+        )
         breachinglib.utils.overview(server, user, attacker)
 
         if not self._check_image_size(model, cfg.case.data.shape):
             raise ValueError("Mismatched dimensions")
 
         return cfg, setup, user, server, attacker, model, loss_fn
-    
 
     def perform_attack(
         self,
@@ -131,13 +129,13 @@ class BreachingAdapter:
         self.attack_cache.true_user_data = true_user_data
 
         breachinglib.utils.overview(server, user, attacker)
-        
+
         self.attack_cache.attack_start_time_s = time.time()
 
         response = request_token, self._worker_response_queue
-        
+
         if cfg.case.data.modality == "vision":
-            user.plot(true_user_data, saveFile="true_data")            
+            user.plot(true_user_data, saveFile="true_data")
 
             with open("./true_data.png", "rb") as image_file:
                 image_data_true = image_file.read()
@@ -157,12 +155,12 @@ class BreachingAdapter:
             add_response_to_channel=partial(self._add_progress_to_channel, user),
             reconstruction_frequency=reconstruction_frequency,
         )
-        
+
         if cfg.case.data.modality == "vision":
             user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         else:
             user.print(reconstructed_user_data, saveFile="reconstructed_data")
-        
+
         return reconstructed_user_data, true_user_data, server_payload
 
     def get_metrics(
@@ -210,31 +208,32 @@ class BreachingAdapter:
                 statistics=stats,
                 true_image=self.attack_cache.true_b64_image,
                 reconstructed_image=base64_reconstructed,
-                attack_start_time_s=self.attack_cache.attack_start_time_s
+                attack_start_time_s=self.attack_cache.attack_start_time_s,
             ),
         )
         return metrics
 
     def _check_image_size(self, model, shape):
         return True
-    
+
     def _getTorchModelFromSet(self, model_name, modality):
         if modality == "vision":
-            model_name = model_name.replace('-', '').lower()
+            model_name = model_name.replace("-", "").lower()
             if not hasattr(visionModels, model_name):
                 print("no torch model found")
                 raise TypeError("given model type did not match any of the options")
             model = getattr(visionModels, model_name)()
         elif modality == "text":
             config_name = model_name.replace("Model", "Config")
-            if not (hasattr(textModels, model_name) and hasattr(textModels, config_name)):
+            if not (
+                hasattr(textModels, model_name) and hasattr(textModels, config_name)
+            ):
                 print("hugging face model or config not found")
                 raise TypeError("given model type did not match any of the options")
             config = getattr(textModels, config_name)()
             model = getattr(textModels, model_name)(config)
-                
+
         return model
-        
 
     def _buildUserModel(self, model, state_dict_path):
         if state_dict_path is not None:
@@ -278,10 +277,13 @@ class BreachingAdapter:
             max_restarts=response_data.max_restarts,
             current_batch=response_data.current_batch,
             max_batches=response_data.max_batches,
-            attack_start_time_s=self.attack_cache.attack_start_time_s
+            attack_start_time_s=self.attack_cache.attack_start_time_s,
         )
 
-        if self.attack_cache.cfg.case.data.modality == "vision" and response_data.reconstructed_image:
+        if (
+            self.attack_cache.cfg.case.data.modality == "vision"
+            and response_data.reconstructed_image
+        ):
             self.attack_cache.reconstructed_b64_image = (
                 self._convert_candidate_to_base64(
                     user, response_data.reconstructed_image
@@ -304,7 +306,7 @@ class BreachingAdapter:
                 SSIM=metrics.get("ssim", 0),
                 PSNR=metrics.get("psnr", 0),
             )
-            
+
             progress.reconstructed_image = reconstructed_b64_image
             progress.true_image = self.attack_cache.true_b64_image
             progress.statistics = self.attack_cache.stats

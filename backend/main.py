@@ -116,7 +116,9 @@ async def submit_attack(
                 maxIterations=maxIterations,
             )
         elif modality == "text":
-            print(f"modality: {modality}, textDataset: {textDataset}, textDataPoints: {textDataPoints}, seqLength: {seqLength}, tokenizer: {tokenizer}, numRestarts: {numRestarts}, stepSize: {stepSize}, maxIterations: {maxIterations}")
+            print(
+                f"modality: {modality}, textDataset: {textDataset}, textDataPoints: {textDataPoints}, seqLength: {seqLength}, tokenizer: {tokenizer}, numRestarts: {numRestarts}, stepSize: {stepSize}, maxIterations: {maxIterations}"
+            )
             breaching_params = BreachingParams(
                 modality=modality,
                 textDataset=textDataset,
