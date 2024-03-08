@@ -66,6 +66,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [queuedCurrent, setQueuedCurrent] = useState(50);
 
   const [attackProgress, setAttackProgress] = useState<AttackProgress>({
+    attack_type: "",
     current_iteration: 0,
     max_iterations: 0,
     current_restart: 0,
@@ -185,7 +186,6 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       break;
     case PageState.ATTACKING:
       content = <AttackPage attackProgress={attackProgress}
-        modality={attackModality}
         startTime={startTime}
         onCancel={onCancel}
         params={params}

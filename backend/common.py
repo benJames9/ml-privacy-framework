@@ -95,6 +95,7 @@ class AttackStatistics(BaseModel):
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"
+    attack_type: str
     attack_start_time_s: int = 0
     current_iteration: int = 0
     max_iterations: int = 0

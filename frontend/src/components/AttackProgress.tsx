@@ -2,6 +2,7 @@ import { AttackStatistics } from "./AttackStatistics";
 
 // TypeScript interface for AttackProgress
 export interface AttackProgress {
+  attack_type: string;
   current_iteration: number;
   max_iterations: number;
   current_restart: number;

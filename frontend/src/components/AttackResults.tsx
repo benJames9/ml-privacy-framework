@@ -4,14 +4,13 @@ import Stats from "./Stats";
 
 interface AttackResultsProps {
   attackProgress: AttackProgress;
-  modality: string;
 }
 
-const AttackResults: React.FC<AttackResultsProps> = ({ attackProgress, modality }) => {
+const AttackResults: React.FC<AttackResultsProps> = ({ attackProgress }) => {
   return (
     <div className="flex flex-col items-center">
-      <Stats stats={attackProgress.statistics} modality={modality} />
-      {modality === "images" && <div>
+      <Stats stats={attackProgress.statistics} attack={attackProgress.attack_type} />
+      {attackProgress.attack_type === "invertinggradients" && <div>
         <SideBySideImages attackProgress={attackProgress} />
       </div>}
     </div>);

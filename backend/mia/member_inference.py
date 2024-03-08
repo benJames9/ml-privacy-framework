@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from sklearn.mixture import GaussianMixture
 from scipy.stats import norm
@@ -135,6 +136,7 @@ class MembershipInferenceAttack(ABC):
         if n > len(data):
             raise ValueError("Shadow model training points larger than dataset")
                 
+        start_time = time.time()
         # Half of the models are trained on the target point, and half are not
         for i in range(self._N):
             num_samples = len(data)
@@ -144,11 +146,11 @@ class MembershipInferenceAttack(ABC):
             if i % 2 == 0:
                 sampled_data = torch.utils.data.ConcatDataset([sampled_data, [self._target_point]])
                 model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
-                                          request_token=request_token, progress_callback=progress_callback)
+                                          request_token=request_token, progress_callback=progress_callback, start_time=start_time)
                 self._in_models.append(model)
             else:
                 model = self._train_model(sampled_data, epochs, batch_size, lr, current_model=i, 
-                                          request_token=request_token, progress_callback=progress_callback)
+                                          request_token=request_token, progress_callback=progress_callback, start_time=start_time)
                 self._out_models.append(model)
             print(f'model {i} trained\n')
 
@@ -293,7 +295,7 @@ class MembershipInferenceAttack(ABC):
         return ratio
     
 class Resnet18MIA(MembershipInferenceAttack):
-    def _train_model(self, data, epochs, batch_size, lr, current_model, request_token, progress_callback):
+    def _train_model(self, data, epochs, batch_size, lr, current_model, request_token, progress_callback, start_time):
         # Define the model
         model = models.resnet18(pretrained=False)
         model.fc = nn.Linear(model.fc.in_features, self._image_stats.num_classes)
@@ -324,7 +326,7 @@ class Resnet18MIA(MembershipInferenceAttack):
                 loss.backward()
                 optimizer.step()
                 
-            progress_callback(request_token, self._max_epochs, current_model * epochs + epoch)
+            progress_callback(request_token, self._max_epochs, current_model * epochs + epoch, start_time)
 
         print('model trained')
         return model
