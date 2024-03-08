@@ -30,7 +30,6 @@ export default function SetupPage() {
 
   // Image parameters
   const [batchSize, setBatchSize] = useState<number>(0);
-  const [imageShape, setImageShape] = useState<[number, number, number]>([0, 0, 0]);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
   const [std, setStd] = useState<[number, number, number]>([0, 0, 0]);
 
@@ -108,9 +107,6 @@ export default function SetupPage() {
         if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
           && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
           errorMsgs.push("Please either enter all values for mean and std or none");
-        }
-        if (imageShape.some(val => invalidNum(val)) && imageShape.some(val => !invalidNum(val))) {
-          errorMsgs.push("Please either enter all values for image shape or none");
         }
         break;
       case "tag":
@@ -257,32 +253,23 @@ export default function SetupPage() {
       case "batchSize":
         setBatchSize(parseInt(value));
         break;
-      case "imageShape1":
-        setImageShape([parseInt(value), imageShape[1], imageShape[2]]);
-        break;
-      case "imageShape2":
-        setImageShape([imageShape[0], parseInt(value), imageShape[2]]);
-        break;
-      case "imageShape3":
-        setImageShape([imageShape[0], imageShape[1], parseInt(value)]);
-        break;
       case "mean1":
-        setMean([parseFloat(value), mean[1], mean[2]]);
+        setMean([parseFloat(value) || 0, mean[1], mean[2]]);
         break;
       case "mean2":
-        setMean([mean[0], parseFloat(value), mean[2]]);
+        setMean([mean[0], parseFloat(value) || 0, mean[2]]);
         break;
       case "mean3":
-        setMean([mean[0], mean[1], parseFloat(value)]);
+        setMean([mean[0], mean[1], parseFloat(value) || 0]);
         break;
       case "std1":
-        setStd([parseFloat(value), std[1], std[2]]);
+        setStd([parseFloat(value) || 0, std[1], std[2]]);
         break;
       case "std2":
-        setStd([std[0], parseFloat(value), std[2]]);
+        setStd([std[0], parseFloat(value) || 0, std[2]]);
         break;
       case "std3":
-        setStd([std[0], std[1], parseFloat(value)]);
+        setStd([std[0], std[1], parseFloat(value) || 0]);
         break;
       case "textDataset":
         setTextDataset(value);
@@ -375,7 +362,6 @@ export default function SetupPage() {
     let info = "Enter the parameters of the uploaded dataset to be used in the attack.";
     switch (attack) {
       case "invertinggradients":
-        info += "\n\n<strong>Image Shape</strong>: The shape of the images in the dataset. Inferred from the dataset if left empty.";
         info += "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
         break;
       case "tag":

@@ -16,12 +16,6 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, a
     <div>
       {attack === "invertinggradients" && <div>
         <ThreeNumberInput
-          label="Image shape"
-          onChange1={(e) => { handleDataParamsChange("imageShape1", e.target.value) }}
-          onChange2={(e) => { handleDataParamsChange("imageShape2", e.target.value) }}
-          onChange3={(e) => { handleDataParamsChange("imageShape3", e.target.value) }}
-        />
-        <ThreeNumberInput
           label="Mean"
           onChange1={(e) => { handleDataParamsChange("mean1", e.target.value) }}
           onChange2={(e) => { handleDataParamsChange("mean2", e.target.value) }}
