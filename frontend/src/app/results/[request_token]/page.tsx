@@ -59,7 +59,7 @@ function does_progress_update_have_images(progress: AttackProgress) {
 }
 
 function does_progress_update_have_stats(progress: AttackProgress) {
-  return Object.entries(progress).map((_, v) => v != 0).reduce((acc, curr) => acc ||= curr, false)
+  return Object.values(progress.statistics).reduce((acc, curr) => acc ||= curr != 0, false)
 }
 
 const ResultsPage: React.FC<SearchParam> = ({ params }) => {
