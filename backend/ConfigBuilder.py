@@ -76,10 +76,19 @@ class ConfigBuilder:
                 # cfg.case.data.
             elif attack_params.breaching_params.modality == "text":
                 # TODO: INSERT THE WIKITEXT ETC STUFF
-                cfg.case.data = breachinglib.get_config(
-                    overrides=["case/data=wikitext"]
-                ).case.data
-                print("defaulted to wikitext")
+                try:
+                    dataset = attack_params.breaching_params.textDataset.lower()
+                    print(f"dataset is: {dataset}")
+                    cfg.case.data = breachinglib.get_config(
+                        overrides=[f"case/data={dataset}"]
+                    ).case.data
+                    print(f"successfully set {dataset}")
+                except Exception as e:
+                    print(e)
+                    cfg.case.data = breachinglib.get_config(
+                        overrides=["case/data=wikitext"]
+                    ).case.data
+                    print("defaulted to wikitext")
                 cfg = self._construct_text_model_cfg(attack_params.model, cfg)
                 cfg = self._construct_text_tokenizer_cfg(
                     attack_params.breaching_params.tokenizer, cfg
