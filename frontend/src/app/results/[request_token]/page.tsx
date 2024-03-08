@@ -89,7 +89,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
 
-  const [pageState, setPageState] = useState<PageState>(PageState.FINAL_SCREEN);
+  const [pageState, setPageState] = useState<PageState>(PageState.LOADING_SPINNER);
   const [attackModality, setAttackModality] = useState<"images" | "text">("images");
 
   useEffect(() => {
