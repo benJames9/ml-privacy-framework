@@ -64,9 +64,7 @@ class ConfigBuilder:
         cfg.attack.optim.step_size = attack_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.maxIterations
         cfg.attack.optim.callback = 1
-        # cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
-        cfg.case.user.user_idx = 1
-        print(f"default clients are {cfg.case.data.default_clients}")
+        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.numRestarts
         return cfg
 

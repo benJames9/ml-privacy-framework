@@ -37,7 +37,7 @@ class BreachingAdapter:
         self.attack_cache = BreachingCache()
 
     def setup_attack(
-        self, attack_params: AttackParameters = None, cfg=None, torch_model=None
+        self, attack_params: AttackParameters = None, cfg=None
     ):
         
         # TODO: REMOVE THIS
@@ -84,20 +84,20 @@ class BreachingAdapter:
 
         print(cfg)
         
-        if torch_model is None and cfg.case.data.modality == "vision":
-            torch_model = self._getTorchModelFromSet(cfg.case.model, cfg.case.data.modality)
-            torch_model = self._buildUserModel(torch_model, attack_params.ptFilePath)
-        print(torch_model)
         user, server, model, loss_fn = breachinglib.cases.construct_case(
             cfg.case, setup, prebuilt_model=None
             )
+        
+        if cfg.case.data.modality == "vision":
+            model = self._getTorchModelFromSet(cfg.case.model, cfg.case.data.modality)
+            
+        if attack_params.ptFilePath is not None:
+            model = self._buildUserModel(model, attack_params.ptFilePath)
+            
         attacker = breachinglib.attacks.prepare_attack(
             server.model, server.loss, cfg.attack, setup
             )
         breachinglib.utils.overview(server, user, attacker)
-
-        # if torch_model is not None:
-        #     model = torch_model
 
         if not self._check_image_size(model, cfg.case.data.shape):
             raise ValueError("Mismatched dimensions")
@@ -156,7 +156,7 @@ class BreachingAdapter:
         if cfg.case.data.modality == "vision":
             user.plot(reconstructed_user_data, saveFile="reconstructed_data")
         else:
-            user.print(reconstructed_user_data)
+            user.print(reconstructed_user_data, saveFile="reconstructed_data")
         
         return reconstructed_user_data, true_user_data, server_payload
 

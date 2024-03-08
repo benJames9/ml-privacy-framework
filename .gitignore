@@ -2,3 +2,6 @@ __pycache__
 backend/reconstructed_data.png
 backend/true_data.png
 backend/dataset
+true_data*
+reconstructed_data*
+venv/
