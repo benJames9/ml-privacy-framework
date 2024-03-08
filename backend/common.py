@@ -61,7 +61,7 @@ class MiaStatistics(BaseModel):
 class BreachingParams(BaseModel):
     modality: str = "images"
     # Image params
-    datasetStructure: Optional[str]
+    datasetStructure: Optional[str] = "Foldered"
     csvPath: Optional[str] = None
     means: Optional[List[float]] = [0.46, 0.56, 0.57]
     stds: Optional[List[float]] = [0.32, 0.28, 0.27]
@@ -77,6 +77,8 @@ class BreachingParams(BaseModel):
     maxIterations: int
     budget: int = 100
     reconstruction_frequency: int = 100
+    tokenizer: Optional[str] = "gpt2"
+    shape: Optional[List[int]] = [16]
 
 
 class AttackParameters(BaseModel):
@@ -84,9 +86,6 @@ class AttackParameters(BaseModel):
     attack: str = "invertinggradients"
     ptFilePath: Optional[str]
     zipFilePath: Optional[str]
-    reconstruction_frequency: int = 10
-    tokenizer: Optional[str] = "gpt2"
-    shape: Optional[List[int]] = [16]
     breaching_params: Optional[BreachingParams] = None
     mia_params: Optional[MiaParams] = None
 
@@ -102,6 +101,7 @@ class AttackStatistics(BaseModel):
 
 class AttackProgress(BaseModel):
     message_type: str = "AttackProgress"
+    attack_type: str = ""
     attack_start_time_s: int = 0
     current_iteration: int = 0
     max_iterations: int = 0

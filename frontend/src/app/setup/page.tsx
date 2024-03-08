@@ -503,7 +503,7 @@ export default function SetupPage() {
           }
         }} />
         <div id="loading-icon">
-          {submitted && <LoadingIcon />}
+          {submitted && <LoadingIcon size={"small"} />}
         </div>
         <div id="error-alert">
           {isInvalid && <ErrorAlert errors={errors} />}

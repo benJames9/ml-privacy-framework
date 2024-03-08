@@ -6,12 +6,36 @@ import random
 class ConfigBuilder:
     def __init__(self, attack_params: AttackParameters) -> None:
         self.attack_params = attack_params
+        self.most_recent_build = None
+        self.max_clients = -1
 
-    def build(self):
-        return self._construct_cfg(self.attack_params)
+    def build(self, dataset_size=None):
+        self.most_recent_build = self._construct_cfg(self.attack_params, dataset_size)
+        self.max_clients = self.most_recent_build.case.data.default_clients
+        return self.most_recent_build
 
-    def _construct_cfg(self, attack_params: AttackParameters, dataset_path=None):
-        print("here")
+    def update_user_idx(self, user_idx):
+        if self.most_recent_build is None:
+            self.build()
+        if user_idx >= self.most_recent_build.case.data.default_clients:
+            raise RuntimeError(
+                f"User index {user_idx} not within [0 : {self.most_recent_build.case.data.default_clients - 1}]"
+            )
+        self.most_recent_build.case.user.user_idx = user_idx
+        return self.most_recent_build
+
+    def get_max_clients(self):
+        if self.most_recent_build is None:
+            self.build()
+        return self.max_clients
+
+    def _construct_cfg(
+        self,
+        attack_params: AttackParameters,
+        dataset_size=None,
+        dataset_path=None,
+    ):
+        print("constructing")
         if attack_params.breaching_params.modality == "images":
             cfg = self._construct_images_cfg(attack_params)
         elif attack_params.breaching_params.modality == "text":
@@ -20,14 +44,16 @@ class ConfigBuilder:
             raise TypeError(
                 f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
             )
-
         assert attack_params is not None
         print("done")
 
         # setup all customisable parameters
         cfg.case.model = attack_params.model
 
-        if attack_params.zipFilePath is None and attack_params.breaching_params.modality == "images":
+        if (
+            attack_params.zipFilePath is None
+            and attack_params.breaching_params.modality == "images"
+        ):
             attack_params.breaching_params.datasetStructure = "default"
             print("defaulting")
 
@@ -39,7 +65,7 @@ class ConfigBuilder:
         print(attack_params.breaching_params.modality)
         if attack_params.breaching_params.datasetStructure == "CSV":
             cfg.case.data.name = "CustomCsv"
-        elif attack_params.breaching_params.datasetStructure == "Foldered":
+        elif attack_params.breaching_params.datasetStructure == "Foldered" and attack_params.breaching_params.modality == "images":
             cfg.case.data.name = "CustomFolders"
         else:
             if attack_params.breaching_params.modality == "images":
@@ -55,25 +81,38 @@ class ConfigBuilder:
                 ).case.data
                 print("defaulted to wikitext")
                 cfg = self._construct_text_model_cfg(attack_params.model, cfg)
-                cfg = self._construct_text_tokenizer_cfg(attack_params.breaching_params.tokenizer, cfg)
-                cfg.case.data.shape = attack_params.shape
+                cfg = self._construct_text_tokenizer_cfg(
+                    attack_params.breaching_params.tokenizer, cfg
+                )
+                cfg.case.data.shape = attack_params.breaching_params.shape
             else:
                 print("Could not match dataset structure")
                 raise TypeError(
                     f"Data type of attack: {attack_params.breaching_params.modality} does not match anything."
                 )
 
-        if attack_params.breaching_params.modality == "images" and any(attack_params.breaching_params.means) and any(attack_params.breaching_params.stds):
-            cfg.case.data.mean = attack_params.breaching_params.means
-            cfg.case.data.std = attack_params.breaching_params.stds
-            cfg.case.data.normalize = False
-
-        cfg.case.user.num_data_points = attack_params.breaching_params.textDataPoints
+        if attack_params.breaching_params.modality == "images":
+            cfg.case.user.num_data_points = attack_params.breaching_params.batchSize
+            if any(attack_params.breaching_params.means) and any(attack_params.breaching_params.stds):
+                cfg.case.data.mean = attack_params.breaching_params.means
+                cfg.case.data.std = attack_params.breaching_params.stds
+                cfg.case.data.normalize = False
+            
+        elif attack_params.breaching_params.modality == "text":
+            cfg.case.user.num_data_points = attack_params.breaching_params.textDataPoints
+            
         cfg.attack.optim.step_size = attack_params.breaching_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.breaching_params.maxIterations
         cfg.attack.optim.callback = 1
         cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
+        print("USER_IDX:", cfg.case.user.user_idx)
         cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
+
+        if dataset_size is not None:
+            cfg.case.data.default_clients = (
+                dataset_size // attack_params.breaching_params.batchSize
+            )
+
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):
@@ -84,8 +123,8 @@ class ConfigBuilder:
         else:
             raise TypeError(f"No text attack match; {attack_params.attack}")
         cfg = self._construct_text_model_cfg(attack_params.model, cfg)
-        cfg = self._construct_text_tokenizer_cfg(attack_params.tokenizer, cfg)
-        cfg.case.data.shape = attack_params.shape
+        cfg = self._construct_text_tokenizer_cfg(attack_params.breaching_params.tokenizer, cfg)
+        cfg.case.data.shape = attack_params.breaching_params.shape
         return cfg
 
     def _construct_text_model_cfg(self, model, cfg):
@@ -120,15 +159,17 @@ class ConfigBuilder:
             cfg.case.data.tokenizer = "gpt2"
             cfg.case.data.task = "causal-lm"
             cfg.case.data.vocab_size = 50257
+        elif tokenizer == "transformer3":
+            cfg.case.model = "transformer3"
         else:
             cfg.case.data.tokenizer = tokenizer
+            print(f"Attempting to use unknown tokenizer {tokenizer}")
         return cfg
 
     def _construct_images_cfg(self, attack_params: AttackParameters):
         if attack_params.attack == "invertinggradients":
             cfg = breachinglib.get_config()
             cfg.case.data.partition = "random"
-            cfg.case.data.default_clients = 50
             # default case.model=ResNet18
         elif attack_params.attack == "modern":
             cfg = breachinglib.get_config(overrides=["attack=modern"])

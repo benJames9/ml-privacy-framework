@@ -69,13 +69,15 @@ class MiaAdapter:
         return model
 
     def _add_progress_to_channel(
-        self, request_token, max_epochs, current_epoch, result=None
+        self, request_token, max_epochs, current_epoch, start_time, result=None
     ):
         # Construct progress type to update user
         progress = AttackProgress(
-            message_type="progress",
+            message_type="AttackProgress",
+            attack_type="mia",
             current_iteration=current_epoch,
             max_iterations=max_epochs,
+            attack_start_time_s=start_time,
         )
 
         # Add final result

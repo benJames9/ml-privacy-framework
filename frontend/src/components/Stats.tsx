@@ -3,14 +3,14 @@ import { AttackStatistics } from "./AttackStatistics";
 interface StatsProps {
   stats: AttackStatistics;
   decimalPlaces?: number;
-  modality: string;
+  attack: string;
 }
 
-const Stats: React.FC<StatsProps> = ({ stats, decimalPlaces = 4, modality }) => {
+const Stats: React.FC<StatsProps> = ({ stats, decimalPlaces = 4, attack }) => {
   return (
     <div className="text-center">
       <h1 className="text-4xl font-bold text-gray-100">Attack Statistics</h1>
-      {modality === "images" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
+      {attack === "invertinggradients" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
         <div className="px-8 py-6 text-gray-200 bg-gray-800 border border-gray-900 rounded-s-lg text-center">
           <h1 className="text-4xl font-bold text-white mb-4">{stats.MSE!.toFixed(decimalPlaces)}</h1>
           <h3 className="text-2xl font-bold text-gray-300 mb-4">MSE</h3>
@@ -28,7 +28,7 @@ const Stats: React.FC<StatsProps> = ({ stats, decimalPlaces = 4, modality }) => 
         </div>
       </div>
       }
-      {modality === "text" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
+      {attack === "tag" && <div className="inline-flex rounded-md shadow-sm mt-10" role="group">
         <div className="px-8 py-6 text-gray-200 bg-gray-800 border border-gray-900 rounded-s-lg text-center">
           <h1 className="text-4xl font-bold text-white mb-4">{stats.ACC!.toFixed(decimalPlaces)}</h1>
           <h3 className="text-2xl font-bold text-gray-300 mb-4">ACC</h3>

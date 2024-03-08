@@ -66,6 +66,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
   const [queuedCurrent, setQueuedCurrent] = useState(50);
 
   const [attackProgress, setAttackProgress] = useState<AttackProgress>({
+    attack_type: "",
     current_iteration: 0,
     max_iterations: 0,
     current_restart: 0,
@@ -85,7 +86,10 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     reconstructed_image: "",
     attack_start_time_s: 0,
     true_text: "",
-    reconstructed_text: ""
+    reconstructed_text: "",
+    mia_stats: {
+      likelihood_ratio: 0
+    }
   });
   const [currentIteration, setCurrentIteration] = useState<number>(0);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -127,7 +131,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
 
           delete data.message_type;
 
-          if(does_progress_update_stats_and_images(data)) {
+          if (does_progress_update_stats_and_images(data)) {
             cached_true_image = data.true_image
             reconstructed_image = data.reconstructed_image
             statistics = data.statistics
@@ -190,14 +194,13 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
       break;
     case PageState.ATTACKING:
       content = <AttackPage attackProgress={attackProgress}
-        modality={attackModality}
         startTime={startTime}
         onCancel={onCancel}
         params={params}
       />
       break;
     case PageState.FINAL_SCREEN:
-      content = <AttackResultsPage attackProgress={attackProgress} modality={attackModality} />
+      content = <AttackResultsPage attackProgress={attackProgress} />
   }
 
   return (
