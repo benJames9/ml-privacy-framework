@@ -53,10 +53,13 @@ function construct_ws_url(endpoint: string) {
   return `${wsScheme}://${wsHost}${endpoint}`
 }
 
-function does_progress_update_stats_and_images(progress: AttackProgress) {
-  return Object.entries(progress).map((_, v) => v != 0).reduce((acc, curr) => acc ||= curr, false) &&
-    !(progress.reconstructed_image == "" || !progress.reconstructed_image) &&
+function does_progress_update_have_images(progress: AttackProgress) {
+  return !(progress.reconstructed_image == "" || !progress.reconstructed_image) &&
     !(progress.true_image == "" || !progress.true_image)
+}
+
+function does_progress_update_have_stats(progress: AttackProgress) {
+  return Object.entries(progress).map((_, v) => v != 0).reduce((acc, curr) => acc ||= curr, false)
 }
 
 const ResultsPage: React.FC<SearchParam> = ({ params }) => {
@@ -131,10 +134,12 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
 
           delete data.message_type;
 
-          if (does_progress_update_stats_and_images(data)) {
-            cached_true_image = data.true_image
-            reconstructed_image = data.reconstructed_image
-            statistics = data.statistics
+          if (does_progress_update_have_stats(data)) {
+            if (does_progress_update_have_images(data)) {
+              cached_true_image = data.true_image;
+              reconstructed_image = data.reconstructed_image;
+            }
+            statistics = data.statistics;
           }
 
           const augmented_update = {
