@@ -59,11 +59,18 @@ class MiaStatistics(BaseModel):
 
 class BreachingParams(BaseModel):
     modality: str = "images"
-    datasetStructure: str = "Foldered"
+    # Image params
+    datasetStructure: Optional[str] = "Foldered"
     csvPath: Optional[str] = None
-    means: List[float] = [0.46, 0.56, 0.57]
-    stds: List[float] = [0.32, 0.28, 0.27]
-    batchSize: int
+    means: Optional[List[float]] = [0.46, 0.56, 0.57]
+    stds: Optional[List[float]] = [0.32, 0.28, 0.27]
+    # Text params
+    textDataset: Optional[str] = None
+    textDataPoints: Optional[int] = None
+    seqLength: Optional[int] = None
+    tokenizer: Optional[str] = None
+    # Attack params
+    batchSize: Optional[int]
     numRestarts: int
     stepSize: float
     maxIterations: int
