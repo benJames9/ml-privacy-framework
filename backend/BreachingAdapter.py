@@ -15,6 +15,7 @@ import tempfile
 import time
 from functools import partial
 from dataclasses import dataclass
+import zipfile
 
 
 @dataclass
@@ -348,34 +349,53 @@ class BreachingAdapter:
         iterations = cfg.attack.optim.max_iterations
         restarts = cfg.attack.restarts.num_trials
         token, channel = response
-
+        
+        attack_dir = "./attack_images"
+        
         for i in range(num_batches):
-            with open(
-                f"./attack_images/reconstructed_data_{i}.png", "rb"
-            ) as image_file:
-                image_data_rec = image_file.read()
-            base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+            file_path = os.path.join(attack_dir, f"reconstruction_metrics_{i}.json")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(metrics_arr[i].json(indent=4))
 
-            with open(f"./attack_images/true_data_{i}.png", "rb") as image_file:
-                image_data_rec = image_file.read()
-            true_base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Path for the temporary zip file
+            tempfile_path = os.path.join(temp_dir, "reconstruction.zip")
 
-            metrics = metrics_arr[i]
+            with zipfile.ZipFile(tempfile_path, 'w') as zipf:
+                for root, dirs, files in os.walk(attack_dir):
+                    for file in files:
+                        zipf.write(os.path.join(root, file), arcname=file)
+                    
+            with open(tempfile_path, "rb") as zip_file:
+                reconstructed_images_archive = base64.b64encode(zip_file.read()).decode('utf-8')
+            
+        with open(
+            f"./attack_images/reconstructed_data_0.png", "rb"
+        ) as image_file:
+            image_data_rec = image_file.read()
+        sample_base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
 
-            channel.put(
-                token,
-                AttackProgress(
-                    attack_type="invertinggradients",
-                    current_iteration=iterations,
-                    current_restart=restarts,
-                    max_iterations=iterations,
-                    max_restarts=restarts,
-                    statistics=metrics,
-                    true_image=true_base64_reconstructed,
-                    reconstructed_image=base64_reconstructed,
-                    attack_start_time_s=self.attack_cache.attack_start_time_s,
-                ),
-            )
+        with open(f"./attack_images/true_data_0.png", "rb") as image_file:
+            image_data_rec = image_file.read()
+        sample_true_base64_reconstructed = base64.b64encode(image_data_rec).decode("utf-8")
+
+        sample_metrics = metrics_arr[i]
+
+        channel.put(
+            token,
+            AttackProgress(
+                attack_type="invertinggradients",
+                current_iteration=iterations,
+                current_restart=restarts,
+                max_iterations=iterations,
+                max_restarts=restarts,
+                statistics=sample_metrics,
+                true_image=sample_true_base64_reconstructed,
+                reconstructed_image=sample_base64_reconstructed,
+                reconstructed_images_archive=reconstructed_images_archive,
+                attack_start_time_s=self.attack_cache.attack_start_time_s,
+            ),
+        )
 
     def _check_image_size(self, model, shape):
         return True

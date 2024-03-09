@@ -111,9 +111,16 @@ class AttackProgress(BaseModel):
     max_batches: int = 0
     time_taken: float = 0
     statistics: AttackStatistics = AttackStatistics()
+    error_message: str = None  # Optional error message
+
+    # inverting gradients
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
+    reconstructed_images_archive: Optional[str]  # base64 encoded zip file
+
+    # tag attacks
     true_text: Optional[str] = None
     reconstructed_text: Optional[str] = None
-    error_message: str = None  # Optional error message
+
+    # mia attacks
     mia_stats: Optional[MiaStatistics] = None

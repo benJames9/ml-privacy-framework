@@ -87,6 +87,7 @@ const ResultsPage: React.FC<SearchParam> = ({ params }) => {
     },
     true_image: "",
     reconstructed_image: "",
+    reconstructed_images_archive: "",
     attack_start_time_s: 0,
     true_text: "",
     reconstructed_text: "",

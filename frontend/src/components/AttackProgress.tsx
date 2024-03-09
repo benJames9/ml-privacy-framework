@@ -16,6 +16,7 @@ export interface AttackProgress {
   reconstructed_image: string;
   true_text: string;
   reconstructed_text: string;
+  reconstructed_images_archive: string;
   mia_stats: {
     likelihood_ratio: number;
   }
