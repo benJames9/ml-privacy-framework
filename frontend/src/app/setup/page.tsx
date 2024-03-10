@@ -97,8 +97,8 @@ export default function SetupPage() {
         if (invalidNum(batchSize)) {
           errorMsgs.push("Please enter a batch size > 0");
         }
-        if (invalidNum(numRestarts)) {
-          errorMsgs.push("Please enter a number of restarts > 0");
+        if (invalidNum(numRestarts + 1)) {
+          errorMsgs.push("Please enter a number of restarts >= 0");
         }
         if (invalidNum(stepSize)) {
           errorMsgs.push("Please enter a step size > 0");
@@ -127,8 +127,8 @@ export default function SetupPage() {
         if (invalidNum(seqLength)) {
           errorMsgs.push("Please enter a sequence length > 0");
         }
-        if (invalidNum(numRestarts)) {
-          errorMsgs.push("Please enter a number of restarts > 0");
+        if (invalidNum(numRestarts + 1)) {
+          errorMsgs.push("Please enter a number of restarts >= 0");
         }
         if (invalidNum(stepSize)) {
           errorMsgs.push("Please enter a step size > 0");
@@ -297,7 +297,11 @@ export default function SetupPage() {
   const handleAttackParamsChange = (field: string, value: string) => {
     switch (field) {
       case "restarts":
-        setNumRestarts(parseInt(value));
+        if (parseInt(value) > 0) {
+          setNumRestarts(parseInt(value) - 1);
+        } else {
+          setNumRestarts(parseInt(value));
+        }        
         break;
       case "stepSize":
         setStepSize(parseFloat(value));
