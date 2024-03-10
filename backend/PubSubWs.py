@@ -3,6 +3,7 @@ from starlette.websockets import WebSocketState
 from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
+import os
 
 WEBSOCKET_TIMEOUT_SECONDS = 3600  # Timeout for websocket connections
 
@@ -13,6 +14,16 @@ class PubSubWs:
         self._route_dict: dict[str, list[WebSocket]] = dict()
         self._last_published_data: dict[str, Optional[str]] = dict()
         self._dict_lock = Lock()
+        
+        self._dict_path = "./route_dict_state.json"
+        self._valid_tokens = "./valid_tokens.json"
+        if os.path.exists(self._dict_path):
+            # Reading the dictionary back from the file
+            with open(self._dict_path, 'r') as infile:
+                self._last_published_data = json.load(infile)
+                
+                for tok in self._last_published_data.keys():
+                    self._route_dict[tok] = []
 
     # Setup websocket to accept connections
     def setup(self, app: FastAPI, base_route: str):
@@ -107,6 +118,7 @@ class PubSubWs:
         # Cache the last published data
         async with self._dict_lock:
             self._last_published_data[request_token] = data_str
+            self._write_dict_to_file()
 
             # Broadcast the data to all clients
             for ws in self._route_dict[request_token]:
@@ -115,6 +127,16 @@ class PubSubWs:
                 except Exception as e:
                     # print(f"WebSocket may already dead: {e}")
                     pass
+
+    def _write_dict_to_file(self):
+        os.makedirs(os.path.dirname(self._dict_path), exist_ok=True)
+        os.makedirs(os.path.dirname(self._valid_tokens), exist_ok=True)
+
+        with open(self._dict_path, 'w') as outfile:
+            json.dump(self._last_published_data, outfile)
+                    
+        with open(self._valid_tokens, 'w') as f:
+            f.write(json.dumps(list(self._route_dict.keys())))
 
     # Register new routes
     async def register_route(self, request_token: str):
@@ -125,6 +147,7 @@ class PubSubWs:
         async with self._dict_lock:
             self._route_dict[request_token] = []
             self._last_published_data[request_token] = None
+            self._write_dict_to_file()
 
     # Deregister routes
     async def deregister_route(self, request_token: str):
@@ -135,3 +158,4 @@ class PubSubWs:
         async with self._dict_lock:
             self._route_dict.pop(request_token)
             self._last_published_data.pop(request_token)
+            self._write_dict_to_file()
