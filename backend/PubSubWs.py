@@ -3,6 +3,7 @@ from starlette.websockets import WebSocketState
 from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
+import pickle
 import os
 
 WEBSOCKET_TIMEOUT_SECONDS = 3600  # Timeout for websocket connections
@@ -15,12 +16,12 @@ class PubSubWs:
         self._last_published_data: dict[str, Optional[str]] = dict()
         self._dict_lock = Lock()
         
-        self._dict_path = "./route_dict_state.json"
+        self._dict_path = "./route_dict_state.pkl"
         self._valid_tokens = "./valid_tokens.json"
         if os.path.exists(self._dict_path):
             # Reading the dictionary back from the file
-            with open(self._dict_path, 'r') as infile:
-                self._last_published_data = json.load(infile)
+            with open(self._dict_path, 'rb') as infile:
+                self._last_published_data = pickle.load(infile)
                 
                 for tok in self._last_published_data.keys():
                     self._route_dict[tok] = []
@@ -80,9 +81,10 @@ class PubSubWs:
 
     # Close all websockets for a given token
     async def close_tokens_websockets(self, request_token: str, error: str):
-        import pprint
-        pprint.pprint(self._route_dict)
-        for ws in self._route_dict[request_token]:
+        async with self._dict_lock:
+            wss = self._route_dict[request_token][:]
+        
+        for ws in wss:
             await self._close_websocket(ws, request_token, error)
 
     # Generate JSON error message to send to client
@@ -132,8 +134,8 @@ class PubSubWs:
         os.makedirs(os.path.dirname(self._dict_path), exist_ok=True)
         os.makedirs(os.path.dirname(self._valid_tokens), exist_ok=True)
 
-        with open(self._dict_path, 'w') as outfile:
-            json.dump(self._last_published_data, outfile)
+        with open(self._dict_path, 'wb') as outfile:
+            pickle.dump(self._last_published_data, outfile)
                     
         with open(self._valid_tokens, 'w') as f:
             f.write(json.dumps(list(self._route_dict.keys())))
