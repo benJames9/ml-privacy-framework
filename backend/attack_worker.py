@@ -46,12 +46,11 @@ def attack_worker(queues: WorkerCommunication):
 
         # Clear attack_images folder
         clear_attack_images()
-        
-        relative_reconstruction_interval = data.breaching_params.maxIterations // data.breaching_params.reconstruction_frequency
 
         try:
             # Model inversion attack
             if data.attack == "invertinggradients":
+                relative_reconstruction_interval = data.breaching_params.maxIterations // data.breaching_params.reconstruction_frequency
                 # Setup attack using params
                 setup, model, permutation_arr, builder = breaching.setup_image_attack(
                     attack_params=data, cfg=None
@@ -72,6 +71,7 @@ def attack_worker(queues: WorkerCommunication):
                 breaching.get_metrics(num_batches, metrics_arr, cfg, response)
 
             elif data.attack == "tag":
+                relative_reconstruction_interval = data.breaching_params.maxIterations // data.breaching_params.reconstruction_frequency
                 # Setup attack using params
                 cfg, setup, user, server, attacker, model, loss_fn = (
                     breaching.setup_text_attack(attack_params=data, cfg=None)
@@ -88,7 +88,7 @@ def attack_worker(queues: WorkerCommunication):
                     model,
                     loss_fn,
                     request_token=request_token,
-                    reconstruction_frequency=data.breaching_params.reconstruction_frequency,
+                    reconstruction_frequency=relative_reconstruction_interval,
                 )
 
                 # Return metrics to user
@@ -104,6 +104,7 @@ def attack_worker(queues: WorkerCommunication):
 
             elif data.attack == "mia":
                 # Perform MIA attack
+                print("Performing MIA attack")
                 mia.perform_attack(data, request_token)
 
             else:

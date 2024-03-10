@@ -19,6 +19,12 @@ from .datasets import calculate_dataset_statistics
 
 class MembershipInferenceAttack(ABC):
     def __init__(self, target_model, target_point, N, class_dict):
+        self._device = (
+            torch.device(f"cuda:0")
+            if torch.cuda.is_available()
+            else torch.device("cpu")
+        )
+        
         # Check if N is even or >= 4
         if N % 2 != 0 or N < 4:
             raise ValueError("Number of shadow models must be even and larger than 4")
@@ -201,8 +207,10 @@ class MembershipInferenceAttack(ABC):
 
         # Make prediction
         model.eval()
+        model = model.to(self._device)
+        input = self._target_point[0].unsqueeze(0).to(self._device)
         with torch.no_grad():
-            logits = model(self._target_point[0].unsqueeze(0))
+            logits = model(input)
 
         print(f'logits: {logits}')
 
@@ -217,6 +225,8 @@ class MembershipInferenceAttack(ABC):
         print(f'one hot: {target_label}')
 
         criterion = nn.CrossEntropyLoss()
+        
+        target_label = target_label.to(self._device)
         loss = criterion(logits, target_label)
 
         print(f'loss: {loss}')
@@ -313,11 +323,12 @@ class Resnet18MIA(MembershipInferenceAttack):
         print('training new model...')
 
         # Train the model
+        model = model.to(self._device)
         model.train()
         for epoch in range(epochs):
             print(f'epoch {epoch}')
-            running_loss = 0.0
             for images, labels in data_loader:
+                images, labels = images.to(self._device), labels.to(self._device)
                 optimizer.zero_grad()
 
                 # Forward pass

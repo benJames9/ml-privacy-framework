@@ -40,6 +40,8 @@ class MiaAdapter:
         # Define target point and initialise attack
         target_point = (mia_params.target_image_path, mia_params.target_label)
         attack = Resnet18MIA(model, target_point, mia_params.N, label_dict)
+        
+        print("Running inference")
 
         # Perform the attack
         ratio = attack.run_inference(
