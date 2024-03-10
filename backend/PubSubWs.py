@@ -3,8 +3,6 @@ from starlette.websockets import WebSocketState
 from asyncio import Lock, create_task, sleep
 from typing import Optional
 import json
-import pickle
-import os
 
 WEBSOCKET_TIMEOUT_SECONDS = 3600  # Timeout for websocket connections
 
@@ -15,27 +13,15 @@ class PubSubWs:
         self._route_dict: dict[str, list[WebSocket]] = dict()
         self._last_published_data: dict[str, Optional[str]] = dict()
         self._dict_lock = Lock()
-        
-        self._dict_path = "./route_dict_state.pkl"
-        self._valid_tokens = "./valid_tokens.json"
-        if os.path.exists(self._dict_path):
-            # Reading the dictionary back from the file
-            with open(self._dict_path, 'rb') as infile:
-                self._last_published_data = pickle.load(infile)
-                
-                for tok in self._last_published_data.keys():
-                    self._route_dict[tok] = []
 
     # Setup websocket to accept connections
     def setup(self, app: FastAPI, base_route: str):
         @app.websocket(f"{base_route}/{{request_token}}")
         async def _websocket_endpoint(ws: WebSocket, request_token: str):
             await ws.accept()
-
+            
             if request_token not in self._route_dict:
-                return await self._close_websocket(
-                    ws, request_token, "Non-existent route"
-                )
+                return await self._close_websocket(ws, request_token, "Non-existent route")
 
             # Set timeout for webscket connection
             create_task(self._close_websocket_after_timeout(ws, request_token))
@@ -81,15 +67,12 @@ class PubSubWs:
 
     # Close all websockets for a given token
     async def close_tokens_websockets(self, request_token: str, error: str):
-        async with self._dict_lock:
-            wss = self._route_dict[request_token][:]
-        
-        for ws in wss:
+        for ws in self._route_dict[request_token]:
             await self._close_websocket(ws, request_token, error)
 
     # Generate JSON error message to send to client
     def _generate_error(self, error: str):
-        return {"message_type": "error", "error_message": error}
+        return {"message_type": "error", "error": error}
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
@@ -107,20 +90,17 @@ class PubSubWs:
             pass
 
         if str_data == "":
-            print("Data is not serialisable")
-            return
+            raise Exception("Data is not serialisable")
         await self.publish(request_token, str_data)
 
     # Publish serialised attack responses to clients
     async def publish(self, request_token: str, data_str: str):
         if not request_token in self._route_dict:
-            print("Cannot publish to non existent route")
-            return
+            raise Exception("Cannot publish to non existent route")
 
         # Cache the last published data
         async with self._dict_lock:
             self._last_published_data[request_token] = data_str
-            self._write_dict_to_file()
 
             # Broadcast the data to all clients
             for ws in self._route_dict[request_token]:
@@ -130,34 +110,20 @@ class PubSubWs:
                     # print(f"WebSocket may already dead: {e}")
                     pass
 
-    def _write_dict_to_file(self):
-        os.makedirs(os.path.dirname(self._dict_path), exist_ok=True)
-        os.makedirs(os.path.dirname(self._valid_tokens), exist_ok=True)
-
-        with open(self._dict_path, 'wb') as outfile:
-            pickle.dump(self._last_published_data, outfile)
-                    
-        with open(self._valid_tokens, 'w') as f:
-            f.write(json.dumps(list(self._route_dict.keys())))
-
     # Register new routes
     async def register_route(self, request_token: str):
         if request_token in self._route_dict:
-            print("Route already registered")
-            return
+            raise Exception("Route already registered")
 
         async with self._dict_lock:
             self._route_dict[request_token] = []
             self._last_published_data[request_token] = None
-            self._write_dict_to_file()
 
     # Deregister routes
     async def deregister_route(self, request_token: str):
         if not request_token in self._route_dict:
-            print("Route doesn't exist")
-            return
+            raise Exception("Route doesn't exist")
 
         async with self._dict_lock:
             self._route_dict.pop(request_token)
             self._last_published_data.pop(request_token)
-            self._write_dict_to_file()

@@ -159,8 +159,6 @@ class BackgroundTasks:
             self._num_buffered_requests_changed.set()
         else:
             self._restart_worker()
-            
-        await self._psw.close_tokens_websockets(request_token, "The Attack was Cancelled")
 
         # Never got result so deregister route
         await self._psw.deregister_route(request_token)
