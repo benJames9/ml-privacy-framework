@@ -13,6 +13,6 @@ COPY . .
 
 RUN apt-get update && apt-get install -y curl
 HEALTHCHECK --interval=30s --timeout=30s --start-period=45s \
-   CMD curl -f --retry 6 --max-time 15 --retry-delay 30 --retry-max-time 60 "http://localhost:8000/health" || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
+   CMD curl -f --retry 3 --max-time 1 --retry-delay 2 --retry-max-time 15 "http://localhost:8000/health" || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
 
 CMD conda run --no-capture-output -vvv -n breaching uvicorn main:app --host 0.0.0.0 --port 8000
