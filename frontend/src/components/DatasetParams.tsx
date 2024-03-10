@@ -27,6 +27,11 @@ const DatasetParams: React.FC<DatasetParamsProps> = ({ handleDataParamsChange, a
           onChange2={(e) => { handleDataParamsChange("std2", e.target.value) }}
           onChange3={(e) => { handleDataParamsChange("std3", e.target.value) }}
         />
+        <NumberInput
+          label="Dataset Size"
+          onChange={(e) => handleDataParamsChange("datasetSize", e.target.value)}
+          isRequired={true}
+        />
       </div>}
       {attack === "tag" && <div>
         <SelectInput

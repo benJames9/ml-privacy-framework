@@ -65,6 +65,7 @@ class BreachingParams(BaseModel):
     csvPath: Optional[str] = None
     means: Optional[List[float]] = [0.46, 0.56, 0.57]
     stds: Optional[List[float]] = [0.32, 0.28, 0.27]
+    dataset_size = 16
     # Text params
     textDataset: Optional[str] = None
     textDataPoints: Optional[int] = None

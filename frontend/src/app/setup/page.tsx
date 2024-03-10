@@ -31,6 +31,7 @@ export default function SetupPage() {
 
   // Image parameters
   const [batchSize, setBatchSize] = useState<number>(0);
+  const [datasetSize, setDatasetSize] = useState<number>(0);
   const [mean, setMean] = useState<[number, number, number]>([0, 0, 0]);
   const [std, setStd] = useState<[number, number, number]>([0, 0, 0]);
 
@@ -108,6 +109,9 @@ export default function SetupPage() {
         if ((mean.some(val => !invalidNum(val)) || std.some(val => !invalidNum(val)))
           && (mean.some(val => invalidNum(val) || std.some(val => invalidNum(val))))) {
           errorMsgs.push("Please either enter all values for mean and std or none");
+        }
+        if (invalidNum(datasetSize)) {
+          errorMsgs.push("Please enter a dataset size > 0");
         }
         break;
       case "tag":
@@ -199,6 +203,7 @@ export default function SetupPage() {
       case "invertinggradients":
         formData.append("mean", JSON.stringify(mean));
         formData.append("std", JSON.stringify(std));
+        formData.append("batchSize", datasetSize.toString());
         formData.append("batchSize", batchSize.toString());
         formData.append("numRestarts", numRestarts.toString());
         formData.append("stepSize", stepSize.toString());
@@ -250,6 +255,9 @@ export default function SetupPage() {
     switch (field) {
       case "batchSize":
         setBatchSize(parseInt(value));
+        break;
+      case "datasetSize":
+        setDatasetSize(parseInt(value));
         break;
       case "mean1":
         setMean([parseFloat(value) || 0, mean[1], mean[2]]);
