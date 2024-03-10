@@ -69,6 +69,8 @@ class PubSubWs:
 
     # Close all websockets for a given token
     async def close_tokens_websockets(self, request_token: str, error: str):
+        import pprint
+        pprint.pprint(self._route_dict)
         for ws in self._route_dict[request_token]:
             await self._close_websocket(ws, request_token, error)
 

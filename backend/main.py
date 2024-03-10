@@ -59,6 +59,7 @@ async def submit_attack(
     modality: str = Form(...),
     # Model Inversion Params
     batchSize: int = Form(None),
+    datasetSize: int = Form(None),
     mean: str = Form(None),
     std: str = Form(None),
     numRestarts: int = Form(None),
@@ -114,6 +115,7 @@ async def submit_attack(
             breaching_params = BreachingParams(
                 modality=modality,
                 batchSize=batchSize,
+                datasetSize=datasetSize,
                 means=[float(i) for i in mean.strip("[]").split(",")],
                 stds=[float(i) for i in std.strip("[]").split(",")],
                 numRestarts=numRestarts,

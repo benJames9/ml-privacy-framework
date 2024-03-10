@@ -14,6 +14,10 @@ import InfoPopup from "@/components/InfoPopup";
 import MiaParams from "@/components/MiaParams";
 import { getAttacksInfo, getDatasetParamsInfo, getAttackParamsInfo, getPtFileInfo, getZipFileInfo } from "@/utils/getInfo";
 
+async function wait_ms(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "AlexNet"];
   const textModels: string[] = ["GPT2", "Transformer3", "Transformer3t", "Transformer1", "TranformerS", "GPT2S"];
@@ -97,7 +101,7 @@ export default function SetupPage() {
         if (invalidNum(batchSize)) {
           errorMsgs.push("Please enter a batch size > 0");
         }
-        if (invalidNum(numRestarts + 1)) {
+        if (invalidNum(numRestarts)) {
           errorMsgs.push("Please enter a number of restarts >= 0");
         }
         if (invalidNum(stepSize)) {
@@ -127,7 +131,7 @@ export default function SetupPage() {
         if (invalidNum(seqLength)) {
           errorMsgs.push("Please enter a sequence length > 0");
         }
-        if (invalidNum(numRestarts + 1)) {
+        if (invalidNum(numRestarts)) {
           errorMsgs.push("Please enter a number of restarts >= 0");
         }
         if (invalidNum(stepSize)) {
@@ -203,7 +207,7 @@ export default function SetupPage() {
       case "invertinggradients":
         formData.append("mean", JSON.stringify(mean));
         formData.append("std", JSON.stringify(std));
-        formData.append("batchSize", datasetSize.toString());
+        formData.append("datasetSize", datasetSize.toString());
         formData.append("batchSize", batchSize.toString());
         formData.append("numRestarts", numRestarts.toString());
         formData.append("stepSize", stepSize.toString());
@@ -234,10 +238,26 @@ export default function SetupPage() {
         break;
     }
 
-    const res = await fetch("/api/submit-attack", {
-      method: 'POST',
-      body: formData,
-    })
+    let res;
+    const max_retries = 10;
+    for (let attempt = 0; attempt < max_retries; attempt++) {
+      try {
+        res = await fetch("/api/submit-attack", {
+          method: 'POST',
+          body: formData,
+        });
+        if (res.ok) break;
+      } catch (error) {
+        console.error(`Attempt ${attempt + 1} failed:`, error);
+      }
+
+      await wait_ms(500) // wait half a second between tries
+    }
+
+    if(!res) {
+      console.log("Fetch failed");
+      return;
+    }
 
     const req_token = await res.json();
     window.location.href = `/results/${req_token}`;
@@ -297,11 +317,7 @@ export default function SetupPage() {
   const handleAttackParamsChange = (field: string, value: string) => {
     switch (field) {
       case "restarts":
-        if (parseInt(value) > 0) {
-          setNumRestarts(parseInt(value) - 1);
-        } else {
-          setNumRestarts(parseInt(value));
-        }        
+        setNumRestarts(parseInt(value) + 1);       
         break;
       case "stepSize":
         setStepSize(parseFloat(value));

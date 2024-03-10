@@ -149,7 +149,7 @@ class BreachingAdapter:
         )
         logger = logging.getLogger()
         builder = ConfigBuilder(attack_params)
-        cfg = builder.build(attack_params.breaching_params.dataset_size)
+        cfg = builder.build(attack_params.breaching_params.datasetSize)
 
         if torch_model is None:
             # modelset = (
