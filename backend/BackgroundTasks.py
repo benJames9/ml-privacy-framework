@@ -10,6 +10,7 @@ from asyncio import (
 from threading import Thread
 from typing import Callable, NoReturn, Deque, Tuple
 from collections import deque
+import traceback
 
 from PubSubWs import PubSubWs
 from common import AttackParameters, WorkerCommunication, PositionInQueue
@@ -93,37 +94,45 @@ class BackgroundTasks:
     # Transfer requests from the buffer to the worker process
     async def _put_requests_to_thread(self):
         while True:
-            await asyncio.to_thread(self._worker_queues.task_channel.wait_for_get_event)
-            # The worker process is requesting for a new task
+            try:
+                await asyncio.to_thread(self._worker_queues.task_channel.wait_for_get_event)
+                # The worker process is requesting for a new task
 
-            # If there are no buffered requests, then wait until there is one
-            if len(self._buffered_requests) == 0:
-                await self._buffered_request_added.wait()
+                # If there are no buffered requests, then wait until there is one
+                if len(self._buffered_requests) == 0:
+                    await self._buffered_request_added.wait()
 
-            # The Event is set regardless of whether or not the queue is empty, so we need to clear it
-            self._buffered_request_added.clear()
-            async with self._buffered_requests_lock:
-                request_token, payload_data = self._buffered_requests.popleft()
-            self._num_buffered_requests_changed.set()
+                # The Event is set regardless of whether or not the queue is empty, so we need to clear it
+                self._buffered_request_added.clear()
+                async with self._buffered_requests_lock:
+                    request_token, payload_data = self._buffered_requests.popleft()
+                self._num_buffered_requests_changed.set()
 
-            await asyncio.to_thread(
-                self._worker_queues.task_channel.put, request_token, payload_data
-            )
+                await asyncio.to_thread(
+                    self._worker_queues.task_channel.put, request_token, payload_data
+                )
+            except Exception as e:
+                print(f"Encoutnered an error while putting requests to the thread (and then to the process) {e}")
+                traceback.print_exc()
 
     # Transfer worker responses to the main thread response queue
     def _response_reader(self, event_loop):
         while not self._process_is_dead:
-            response = self._worker_queues.response_channel.get()
+            try:
+                response = self._worker_queues.response_channel.get()
 
-            if response is not None:
-                token, progress = response
-                if progress is not None and progress.message_type == "error":
-                    event_loop.create_task(
-                        self._psw.close_tokens_websockets(token, progress.error_message)
-                    )
+                if response is not None:
+                    token, progress = response
+                    if progress is not None and progress.message_type == "error":
+                        event_loop.create_task(
+                            self._psw.close_tokens_websockets(token, progress.error_message)
+                        )
 
-            # Safely push to asyncio queue on the main thread
-            run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
+                # Safely push to asyncio queue on the main thread
+                run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
+            except Exception as e:
+                print(f"Encoutnered an error while getting requests from the process {e}")
+                traceback.print_exc()
 
     # Publish responses from main thread to clients
     async def _get_response_from_thread(self):
