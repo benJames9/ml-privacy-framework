@@ -121,7 +121,6 @@ class BackgroundTasks:
                     event_loop.create_task(
                         self._psw.close_tokens_websockets(token, progress.error_message)
                     )
-                    self._restart_worker()
 
             # Safely push to asyncio queue on the main thread
             run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)

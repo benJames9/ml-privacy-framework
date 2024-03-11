@@ -67,12 +67,15 @@ class PubSubWs:
 
     # Close all websockets for a given token
     async def close_tokens_websockets(self, request_token: str, error: str):
-        for ws in self._route_dict[request_token]:
+        async with self._dict_lock:
+            wss = self._route_dict[request_token][:]
+        
+        for ws in wss:
             await self._close_websocket(ws, request_token, error)
 
     # Generate JSON error message to send to client
     def _generate_error(self, error: str):
-        return {"message_type": "error", "error": error}
+        return {"message_type": "error", "error_message": error}
 
     # Publish attack responses to clients
     async def publish_serialisable_data(self, request_token: str, data):
@@ -107,7 +110,6 @@ class PubSubWs:
                 try:
                     await ws.send_text(data_str)
                 except Exception as e:
-                    # print(f"WebSocket may already dead: {e}")
                     pass
 
     # Register new routes

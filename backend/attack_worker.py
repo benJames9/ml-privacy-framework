@@ -113,12 +113,10 @@ def attack_worker(queues: WorkerCommunication):
         # Report any errors to task manager
         except Exception as e:
             print(f"Attack worker exception was:\n{e}")
-            traceback.print_exc()
             progress = AttackProgress(
                 message_type="error",
                 error_message=f"Attack Configuration Error: {str(e)}",
             )
-            traceback.print_exc()
             queues.response_channel.put(request_token, progress)
 
 

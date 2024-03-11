@@ -20,13 +20,13 @@ async function wait_ms(ms: number) {
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet-18", "DenseNet-121", "AlexNet"];
-  const textModels: string[] = ["GPT2", "Transformer3", "Transformer3t", "Transformer1", "TranformerS", "GPT2S"];
+  const textModels: string[] = ["Transformer3", "Transformer3t", "Transformer1", "TranformerS", "GPT2", "GPT2S"];
   const miaModels: string[] = ["ResNet-18"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Membership\nInference"];
   const textDatasets: string[] = ["WikiText", "Shakespeare", "StackOverflow"]
   const tokenizers: string[] = ["GPT2"];
 
-  const [model, setSelectedModel] = useState<string>("");
+  const [model, setSelectedModel] = useState<string>(imageModels[0]);
   const [attack, setSelectedAttack] = useState<string>("");
   const [modality, setModality] = useState<"images" | "text">("images");
 
@@ -366,18 +366,17 @@ export default function SetupPage() {
       case "Inverting Gradients\n(Single Step)":
         setSelectedAttack("invertinggradients");
         setModality("images");
+        setSelectedModel(imageModels[0]);
         break;
       case "TAG\n(Text Attack)":
         setSelectedAttack("tag");
         setModality("text");
-        break;
-      case "Fishing for\nUser Data":
-        setSelectedAttack("fishing");
-        setModality("images");
+        setSelectedModel(textModels[0]);
         break;
       case "Membership\nInference":
         setSelectedAttack("mia");
         setModality("images");
+        setSelectedModel(miaModels[0]);
         break;
       default:
         break;
