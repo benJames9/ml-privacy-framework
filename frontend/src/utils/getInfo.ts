@@ -33,6 +33,8 @@ export const getDatasetParamsInfo = (attack: string) => {
       info +=
         "\n\n<strong>Mean, Standard Deviation</strong>: The mean and standard deviation of the images in the dataset. Inferred from the dataset if left empty.";
       info +=
+        "\n\n<strong>Dataset Size</strong>: Number of images to perform the attack on.";
+      info +=
         "\n\n<strong>Batch Size</strong>: Number of images per batch. Each batch is computed in a grid.";
       break;
     case "tag":
