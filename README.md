@@ -1,5 +1,22 @@
 # Machine Learning Privacy Framework
 
+## View the website publicly
+If you have access to Imperial VPN, navigate to http://146.169.42.246 to view this web-application running.
+
+## Run the application locally
+You can run the application locally on your machine if you want to use your own GPU.
+
+### Prerequisites
+docker and docker-compose
+CUDA configured with docker access
+
+### Steps
+Clone the repository
+cd /tooling/
+docker-compose up --build -d
+
+Then after containers are built, navigate to http://localhost to view the application!
+
 ## Development
 1. We'll be doing development using [VSCode](https://code.visualstudio.com/).
 2. We'll be using Dev Containers in VSCode, so get [Docker](https://www.docker.com/) and the [dev containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
