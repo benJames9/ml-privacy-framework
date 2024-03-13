@@ -7,13 +7,13 @@ If you have access to Imperial VPN, navigate to http://146.169.42.246 to view th
 You can run the application locally on your machine if you want to use your own GPU.
 
 ### Prerequisites
-docker and docker-compose
+docker and docker-compose \
 CUDA configured with docker access
 
 ### Steps
-Clone the repository
-cd /tooling/
-docker-compose up --build -d
+Clone the repository \
+cd /tooling/ \
+docker-compose up --build -d 
 
 Then after containers are built, navigate to http://localhost to view the application!
 
