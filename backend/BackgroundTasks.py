@@ -118,21 +118,17 @@ class BackgroundTasks:
     # Transfer worker responses to the main thread response queue
     def _response_reader(self, event_loop):
         while not self._process_is_dead:
-            try:
-                response = self._worker_queues.response_channel.get()
+            response = self._worker_queues.response_channel.get()
+            
+            if response is not None:
+                token, progress = response
+                if progress is not None and progress.message_type == "error":
+                    event_loop.create_task(
+                        self._psw.close_tokens_websockets(token, progress.error_message)
+                    )
 
-                if response is not None:
-                    token, progress = response
-                    if progress is not None and progress.message_type == "error":
-                        event_loop.create_task(
-                            self._psw.close_tokens_websockets(token, progress.error_message)
-                        )
-
-                # Safely push to asyncio queue on the main thread
-                run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
-            except Exception as e:
-                print(f"Encoutnered an error while getting requests from the process {e}")
-                traceback.print_exc()
+            # Safely push to asyncio queue on the main thread
+            run_coroutine_threadsafe(self._resp_aio_queue.put(response), event_loop)
 
     # Publish responses from main thread to clients
     async def _get_response_from_thread(self):
