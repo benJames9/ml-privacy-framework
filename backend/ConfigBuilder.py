@@ -72,6 +72,7 @@ class ConfigBuilder:
                 cfg.case.data = breachinglib.get_config(
                     overrides=["case/data=CIFAR10"]
                 ).case.data
+                cfg.case.data.partition = "random"
                 print("defaulted to CIFAR10")
                 # cfg.case.data.
             elif attack_params.breaching_params.modality == "text":
@@ -113,14 +114,14 @@ class ConfigBuilder:
         cfg.attack.optim.step_size = attack_params.breaching_params.stepSize
         cfg.attack.optim.max_iterations = attack_params.breaching_params.maxIterations
         cfg.attack.optim.callback = 1
-        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
         cfg.attack.restarts.num_trials = attack_params.breaching_params.numRestarts
 
         if dataset_size is not None:
             cfg.case.data.default_clients = (
                 dataset_size // attack_params.breaching_params.batchSize
             )
-
+        cfg.case.user.user_idx = random.randint(0, cfg.case.data.default_clients - 1)
+        print(cfg)
         return cfg
 
     def _construct_text_cfg(self, attack_params: AttackParameters):

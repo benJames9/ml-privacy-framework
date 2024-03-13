@@ -125,30 +125,23 @@ if __name__ == "__main__":
     from common import AttackParameters, BreachingParams
 
     pars = AttackParameters(
-        attack="tag",
-        model="gpt2",
-        modality="text",
-        datasetStructure="text",
-        csvPath=None,
-        batchSize=2,
-        numRestarts=1,
-        stepSize=0.5,
-        maxIterations=100,
-        callbackInterval=10,
-        ptFilePath="./transformer3.pt",
-        zipFilePath=None,
-        budget=100,
-        means=[],
-        stds=[],
+        attack="invertinggradients",
+        model="Vgg16",
+        ptFilePath=None,
+        zipFilePath="../small_foldered_set.zip",
         breaching_params=BreachingParams(
-            modality="text",
-            textDataPoints=2,
-            stepSize=0.1,
             numRestarts=1,
-            maxIterations=5,
-            tokenizer="gpt2",
+            maxIterations=1,
+            datasetStructure="Foldered",
+            datasetSize=4,
+            means=[],
+            stds=[],
+            modality="images",
+            batchSize=4,
+            stepSize=0.1,
         ),
     )
+
 
     req_tok = str(uuid.uuid4())
 

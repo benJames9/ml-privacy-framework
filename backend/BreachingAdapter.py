@@ -340,7 +340,7 @@ class BreachingAdapter:
                 true_text=self.attack_cache.true_user_text,
                 reconstructed_image=base64_reconstructed,
                 reconstructed_text=text_reconstructed,
-                attack_start_time_s=self.attack_cache.attack_start_time_s,
+                attack_start_time_s=int(self.attack_cache.attack_start_time_s),
             ),
         )
         return metrics
@@ -393,7 +393,7 @@ class BreachingAdapter:
                 true_image=sample_true_base64_reconstructed,
                 reconstructed_image=sample_base64_reconstructed,
                 reconstructed_images_archive=reconstructed_images_archive,
-                attack_start_time_s=self.attack_cache.attack_start_time_s,
+                attack_start_time_s=int(self.attack_cache.attack_start_time_s),
             ),
         )
 
@@ -467,7 +467,7 @@ class BreachingAdapter:
             max_restarts=response_data.max_restarts,
             current_batch=response_data.current_batch,
             max_batches=response_data.max_batches,
-            attack_start_time_s=self.attack_cache.attack_start_time_s,
+            attack_start_time_s=int(self.attack_cache.attack_start_time_s),
         )
 
         if (

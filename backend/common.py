@@ -117,7 +117,7 @@ class AttackProgress(BaseModel):
     # inverting gradients
     true_image: Optional[str] = None  # base64 encoded image
     reconstructed_image: Optional[str] = None  # base64 encoded image
-    reconstructed_images_archive: Optional[str]  # base64 encoded zip file
+    reconstructed_images_archive: Optional[str] = None # base64 encoded zip file
 
     # tag attacks
     true_text: Optional[str] = None
