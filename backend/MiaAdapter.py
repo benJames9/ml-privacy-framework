@@ -57,7 +57,7 @@ class MiaAdapter:
         print(f"ratio: {ratio}")
 
     def _get_model(self, model_type, path_to_pt, num_classes):
-        if model_type == "ResNet-18":
+        if model_type == "ResNet18":
             model = models.resnet18(pretrained=False)
             model.fc = torch.nn.Linear(in_features=512, out_features=num_classes)
         else:

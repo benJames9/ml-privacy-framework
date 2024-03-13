@@ -20,8 +20,8 @@ async function wait_ms(ms: number) {
 
 export default function SetupPage() {
   const imageModels: string[] = ["ResNet18",
-    "DenseNet121",
     "AlexNet",
+    "densenet121",
     "densenet161",
     "densenet169",
     "densenet201",
@@ -55,7 +55,6 @@ export default function SetupPage() {
     "RegNet_x_8gf",
     "RegNet_x_16gf",
     "RegNet_x_32gf",
-    "ResNet18",
     "ResNet34",
     "ResNet50",
     "ResNet101",
@@ -76,12 +75,12 @@ export default function SetupPage() {
     "Vgg16",
     "Vgg19"];
   const textModels: string[] = ["Transformer3", "Transformer3t", "Transformer1", "TranformerS", "GPT2", "GPT2S"];
-  const miaModels: string[] = ["ResNet-18"];
+  const miaModels: string[] = ["ResNet18"];
   const attacks: string[] = ["Inverting Gradients\n(Single Step)", "TAG\n(Text Attack)", "Membership\nInference"];
   const textDatasets: string[] = ["WikiText", "Shakespeare", "StackOverflow"]
   const tokenizers: string[] = ["GPT2"];
 
-  const [model, setSelectedModel] = useState<string>(imageModels[0]);
+  const [model, setSelectedModel] = useState<string>("");
   const [attack, setSelectedAttack] = useState<string>("");
   const [modality, setModality] = useState<"images" | "text">("images");
 
@@ -309,7 +308,7 @@ export default function SetupPage() {
       await wait_ms(500) // wait half a second between tries
     }
 
-    if(!res) {
+    if (!res) {
       console.log("Fetch failed");
       return;
     }
@@ -372,7 +371,7 @@ export default function SetupPage() {
   const handleAttackParamsChange = (field: string, value: string) => {
     switch (field) {
       case "restarts":
-        setNumRestarts(parseInt(value) + 1);       
+        setNumRestarts(parseInt(value) + 1);
         break;
       case "stepSize":
         setStepSize(parseFloat(value));
